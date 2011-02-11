@@ -10,5 +10,5 @@ from distutils.core import setup
 
 setup(name='python-libs',
       description='Common XenServer Python classes',
-      packages=['xs'],
+      packages=['xcp'],
      )

@@ -19,12 +19,11 @@ Common XenServer Python classes.
 %setup -q
 
 %build
-ls %{dirname}
-%{__python} %{dirname}/setup.py build
+%{__python} setup.py build
  
 %install
 rm -rf $RPM_BUILD_ROOT
-%{__python} %{dirname}/setup.py install -O1 --skip-build --root %{buildroot}
+%{__python} setup.py install -O1 --skip-build --root %{buildroot}
  
 %clean
 rm -rf $RPM_BUILD_ROOT

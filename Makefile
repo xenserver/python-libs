@@ -45,11 +45,14 @@ $(PYTHON_LIB_SRC): $(PYTHON_LIBS_SOURCES)
 	rm -rf $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)
 
 .SECONDARY: $(RPM_SPECSDIR)/%.spec
-$(RPM_SPECSDIR)/%.spec: *.spec
-	cp -f $^ $@
+$(RPM_SPECSDIR)/%.spec: *.spec.in
+	sed -e 's/@PYTHON_LIB_VERSION@/$(PYTHON_LIB_VERSION)/g' \
+	  -e 's/@PYTHON_LIB_RELEASE@/$(PYTHON_LIB_RELEASE)/g' \
+	  < $< \
+	  > $@
 
 $(RPM_SRPMSDIR)/$(PYTHON_LIB_SRPM): $(RPM_DIRECTORIES) $(RPM_SPECSDIR)/$(PYTHON_LIB_SPEC) $(PYTHON_LIB_SRC)
-	$(RPMBUILD) --define "version $(PYTHON_LIB_VERSION)" --define "release $(PYTHON_LIB_RELEASE)" -bs $(RPM_SPECSDIR)/$(PYTHON_LIB_SPEC)
+	$(RPMBUILD) -bs $(RPM_SPECSDIR)/$(PYTHON_LIB_SPEC)
 
 $(PYTHON_LIB_STAMP): $(RPM_SRPMSDIR)/$(PYTHON_LIB_SRPM)
 	# work around rpmbuild removing source and spec

@@ -2,8 +2,8 @@
 
 Summary: Common XenServer Python classes
 Name: python-libs
-Version: %{version}
-Release: %{release}
+Version: @PYTHON_LIB_VERSION@
+Release: @PYTHON_LIB_RELEASE@
 Source: %{name}-%{version}.tar.gz
 License: GPL
 Group: Applications/System

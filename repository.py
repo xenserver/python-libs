@@ -1,14 +1,19 @@
 #!/usr/bin/env python
-# Copyright (c) 2011 Citrix Systems, Inc. All use and distribution of this
-# copyrighted material is governed by and subject to terms and conditions
-# as licensed by Citrix Systems, Inc. All other rights reserved.
-# Xen, XenSource and XenEnterprise are either registered trademarks or
-# trademarks of Citrix Systems, Inc. in the United States and/or other 
-# countries.
+# Copyright (c) 2011 Citrix Systems, Inc.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published
+# by the Free Software Foundation; version 2.1 only. with the special
+# exception on linking described in file LICENSE.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
 
 import os.path
 
-import accessor
+import xcl.accessor as accessor
 
 class Repository:
     REPOSITORY_FILENAME = "XS-REPOSITORY"

@@ -30,7 +30,7 @@ $(MY_SOURCES)/MANIFEST: $(MY_SOURCES_DIRSTAMP) $(RPM_BUILD_COOKIE)
 
 .PHONY: pylint
 pylint:
-	pylint $(PYTHON_LIBS_SOURCES) --rcfile=pylint.rc
+	run-pylint.sh $(PYTHON_LIBS_SOURCES)
 
 .PHONY: sources
 sources: $(MY_SOURCES)/MANIFEST

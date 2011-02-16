@@ -37,8 +37,10 @@ load-plugins=
 
 # W0142 - Used * or ** magic
 # W0703 - Catch "Exception"
+# C0111 - Missing docstring
+# R0201 - Method could be a function
 
-disable=W0142,W0703
+disable=W0142,W0703,C0111,R0201
 
 
 [REPORTS]
@@ -94,7 +96,7 @@ function-rgx=[a-z_][a-zA-Z0-9_]{2,30}$
 method-rgx=[a-z_][a-zA-Z0-9_]{2,30}$
 
 # Regular expression which should only match correct instance attribute names
-attr-rgx=[a-z_][a-z0-9_]{2,30}$
+attr-rgx=[a-z_][a-zA-Z0-9_]{2,30}$
 
 # Regular expression which should only match correct argument names
 argument-rgx=[a-z_][a-zA-Z0-9_]{0,30}$

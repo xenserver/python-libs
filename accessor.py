@@ -11,6 +11,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 
+"""accessor - provide common interface to access methods"""
+
 import ftplib
 import os
 import tempfile
@@ -20,7 +22,7 @@ import urlparse
 
 import xcp.mount as mount
 
-class SplitResult:
+class SplitResult(object):
     def __init__(self, args):
         (
             self.scheme,
@@ -64,17 +66,25 @@ def compat_urlsplit(url, allow_fragments = True):
         return ret
     return SplitResult(ret)
 
-class Accessor:
+class Accessor(object):
+
+    def __init__(self):
+        pass
+
     def access(self, name):
         """ Return boolean determining where 'name' is an accessible object
         in the target. """
         try:
             f = self.openAddress(name)
             f.close()
-        except:
+        except Exception:
             return False
 
         return True
+
+    def openAddress(self, name):
+        """should be overloaded"""
+        pass
 
     def canEject(self):
         return False
@@ -87,20 +97,23 @@ class Accessor:
     
 class FilesystemAccessor(Accessor):
     def __init__(self, location):
+        super(FilesystemAccessor, self).__init__()
         self.location = location
 
     def openAddress(self, addr):
         return open(os.path.join(self.location, addr), 'r')
 
 class MountingAccessor(FilesystemAccessor):
-    def __init__(self, mount_types, mount_source, mount_options = ['ro']):
-        (
-            self.mount_types,
-            self.mount_source,
-            self.mount_options
-        ) = (mount_types, mount_source, mount_options)
+    def __init__(self, mount_types, mount_source, mount_options = None):
+        super(MountingAccessor, self).__init__(None)
+
+        if mount_options is None:
+            mount_options = ['ro']
+
+        self.mount_types = mount_types
+        self.mount_source = mount_source
+        self.mount_options = mount_options
         self.start_count = 0
-        self.location = None
 
     def start(self):
         if self.start_count == 0:
@@ -112,7 +125,7 @@ class MountingAccessor(FilesystemAccessor):
                     mount.mount(self.mount_source, self.location,
                                 options = self.mount_options,
                                 fstype = fs)
-                except mount.MountException, e:
+                except mount.MountException:
                     continue
                 else:
                     success = True
@@ -136,10 +149,12 @@ class MountingAccessor(FilesystemAccessor):
             self.finish()
 
 class DeviceAccessor(MountingAccessor):
-    def __init__(self, device, fs = ['iso9660', 'vfat', 'ext3']):
+    def __init__(self, device, fs = None):
         """ Return a MountingAccessor for a device 'device', which should
         be a fully qualified path to a device node. """
-        MountingAccessor.__init__(self, fs, device)
+        if fs is None:
+            fs = ['iso9660', 'vfat', 'ext3']
+        super(DeviceAccessor, self).__init__(fs, device)
         self.device = device
 
     def __repr__(self):
@@ -158,7 +173,8 @@ class NFSAccessor(MountingAccessor):
     def __init__(self, nfspath):
         if nfspath.startswith('nfs://'):
             nfspath = nfspath[:6]
-        MountingAccessor.__init__(self, ['nfs'], nfspath, ['ro', 'tcp'])
+        super(NFSAccessor, self).__init__(['nfs'], nfspath, ['ro', 'tcp'])
+        self.nfspath = nfspath
 
     def __repr__(self):
         return "<NFSAccessor: %s>" % self.nfspath
@@ -167,22 +183,23 @@ class URLAccessor(Accessor):
     url_prefixes = ['http', 'https', 'ftp', 'file']
 
     def __init__(self, baseAddress):
+        super(URLAccessor, self).__init__()
         assert baseAddress.endswith('/')
         self.url_parts = compat_urlsplit(baseAddress, allow_fragments = False)
         assert self.url_parts.scheme in self.url_prefixes
 
         if self.url_parts.scheme.startswith('http') and self.url_parts.username:
             self.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            print self.url_parts.hostname, self.url_parts.username, self.url_parts.password
             self.passman.add_password(None, self.url_parts.hostname,
-                                      self.url_parts.username, self.url_parts.password)
+                                      self.url_parts.username,
+                                      self.url_parts.password)
             self.authhandler = urllib2.HTTPBasicAuthHandler(self.passman)
             self.opener = urllib2.build_opener(self.authhandler)
             urllib2.install_opener(self.opener)
         # rebuild URL without auth components & escape special chars in path
-        self.baseAddress = urlparse.urlunsplit((self.url_parts.scheme,
-                                                self.url_parts.hostname,
-                                                urllib.quote(self.url_parts.path), '', ''))
+        self.baseAddress = urlparse.urlunsplit(
+            (self.url_parts.scheme, self.url_parts.hostname,
+             urllib.quote(self.url_parts.path), '', ''))
 
     def access(self, path):
         if self.url_parts.scheme != 'ftp':
@@ -190,8 +207,8 @@ class URLAccessor(Accessor):
 
         url = os.path.join(self.url_parts.path, path)[1:]
 
-        # if FTP, override by actually checking the file exists because urllib2 seems
-        # to be not so good at this.
+        # if FTP, override by actually checking the file exists because urllib2
+        # seems to be not so good at this.
         try:
             directory, fname = os.path.split(url)
 
@@ -202,7 +219,7 @@ class URLAccessor(Accessor):
                 ftp.cwd(directory)
             lst = ftp.nlst()
             return fname in lst
-        except:
+        except Exception:
             return False
 
     def openAddress(self, address):
@@ -211,7 +228,7 @@ class URLAccessor(Accessor):
     def __repr__(self):
         return "<URLAccessor: %s>" % self.baseAddress
 
-supported_accessors = {'nfs': NFSAccessor,
+SUPPORTED_ACCESSORS = {'nfs': NFSAccessor,
                        'http': URLAccessor,
                        'https': URLAccessor,
                        'ftp': URLAccessor,
@@ -220,5 +237,5 @@ supported_accessors = {'nfs': NFSAccessor,
 def createAccessor(baseAddress):
     url_parts = compat_urlsplit(baseAddress, allow_fragments = False)
 
-    assert url_parts.scheme in supported_accessors.keys()
-    return supported_accessors[url_parts.scheme](baseAddress)
+    assert url_parts.scheme in SUPPORTED_ACCESSORS.keys()
+    return SUPPORTED_ACCESSORS[url_parts.scheme](baseAddress)

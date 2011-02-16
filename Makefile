@@ -28,6 +28,10 @@ $(MY_SOURCES)/MANIFEST: $(MY_SOURCES_DIRSTAMP) $(RPM_BUILD_COOKIE)
 	( echo "$(COMPONENT) gpl file $(RPM_SRPMSDIR)/$(PYTHON_LIB_SRPM)" ; \
 	) >$@
 
+.PHONY: pylint
+pylint:
+	pylint $(PYTHON_LIBS_SOURCES) --rcfile=pylint.rc
+
 .PHONY: sources
 sources: $(MY_SOURCES)/MANIFEST
 

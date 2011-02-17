@@ -32,7 +32,7 @@
    Derived from Lars Gustäbel's tarfile.py
 """
 
-version     = "0.1"
+__version__ = "0.1"
 __author__  = "Simon Rowe"
 __credits__ = "Lars Gustäbel"
 
@@ -56,9 +56,9 @@ if sys.platform == 'mac':
     raise ImportError, "cpiofile does not work for platform==mac"
 
 try:
-    import grp, pwd
+    import grp as GRP, pwd as PWD
 except ImportError:
-    grp = pwd = None
+    GRP = PWD = None
 
 # from cpiofile import *
 __all__ = ["CpioFile", "CpioInfo", "is_cpiofile", "CpioError"]
@@ -111,11 +111,11 @@ def copyfileobj(src, dst, length=None):
         shutil.copyfileobj(src, dst)
         return
 
-    BUFSIZE = 16 * 1024
-    blocks, remainder = divmod(length, BUFSIZE)
-    for b in xrange(blocks):
-        buf = src.read(BUFSIZE)
-        if len(buf) < BUFSIZE:
+    bufsize = 16 * 1024
+    blocks, remainder = divmod(length, bufsize)
+    for _ in xrange(blocks):
+        buf = src.read(bufsize)
+        if len(buf) < bufsize:
             raise IOError("end of file reached")
         dst.write(buf)
 
@@ -126,7 +126,7 @@ def copyfileobj(src, dst, length=None):
         dst.write(buf)
     return
 
-filemode_table = (
+FILEMODE_TABLE = (
     ((S_IFLNK,      "l"),
      (S_IFREG,      "-"),
      (S_IFBLK,      "b"),
@@ -159,7 +159,7 @@ def filemode(mode):
        Used by CpioFile.list()
     """
     perm = []
-    for table in filemode_table:
+    for table in FILEMODE_TABLE:
         for bit, char in table:
             if mode & bit == bit:
                 perm.append(char)
@@ -168,10 +168,13 @@ def filemode(mode):
             perm.append("-")
     return "".join(perm)
 
-if os.sep != "/":
-    normpath = lambda path: os.path.normpath(path).replace(os.sep, "/")
-else:
-    normpath = os.path.normpath
+
+def normpath(path):
+    if os.sep != "/":
+        return os.path.normpath(path).replace(os.sep, "/")
+    else:
+        return os.path.normpath(path)
+
 
 class CpioError(Exception):
     """Base exception."""
@@ -192,7 +195,7 @@ class StreamError(CpioError):
 #---------------------------
 # internal stream interface
 #---------------------------
-class _LowLevelFile:
+class _LowLevelFile(object):
     """Low-level file object. Supports reading and writing.
        It is used instead of a regular file object for streaming
        access.
@@ -203,8 +206,9 @@ class _LowLevelFile:
             "r": os.O_RDONLY,
             "w": os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
         }[mode]
-        if hasattr(os, "O_BINARY"):
-            mode |= os.O_BINARY
+        if not hasattr(os, "O_BINARY"):
+            os.O_BINARY = 0
+        mode |= os.O_BINARY
         self.fd = os.open(name, mode)
 
     def close(self):
@@ -216,7 +220,7 @@ class _LowLevelFile:
     def write(self, s):
         os.write(self.fd, s)
 
-class _Stream:
+class _Stream(object):
     """Class that serves as an adapter between CpioFile and
        a stream-like object.  The stream-like object only
        needs to have a read() or write() method and is accessed
@@ -379,7 +383,7 @@ class _Stream:
         """
         if pos - self.pos >= 0:
             blocks, remainder = divmod(pos - self.pos, self.bufsize)
-            for i in xrange(blocks):
+            for _ in xrange(blocks):
                 self.read(self.bufsize)
             self.read(remainder)
         else:
@@ -450,7 +454,8 @@ class _StreamProxy(object):
         self.buf = self.fileobj.read(BLOCKSIZE)
 
     def read(self, size):
-        self.read = self.fileobj.read
+        #self.read = self.fileobj.read
+        setattr(self, "read", self.fileobj.read)
         return self.buf
 
     def getcomptype(self):
@@ -477,6 +482,9 @@ class _BZ2Proxy(object):
     def __init__(self, fileobj, mode):
         self.fileobj = fileobj
         self.mode = mode
+        self.bz2obj = None
+        self.buf = None
+        self.pos = None
         self.init()
 
     def init(self):
@@ -595,14 +603,14 @@ class _FileInFile(object):
 
         size = min(size, section.offset + section.size - self.position)
 
-        if isinstance(section, _data):
-            realpos = section.realpos + self.position - section.offset
-            self.fileobj.seek(self.offset + realpos)
-            self.position += size
-            return self.fileobj.read(size)
-        else:
-            self.position += size
-            return NUL * size
+        # if isinstance(section, _data):
+        #     realpos = section.realpos + self.position - section.offset
+        #     self.fileobj.seek(self.offset + realpos)
+        #     self.position += size
+        #     return self.fileobj.read(size)
+        # else:
+        #     self.position += size
+        #     return NUL * size
 #class _FileInFile
 
 SEEK_SET = 0
@@ -689,7 +697,8 @@ class ExFileObject(object):
         result = []
         while True:
             line = self.readline()
-            if not line: break
+            if not line:
+                break
             result.append(line)
         return result
 
@@ -772,8 +781,10 @@ class CpioInfo(object):
         self.offset = 0         # the cpio header starts here
         self.offset_data = 0    # the file's data starts here
 
+        self.buf = None
+
     def __repr__(self):
-        return "<%s %r at %#x>" % (self.__class__.__name__,self.name,id(self))
+        return "<%s %r at %#x>" % (self.__class__.__name__, self.name, id(self))
 
     @classmethod
     def frombuf(cls, buf):
@@ -808,7 +819,8 @@ class CpioInfo(object):
         buf += "%08X" % self.gid
         buf += "%08X" % self.nlink
         buf += "%08X" % self.mtime
-        buf += "%08X" % (self.linkname == '' and self.size or len(self.linkname))
+        buf += "%08X" % (self.linkname == '' and self.size or
+                         len(self.linkname))
         buf += "%08X" % self.devmajor
         buf += "%08X" % self.devminor
         buf += "%08X" % self.rdevmajor
@@ -817,14 +829,14 @@ class CpioInfo(object):
         buf += "%08X" % self.check
 
         buf += self.name + NUL
-        words, remainder = divmod(len(buf), WORDSIZE)
+        _, remainder = divmod(len(buf), WORDSIZE)
         if remainder != 0:
             # pad to next word
             buf += (WORDSIZE - remainder) * NUL
 
         if self.linkname != '':
             buf += self.linkname
-            words, remainder = divmod(len(buf), WORDSIZE)
+            _, remainder = divmod(len(buf), WORDSIZE)
             if remainder != 0:
                 # pad to next word
                 buf += (WORDSIZE - remainder) * NUL
@@ -985,8 +997,8 @@ class CpioFile(object):
             raise ReadError("file could not be opened successfully")
 
         elif ":" in mode:
-            filemode, comptype = mode.split(":", 1)
-            filemode = filemode or "r"
+            fmode, comptype = mode.split(":", 1)
+            fmode = fmode or "r"
             comptype = comptype or "cpio"
 
             # Select the *open() function according to
@@ -995,18 +1007,18 @@ class CpioFile(object):
                 func = getattr(cls, cls.OPEN_METH[comptype])
             else:
                 raise CompressionError("unknown compression type %r" % comptype)
-            return func(name, filemode, fileobj)
+            return func(name, fmode, fileobj)
 
         elif "|" in mode:
-            filemode, comptype = mode.split("|", 1)
-            filemode = filemode or "r"
+            fmode, comptype = mode.split("|", 1)
+            fmode = fmode or "r"
             comptype = comptype or "cpio"
 
-            if filemode not in "rw":
+            if fmode not in "rw":
                 raise ValueError("mode must be 'r' or 'w'")
 
-            t = cls(name, filemode,
-                    _Stream(name, filemode, comptype, fileobj, bufsize))
+            t = cls(name, fmode,
+                    _Stream(name, fmode, comptype, fileobj, bufsize))
             t._extfileobj = False
             return t
 
@@ -1033,7 +1045,9 @@ class CpioFile(object):
 
         try:
             import gzip
-            gzip.GzipFile
+            # gzip.GzipFile
+            if not hasattr(gzip, "GzipFile"):
+                raise AttributeError
         except (ImportError, AttributeError):
             raise CompressionError("gzip module is not available")
 
@@ -1153,7 +1167,7 @@ class CpioFile(object):
         if arcname is None:
             arcname = name
         arcname = normpath(arcname)
-        drv, arcname = os.path.splitdrive(arcname)
+        _, arcname = os.path.splitdrive(arcname)
         while arcname[0:1] == "/":
             arcname = arcname[1:]
 
@@ -1297,7 +1311,7 @@ class CpioFile(object):
             copyfileobj(fileobj, self.fileobj, cpioinfo.size)
             self.offset += cpioinfo.size
 
-            words, remainder = divmod(self.offset, WORDSIZE)
+            _, remainder = divmod(self.offset, WORDSIZE)
             if remainder > 0:
                 # pad to next word
                 self.fileobj.write((WORDSIZE - remainder) * NUL)
@@ -1435,7 +1449,7 @@ class CpioFile(object):
             ti.gid   = cpioinfo.gid
             try:
                 self._extract_member(ti, ti.name)
-            except:
+            except Exception:
                 pass
 
         if cpioinfo.issym():
@@ -1485,7 +1499,8 @@ class CpioFile(object):
             if self.inodes.has_key(cpioinfo.ino):
                 # actual file exists, create link
                 # FIXME handle platforms that don't support hardlinks
-                os.link(os.path.join(cpioinfo._link_path, self.inodes[cpioinfo.ino][0]), cpiogetpath)
+                os.link(os.path.join(cpioinfo._link_path, 
+                                     self.inodes[cpioinfo.ino][0]), cpiogetpath)
             else:
                 extractinfo = self._datamember(cpioinfo)
 
@@ -1547,24 +1562,24 @@ class CpioFile(object):
 
             try:
                 self._extract_member(self.getmember(linkpath), cpiogetpath)
-            except (EnvironmentError, KeyError), e:
+            except (EnvironmentError, KeyError):
                 linkpath = os.path.normpath(linkpath)
                 try:
                     shutil.copy2(linkpath, cpiogetpath)
-                except EnvironmentError, e:
+                except EnvironmentError:
                     raise IOError("link could not be created")
 
     def chown(self, cpioinfo, cpiogetpath):
         """Set owner of cpiogetpath according to cpioinfo.
         """
-        if pwd and hasattr(os, "geteuid") and os.geteuid() == 0:
+        if PWD and hasattr(os, "geteuid") and os.geteuid() == 0:
             # We have to be root to do so.
             try:
-                g = grp.getgrgid(cpioinfo.gid)[2]
+                g = GRP.getgrgid(cpioinfo.gid)[2]
             except KeyError:
                 g = os.getgid()
             try:
-                u = pwd.getpwuid(cpioinfo.uid)[2]
+                u = PWD.getpwuid(cpioinfo.uid)[2]
             except KeyError:
                 u = os.getuid()
             try:
@@ -1573,7 +1588,7 @@ class CpioFile(object):
                 else:
                     if sys.platform != "os2emx":
                         os.chown(cpiogetpath, u, g)
-            except EnvironmentError, e:
+            except EnvironmentError:
                 raise ExtractError("could not change owner")
 
     def chmod(self, cpioinfo, cpiogetpath):
@@ -1582,7 +1597,7 @@ class CpioFile(object):
         if hasattr(os, 'chmod'):
             try:
                 os.chmod(cpiogetpath, cpioinfo.mode)
-            except EnvironmentError, e:
+            except EnvironmentError:
                 raise ExtractError("could not change mode")
 
     def utime(self, cpioinfo, cpiogetpath):
@@ -1596,7 +1611,7 @@ class CpioFile(object):
             return
         try:
             os.utime(cpiogetpath, (cpioinfo.mtime, cpioinfo.mtime))
-        except EnvironmentError, e:
+        except EnvironmentError:
             raise ExtractError("could not change modification time")
 
     #--------------------------------------------------------------------------
@@ -1735,7 +1750,7 @@ class CpioFile(object):
             print >> sys.stderr, msg
 # class CpioFile
 
-class CpioIter:
+class CpioIter(object):
     """Iterator Class.
 
        for cpioinfo in CpioFile(...):
@@ -1776,15 +1791,15 @@ class CpioIter:
 #---------------------------------------------
 CPIO_PLAIN = 0           # zipfile.ZIP_STORED
 CPIO_GZIPPED = 8         # zipfile.ZIP_DEFLATED
-class CpioFileCompat:
+class CpioFileCompat(object):
     """CpioFile class compatible with standard module zipfile's
        ZipFile class.
     """
-    def __init__(self, file, mode="r", compression=CPIO_PLAIN):
+    def __init__(self, fpath, mode="r", compression=CPIO_PLAIN):
         if compression == CPIO_PLAIN:
-            self.cpiofile = CpioFile.cpioopen(file, mode)
+            self.cpiofile = CpioFile.cpioopen(fpath, mode)
         elif compression == CPIO_GZIPPED:
-            self.cpiofile = CpioFile.gzopen(file, mode)
+            self.cpiofile = CpioFile.gzopen(fpath, mode)
         else:
             raise ValueError("unknown compression constant")
         if mode[0:1] == "r":
@@ -1808,7 +1823,7 @@ class CpioFileCompat:
         return self.cpiofile.extractfile(self.cpiofile.getmember(name)).read()
     def write(self, filename, arcname=None, compress_type=None):
         self.cpiofile.add(filename, arcname)
-    def writestr(self, zinfo, bytes):
+    def writestr(self, zinfo, bts):
         try:
             from cStringIO import StringIO
         except ImportError:
@@ -1817,7 +1832,7 @@ class CpioFileCompat:
         zinfo.name = zinfo.filename
         zinfo.size = zinfo.file_size
         zinfo.mtime = calendar.timegm(zinfo.date_time)
-        self.cpiofile.addfile(zinfo, StringIO(bytes))
+        self.cpiofile.addfile(zinfo, StringIO(bts))
     def close(self):
         self.cpiofile.close()
 #class CpioFileCompat
@@ -1836,4 +1851,5 @@ def is_cpiofile(name):
     except CpioError:
         return False
 
-open = CpioFile.open
+def cpioOpen(*al, **ad):
+    return CpioFile.open(*al, **ad)

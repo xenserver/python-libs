@@ -14,7 +14,7 @@
 import os.path
 import subprocess
 
-class PCIIds:
+class PCIIds(object):
     def __init__(self, fn):
         self.vendor_dict = {}
         self.sub_dict = {}
@@ -27,7 +27,8 @@ class PCIIds:
         fh = open(fn)
         for l in fh:
             line = l.rstrip()
-            if line == '' or line.startswith('#'): continue
+            if line == '' or line.startswith('#'):
+                continue
 
             if line.startswith('C'):
                 # Class
@@ -89,15 +90,21 @@ class PCIIds:
                 ret.append(k)
         return ret
 
-class PCIDevices:
+class PCIDevices(object):
     def __init__(self):
         self.devs = {}
         
-        cmd = subprocess.Popen(['lspci', '-mn'], bufsize = 1, stdout = subprocess.PIPE)
+        cmd = subprocess.Popen(['lspci', '-mn'], bufsize = 1,
+                               stdout = subprocess.PIPE)
         for l in cmd.stdout:
             line = l.rstrip()
-            el = filter(lambda x: not x.startswith('-'), line.replace('"','').split())
-            self.devs[el[0]] = {'id': el[0], 'class': el[1][:2], 'subclass': el[1][2:], 'vendor': el[2], 'device': el[3]}
+            el = filter(lambda x: not x.startswith('-'),
+                        line.replace('"','').split())
+            self.devs[el[0]] = {'id': el[0],
+                                'class': el[1][:2],
+                                'subclass': el[1][2:],
+                                'vendor': el[2],
+                                'device': el[3]}
             if len(el) == 6:
                 self.devs[el[0]]['subvendor'] = el[4]
                 self.devs[el[0]]['subdevice'] = el[5]
@@ -110,7 +117,8 @@ class PCIDevices:
         	[class1, class2, ... classN]"""
         if subcls:
             assert isinstance(cls, str)
-            return filter(lambda x: x['class'] == cls and x['subclass'] == subcls, self.devs.values())
+            return filter(lambda x: x['class'] == cls and
+                          x['subclass'] == subcls, self.devs.values())
         else:
             assert isinstance(cls, list)
             return filter(lambda x: x['class'] in cls, self.devs.values())
@@ -121,18 +129,19 @@ class PCIDevices:
             left, _ = dev.rsplit('.', 1)
             return left
 
-        return filter(lambda x: x != dev and slot(x) == slot(dev), self.devs.keys())
+        return filter(lambda x: x != dev and slot(x) == slot(dev),
+                      self.devs.keys())
 
 
 if __name__ == "__main__":
-    ids = PCIIds.read()
-    video_class = ids.lookupClass('Display controller')
+    IDS = PCIIds.read()
+    VIDEO_CLASS = IDS.lookupClass('Display controller')
 
-    devs = PCIDevices()
-    for video_dev in devs.findByClass(video_class):
-        print video_dev['id'], ids.findVendor(video_dev['vendor']), \
-        ids.findDevice(video_dev['vendor'], video_dev['device'])
-        print devs.findRelatedFunctions(video_dev['id'])
-    print devs.findRelatedFunctions('00:1d.1')
+    DEVS = PCIDevices()
+    for video_dev in DEVS.findByClass(VIDEO_CLASS):
+        print video_dev['id'], IDS.findVendor(video_dev['vendor']), \
+        IDS.findDevice(video_dev['vendor'], video_dev['device'])
+        print DEVS.findRelatedFunctions(video_dev['id'])
+    print DEVS.findRelatedFunctions('00:1d.1')
 
 

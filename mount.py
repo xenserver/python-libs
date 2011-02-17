@@ -19,7 +19,8 @@ import tempfile
 class MountException(Exception):
     pass
 
-def runCmd2(command, with_stdout = False, with_stderr = False, inputtext = None):
+def runCmd2(command, with_stdout = False, with_stderr = False,
+            inputtext = None):
     out = ""
     err = ""
     cmd = subprocess.Popen(command, bufsize = 1,
@@ -39,14 +40,14 @@ def runCmd2(command, with_stdout = False, with_stderr = False, inputtext = None)
             err += line
         rv = cmd.wait()
 
-    l = "ran %s; rc %d" % (str(command), rv)
-    if inputtext:
-        l += " with input %s" % inputtext
-    if out != "":
-        l += "\nSTANDARD OUT:\n" + out
-    if err != "":
-        l += "\nSTANDARD ERROR:\n" + err
-    #xelogging.log(l)
+    # l = "ran %s; rc %d" % (str(command), rv)
+    # if inputtext:
+    #     l += " with input %s" % inputtext
+    # if out != "":
+    #     l += "\nSTANDARD OUT:\n" + out
+    # if err != "":
+    #     l += "\nSTANDARD ERROR:\n" + err
+    # xelogging.log(l)
 
     if with_stdout and with_stderr:
         return rv, out, err
@@ -81,7 +82,8 @@ def bindMount(source, mountpoint):
         raise MountException, "out: '%s' err: '%s'" % (out, err)
 
 def umount(mountpoint, force = False):
-    cmd = ['/bin/umount', '-d'] # -d option also removes the loop device (if present)
+    # -d option also removes the loop device (if present)
+    cmd = ['/bin/umount', '-d'] 
     if force:
         cmd.append('-f')
     cmd.append(mountpoint)
@@ -89,7 +91,7 @@ def umount(mountpoint, force = False):
     rc = runCmd2(cmd)
     return rc
 
-class TempMount:
+class TempMount(object):
     def __init__(self, device, tmp_prefix, options = None, fstype = None):
         self.mounted = False
         self.mount_point = tempfile.mkdtemp(dir = "/tmp", prefix = tmp_prefix)

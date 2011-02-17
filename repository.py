@@ -13,45 +13,47 @@
 
 import os.path
 
-import xcl.accessor as accessor
+#import xcl.accessor as accessor
+#import xcp.accessor
 
-class Repository:
+class Repository(object):
     REPOSITORY_FILENAME = "XS-REPOSITORY"
     PKGDATA_FILENAME = "XS-PACKAGES"
     REPOLIST_FILENAME = "XS-REPOSITORY-LIST"
 
-    def __init__(self, accessor, base):
+    def __init__(self, access, base):
         (
             self.accessor,
             self.base
-        ) = (accessor, base)
+        ) = (access, base)
 
     @classmethod
-    def isRepo(cls, accessor, base):
-        """ Return whether there is a repository at base address 'base' accessible
-        using accessor."""
-        return False not in map(lambda x: accessor.access(os.path.join(base, x)), [cls.REPOSITORY_FILENAME, cls.PKGDATA_FILENAME])
+    def isRepo(cls, access, base):
+        """ Return whether there is a repository at base address
+        'base' accessible using accessor."""
+        return False not in map(lambda x: access.access(os.path.join(base, x)),
+                                [cls.REPOSITORY_FILENAME, cls.PKGDATA_FILENAME])
 
     @classmethod
-    def findRepositories(cls, accessor):
+    def findRepositories(cls, access):
         # Check known locations:
         repo_dirs = ['', 'packages', 'packages.main', 'packages.linux',
                         'packages.site']
         repos = []
 
-        accessor.start()
+        access.start()
         # extend if repo list is present
         try:
-            extra = accessor.openAddress(cls.REPOLIST_FILENAME)
+            extra = access.openAddress(cls.REPOLIST_FILENAME)
             if extra:
                 repo_dirs.extend(map(lambda x: x.strip(), extra))
                 extra.close()
-        except:
+        except Exception:
             pass
             
         for repo_dir in repo_dirs:
-            if cls.isRepo(accessor, repo_dir):
-                repos.append(cls(accessor, repo_dir))
-        accessor.finish()
+            if cls.isRepo(access, repo_dir):
+                repos.append(cls(access, repo_dir))
+        access.finish()
 
         return repos

@@ -39,8 +39,9 @@ load-plugins=
 # W0703 - Catch "Exception"
 # C0111 - Missing docstring
 # R0201 - Method could be a function
+# W0603 - Using the global statement
 
-disable=W0142,W0703,C0111,R0201
+disable=W0142,W0703,C0111,R0201,W0603
 
 
 [REPORTS]
@@ -78,7 +79,7 @@ comment=no
 required-attributes=
 
 # List of builtins function names that should not be used, separated by a comma
-bad-functions=map,filter,apply,input
+bad-functions=input
 
 # Regular expression which should only match correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
@@ -131,7 +132,7 @@ notes=FIXME,XXX,TODO
 max-line-length=80
 
 # Maximum number of lines in a module
-max-module-lines=1000
+max-module-lines=5000
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).
@@ -196,35 +197,35 @@ defining-attr-methods=__init__,__new__,setUp
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=5
+max-args=100
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
 ignored-argument-names=_.*
 
 # Maximum number of locals for function / method body
-max-locals=15
+max-locals=100
 
 # Maximum number of return / yield for function / method body
-max-returns=6
+max-returns=100
 
 # Maximum number of branch for function / method body
-max-branchs=12
+max-branchs=100
 
 # Maximum number of statements in function / method body
-max-statements=50
+max-statements=100
 
 # Maximum number of parents for a class (see R0901).
-max-parents=7
+max-parents=100
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=100
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=2
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=100
 
 
 [IMPORTS]

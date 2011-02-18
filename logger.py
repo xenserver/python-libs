@@ -82,6 +82,6 @@ def error(*al, **ad):
     """error"""
     LOG.error(*al, **ad)
 
-def criticial(*al, **ad):
+def critical(*al, **ad):
     """critical"""
     LOG.critical(*al, **ad)

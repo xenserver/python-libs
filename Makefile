@@ -22,10 +22,16 @@ PYTHON_LIB_SRPM := python-libs-$(PYTHON_LIB_VERSION)-$(PYTHON_LIB_RELEASE).src.r
 PYTHON_LIB_STAMP := $(MY_OBJ_DIR)/.rpmbuild.python_lib.stamp
 
 .PHONY: build
-build: $(PYTHON_LIB_STAMP)
+build: $(PYTHON_LIB_STAMP) $(MY_OUTPUT_DIR)/python-libs.inc
 
 $(MY_SOURCES)/MANIFEST: $(MY_SOURCES_DIRSTAMP) $(RPM_BUILD_COOKIE)
 	( echo "$(COMPONENT) gpl file $(RPM_SRPMSDIR)/$(PYTHON_LIB_SRPM)" ; \
+	) >$@
+
+$(MY_OUTPUT_DIR)/python-libs.inc: $(MY_OUTPUT_DIR)/.dirstamp
+	( echo PYTHON_LIBS_PKG_NAME := python-libs ;\
+	  echo PYTHON_LIBS_PKG_VERSION := $(PYTHON_LIB_VERSION)-$(PYTHON_LIB_RELEASE) ;\
+	  echo PYTHON_LIBS_PKG_FILE := RPMS/noarch/python-libs-$(PYTHON_LIB_VERSION)-$(PYTHON_LIB_RELEASE).noarch.rpm ;\
 	) >$@
 
 .PHONY: pylint

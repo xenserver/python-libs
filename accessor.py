@@ -172,7 +172,7 @@ class DeviceAccessor(MountingAccessor):
 class NFSAccessor(MountingAccessor):
     def __init__(self, nfspath):
         if nfspath.startswith('nfs://'):
-            nfspath = nfspath[:6]
+            nfspath = nfspath[6:]
         super(NFSAccessor, self).__init__(['nfs'], nfspath, ['ro', 'tcp'])
         self.nfspath = nfspath
 

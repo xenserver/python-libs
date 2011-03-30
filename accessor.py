@@ -196,10 +196,10 @@ class URLAccessor(Accessor):
             self.authhandler = urllib2.HTTPBasicAuthHandler(self.passman)
             self.opener = urllib2.build_opener(self.authhandler)
             urllib2.install_opener(self.opener)
-        # rebuild URL without auth components & escape special chars in path
-        self.baseAddress = urlparse.urlunsplit(
-            (self.url_parts.scheme, self.url_parts.hostname,
-             urllib.quote(self.url_parts.path), '', ''))
+            # rebuild URL without auth components & escape special chars in path
+            self.baseAddress = urlparse.urlunsplit(
+                (self.url_parts.scheme, self.url_parts.hostname,
+                 urllib.quote(self.url_parts.path), '', ''))
 
     def access(self, path):
         if self.url_parts.scheme != 'ftp':

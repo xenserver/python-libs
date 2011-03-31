@@ -28,10 +28,13 @@ FORMAT = logging.Formatter(
 def openLog(lfile):
     """Add a new file target to be logged too"""
     if hasattr(lfile, 'name'):
-        LOG.addHandler(logging.StreamHandler(lfile))
+        handler = logging.StreamHandler(lfile)
+        handler.setFormatter(FORMAT)
+        LOG.addHandler(handler)
     else:
         try:
-            handler = logging.FileHandler(lfile)
+            handler = logging.handlers.RotatingFileHandler(lfile,
+                                                           maxBytes=2**31)
             old = fcntl.fcntl(handler.stream.fileno(), fcntl.F_GETFD)
             fcntl.fcntl(handler.stream.fileno(),
                         fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)
@@ -50,6 +53,14 @@ def closeLogs():
 def logToStderr():
     """Log to stderr"""
     return openLog(sys.stderr)
+
+def logToSyslog(ident = sys.argv[0], level = logging.INFO):
+    """Log to syslog"""
+    syslog = logging.handlers.SysLogHandler("/dev/log")
+    syslog.setLevel(level)
+    fmt = logging.Formatter(ident+" %(levelname)s: %(message)s")
+    syslog.addFormatter(fmt)
+    LOG.addHandler(syslog)
 
 def log(txt):
     """ Write txt to the log(s) """

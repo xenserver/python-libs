@@ -25,12 +25,10 @@ LOG.setLevel(logging.INFO)
 FORMAT = logging.Formatter(
         "%(levelname)- 9.9s[%(asctime)s] %(message)s")
 
-def openLog(lfile):
+def openLog(lfile, level=logging.INFO):
     """Add a new file target to be logged too"""
     if hasattr(lfile, 'name'):
         handler = logging.StreamHandler(lfile)
-        handler.setFormatter(FORMAT)
-        LOG.addHandler(handler)
     else:
         try:
             handler = logging.handlers.RotatingFileHandler(lfile,
@@ -38,11 +36,13 @@ def openLog(lfile):
             old = fcntl.fcntl(handler.stream.fileno(), fcntl.F_GETFD)
             fcntl.fcntl(handler.stream.fileno(),
                         fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)
-            handler.setFormatter(FORMAT)
-            LOG.addHandler(handler)
         except Exception:
             log("Error opening %s as a log output." % lfile)
             return False
+
+    handler.setFormatter(FORMAT)
+    handler.setLevel(level)
+    LOG.addHandler(handler)
     return True
 
 def closeLogs():
@@ -50,9 +50,9 @@ def closeLogs():
     for h in LOG.handlers:
         LOG.removeHandler(h)
 
-def logToStderr():
+def logToStderr(level=logging.INFO):
     """Log to stderr"""
-    return openLog(sys.stderr)
+    return openLog(sys.stderr, level)
 
 def logToSyslog(ident = sys.argv[0], level = logging.INFO):
     """Log to syslog"""

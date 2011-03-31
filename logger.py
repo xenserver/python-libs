@@ -56,7 +56,10 @@ def logToStderr(level=logging.INFO):
 
 def logToSyslog(ident = sys.argv[0], level = logging.INFO):
     """Log to syslog"""
-    syslog = logging.handlers.SysLogHandler("/dev/log")
+    if os.path.exists("/dev/log"):
+        syslog = logging.handlers.SysLogHandler("/dev/log")
+    else:
+        syslog = logging.handlers.SysLogHandler()
     syslog.setLevel(level)
     fmt = logging.Formatter(ident+" %(levelname)s: %(message)s")
     syslog.addFormatter(fmt)

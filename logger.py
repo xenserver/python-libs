@@ -25,21 +25,24 @@ LOG.setLevel(logging.INFO)
 FORMAT = logging.Formatter(
         "%(levelname)- 9.9s[%(asctime)s] %(message)s")
 
-def openLog(lfile):
+def openLog(lfile, level=logging.INFO):
     """Add a new file target to be logged too"""
     if hasattr(lfile, 'name'):
-        LOG.addHandler(logging.StreamHandler(lfile))
+        handler = logging.StreamHandler(lfile)
     else:
         try:
-            handler = logging.FileHandler(lfile)
+            handler = logging.handlers.RotatingFileHandler(lfile,
+                                                           maxBytes=2**31)
             old = fcntl.fcntl(handler.stream.fileno(), fcntl.F_GETFD)
             fcntl.fcntl(handler.stream.fileno(),
                         fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)
-            handler.setFormatter(FORMAT)
-            LOG.addHandler(handler)
         except Exception:
             log("Error opening %s as a log output." % lfile)
             return False
+
+    handler.setFormatter(FORMAT)
+    handler.setLevel(level)
+    LOG.addHandler(handler)
     return True
 
 def closeLogs():
@@ -47,9 +50,20 @@ def closeLogs():
     for h in LOG.handlers:
         LOG.removeHandler(h)
 
-def logToStderr():
+def logToStderr(level=logging.INFO):
     """Log to stderr"""
-    return openLog(sys.stderr)
+    return openLog(sys.stderr, level)
+
+def logToSyslog(ident = sys.argv[0], level = logging.INFO):
+    """Log to syslog"""
+    if os.path.exists("/dev/log"):
+        syslog = logging.handlers.SysLogHandler("/dev/log")
+    else:
+        syslog = logging.handlers.SysLogHandler()
+    syslog.setLevel(level)
+    fmt = logging.Formatter(ident+" %(levelname)s: %(message)s")
+    syslog.addFormatter(fmt)
+    LOG.addHandler(syslog)
 
 def log(txt):
     """ Write txt to the log(s) """

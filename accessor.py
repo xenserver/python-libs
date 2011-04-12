@@ -200,6 +200,8 @@ class URLAccessor(Accessor):
             self.baseAddress = urlparse.urlunsplit(
                 (self.url_parts.scheme, self.url_parts.hostname,
                  urllib.quote(self.url_parts.path), '', ''))
+        else:
+            self.baseAddress = baseAddress
 
     def access(self, path):
         if self.url_parts.scheme != 'ftp':

@@ -57,7 +57,7 @@ def runCmd2(command, with_stdout = False, with_stderr = False,
         return rv, err
     return rv
 
-def mount(dev, mountpoint, options = None, fstype = None):
+def mount(dev, mountpoint, options = None, fstype = None, label = None):
     cmd = ['/bin/mount']
     if options:
         assert type(options) == list
@@ -68,7 +68,11 @@ def mount(dev, mountpoint, options = None, fstype = None):
     if options:
         cmd += ['-o', ",".join(options)]
 
-    cmd.append(dev)
+    if label:
+        cmd += ['-L', "%s" % label]
+    else:
+        assert(dev)
+        cmd.append(dev)
     cmd.append(mountpoint)
 
     rc, out, err = runCmd2(cmd, with_stdout=True, with_stderr=True)
@@ -92,11 +96,11 @@ def umount(mountpoint, force = False):
     return rc
 
 class TempMount(object):
-    def __init__(self, device, tmp_prefix, options = None, fstype = None):
+    def __init__(self, device, tmp_prefix, options = None, fstype = None, label = None):
         self.mounted = False
         self.mount_point = tempfile.mkdtemp(dir = "/tmp", prefix = tmp_prefix)
         try:
-            mount(device, self.mount_point, options, fstype)
+            mount(device, self.mount_point, options, fstype, label)
         except:
             os.rmdir(self.mount_point)
             raise

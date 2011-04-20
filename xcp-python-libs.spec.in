@@ -1,7 +1,7 @@
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 Summary: Common XenServer Python classes
-Name: python-libs
+Name: xcp-python-libs
 Version: @PYTHON_LIB_VERSION@
 Release: @PYTHON_LIB_RELEASE@
 Source: %{name}-%{version}.tar.gz

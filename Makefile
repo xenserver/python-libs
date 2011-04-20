@@ -15,10 +15,10 @@ $(MY_OBJ_DIR)/version.inc:
 
 PYTHON_LIBS_SOURCES := $(wildcard *.py)
 
-PYTHON_LIB_SPEC := python-libs.spec
-PYTHON_LIB_SRC_DIR := python-libs-$(PYTHON_LIB_VERSION)
-PYTHON_LIB_SRC := $(RPM_SOURCESDIR)/python-libs-$(PYTHON_LIB_VERSION).tar.gz
-PYTHON_LIB_SRPM := python-libs-$(PYTHON_LIB_VERSION)-$(PYTHON_LIB_RELEASE).src.rpm
+PYTHON_LIB_SPEC := xcp-python-libs.spec
+PYTHON_LIB_SRC_DIR := xcp-python-libs-$(PYTHON_LIB_VERSION)
+PYTHON_LIB_SRC := $(RPM_SOURCESDIR)/xcp-python-libs-$(PYTHON_LIB_VERSION).tar.gz
+PYTHON_LIB_SRPM := xcp-python-libs-$(PYTHON_LIB_VERSION)-$(PYTHON_LIB_RELEASE).src.rpm
 PYTHON_LIB_STAMP := $(MY_OBJ_DIR)/.rpmbuild.python_lib.stamp
 
 .PHONY: build
@@ -29,9 +29,9 @@ $(MY_SOURCES)/MANIFEST: $(MY_SOURCES_DIRSTAMP) $(RPM_BUILD_COOKIE)
 	) >$@
 
 $(MY_OUTPUT_DIR)/python-libs.inc: $(MY_OUTPUT_DIR)/.dirstamp
-	( echo PYTHON_LIBS_PKG_NAME := python-libs ;\
+	( echo PYTHON_LIBS_PKG_NAME := xcp-python-libs ;\
 	  echo PYTHON_LIBS_PKG_VERSION := $(PYTHON_LIB_VERSION)-$(PYTHON_LIB_RELEASE) ;\
-	  echo PYTHON_LIBS_PKG_FILE := RPMS/noarch/python-libs-$(PYTHON_LIB_VERSION)-$(PYTHON_LIB_RELEASE).noarch.rpm ;\
+	  echo PYTHON_LIBS_PKG_FILE := RPMS/noarch/xcp-python-libs-$(PYTHON_LIB_VERSION)-$(PYTHON_LIB_RELEASE).noarch.rpm ;\
 	) >$@
 
 .PHONY: pylint

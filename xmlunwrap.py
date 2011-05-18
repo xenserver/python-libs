@@ -38,7 +38,7 @@ def getElementsByTagName(el, tags, mandatory = False):
 def getStrAttribute(el, attrs, default = '', mandatory = False):
     matching = []
     for attr in attrs:
-        val = el.getAttribute(attr)
+        val = el.getAttribute(attr).encode()
         if val != '':
             matching.append(val)
     if len(matching) == 0:

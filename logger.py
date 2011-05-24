@@ -31,8 +31,13 @@ def openLog(lfile, level=logging.INFO):
         handler = logging.StreamHandler(lfile)
     else:
         try:
-            handler = logging.handlers.RotatingFileHandler(lfile,
-                                                           maxBytes=2**31)
+            h = open(lfile, 'w')
+            if h.isatty():
+                handler = logging.StreamHandler(h)
+            else:
+                h.close()
+                handler = logging.handlers.RotatingFileHandler(lfile,
+                                                               maxBytes=2**31)
             old = fcntl.fcntl(handler.stream.fileno(), fcntl.F_GETFD)
             fcntl.fcntl(handler.stream.fileno(),
                         fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)

@@ -14,6 +14,8 @@
 """Logging support with backwards compatability for xelogging"""
 
 import fcntl
+import os
+import os.path
 import sys
 import traceback
 import logging
@@ -59,7 +61,7 @@ def logToStderr(level=logging.INFO):
     """Log to stderr"""
     return openLog(sys.stderr, level)
 
-def logToSyslog(ident = sys.argv[0], level = logging.INFO):
+def logToSyslog(ident = os.path.basename(sys.argv[0]), level = logging.INFO):
     """Log to syslog"""
     if os.path.exists("/dev/log"):
         syslog = logging.handlers.SysLogHandler("/dev/log")
@@ -67,7 +69,7 @@ def logToSyslog(ident = sys.argv[0], level = logging.INFO):
         syslog = logging.handlers.SysLogHandler()
     syslog.setLevel(level)
     fmt = logging.Formatter(ident+" %(levelname)s: %(message)s")
-    syslog.addFormatter(fmt)
+    syslog.setFormatter(fmt)
     LOG.addHandler(syslog)
 
 def log(txt):

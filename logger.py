@@ -11,7 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 
-"""Logging support with backwards compatability for xelogging"""
+"""Logging support with backwards compatibility for xelogging"""
 
 import fcntl
 import os
@@ -28,7 +28,7 @@ FORMAT = logging.Formatter(
         "%(levelname)- 9.9s[%(asctime)s] %(message)s")
 
 def openLog(lfile, level=logging.INFO):
-    """Add a new file target to be logged too"""
+    """Add a new file target to be logged to"""
     if hasattr(lfile, 'name'):
         handler = logging.StreamHandler(lfile)
     else:
@@ -44,7 +44,7 @@ def openLog(lfile, level=logging.INFO):
             fcntl.fcntl(handler.stream.fileno(),
                         fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)
         except Exception:
-            log("Error opening %s as a log output." % lfile)
+            log("Error opening %s as a log output." % str(lfile))
             return False
 
     handler.setFormatter(FORMAT)
@@ -85,7 +85,7 @@ def logException(e):
     LOG.critical(errmsg)
     LOG.critical(err)
 
-# export the standard logging calles at the module level
+# export the standard logging calls at the module level
 
 def debug(*al, **ad):
     """debug"""

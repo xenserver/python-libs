@@ -25,7 +25,8 @@ import logging.handlers
 LOG = logging.getLogger()
 LOG.setLevel(logging.INFO)
 FORMAT = logging.Formatter(
-        "%(levelname)- 9.9s[%(asctime)s] %(message)s")
+        "%(levelname)- 9.9s[%(asctime)s] %(message)s",
+        "%F %T")
 
 def openLog(lfile, level=logging.INFO):
     """Add a new file target to be logged to"""

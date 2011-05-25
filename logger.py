@@ -23,7 +23,7 @@ import logging.handlers
 
 
 LOG = logging.getLogger()
-LOG.setLevel(logging.INFO)
+LOG.setLevel(logging.NOTSET)
 FORMAT = logging.Formatter(
         "%(levelname)- 9.9s[%(asctime)s] %(message)s",
         "%F %T")

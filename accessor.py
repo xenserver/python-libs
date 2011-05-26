@@ -15,12 +15,16 @@
 
 import ftplib
 import os
+import socket
+import sys
 import tempfile
+import types
 import urllib
 import urllib2
 import urlparse
 
 import xcp.mount as mount
+import xcp.logger as logger
 
 class SplitResult(object):
     def __init__(self, args):
@@ -61,15 +65,15 @@ class SplitResult(object):
         return netloc.lower() or None
 
 def compat_urlsplit(url, allow_fragments = True):
-    ret = urlparse.urlsplit(url, allow_fragments)
+    ret = urlparse.urlsplit(url, allow_fragments = allow_fragments)
     if 'SplitResult' in dir(urlparse):
         return ret
     return SplitResult(ret)
 
 class Accessor(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, ro):
+        self.read_only = ro;
 
     def access(self, name):
         """ Return boolean determining where 'name' is an accessible object
@@ -94,10 +98,20 @@ class Accessor(object):
 
     def finish(self):
         pass
+
+    @staticmethod
+    def _writeFile(in_fh, out_fh):
+        while out_fh:
+            data = in_fh.read(256 * 512)
+            if len(data) == 0:
+                break
+            out_fh.write(data)
+        out_fh.close()
+        return True
     
 class FilesystemAccessor(Accessor):
-    def __init__(self, location):
-        super(FilesystemAccessor, self).__init__()
+    def __init__(self, location, ro):
+        super(FilesystemAccessor, self).__init__(ro)
         self.location = location
 
     def openAddress(self, addr):
@@ -105,10 +119,8 @@ class FilesystemAccessor(Accessor):
 
 class MountingAccessor(FilesystemAccessor):
     def __init__(self, mount_types, mount_source, mount_options = None):
-        super(MountingAccessor, self).__init__(None)
-
-        if mount_options is None:
-            mount_options = ['ro']
+        ro = isinstance(mount_options, types.ListType) and 'ro' in mount_options
+        super(MountingAccessor, self).__init__(None, ro)
 
         self.mount_types = mount_types
         self.mount_source = mount_source
@@ -122,8 +134,15 @@ class MountingAccessor(FilesystemAccessor):
             success = False
             for fs in self.mount_types:
                 try:
+                    opts = self.mount_options
+                    if fs == 'iso9660':
+                        if isinstance(opts, types.ListType):
+                            if 'ro' not in opts:
+                                opts.append('ro')
+                        else:
+                            opts = ['ro']
                     mount.mount(self.mount_source, self.location,
-                                options = self.mount_options,
+                                options = opts,
                                 fstype = fs)
                 except mount.MountException:
                     continue
@@ -144,25 +163,34 @@ class MountingAccessor(FilesystemAccessor):
             os.rmdir(self.location)
             self.location = None
 
+    def writeFile(self, in_fh, out_name):
+        logger.info("Copying to %s" % os.path.join(self.location, out_name))
+        out_fh = open(os.path.join(self.location, out_name), 'w')
+        return self._writeFile(in_fh, out_fh)
+
     def __del__(self):
         while self.start_count > 0:
             self.finish()
 
 class DeviceAccessor(MountingAccessor):
-    def __init__(self, device, fs = None):
+    def __init__(self, device, ro, fs = None):
         """ Return a MountingAccessor for a device 'device', which should
         be a fully qualified path to a device node. """
+        if device.startswith('dev://'):
+            device = device[6:]
         if fs is None:
             fs = ['iso9660', 'vfat', 'ext3']
-        super(DeviceAccessor, self).__init__(fs, device)
+        opts = None
+        if ro:
+            opts = ['ro']
+        super(DeviceAccessor, self).__init__(fs, device, opts)
         self.device = device
 
     def __repr__(self):
         return "<DeviceAccessor: %s>" % self.device
 
 #    def canEject(self):
-#        if diskutil.removable(self.device):
-#            return True
+#        return diskutil.removable(self.device):
 
 #    def eject(self):
 #        assert self.canEject()
@@ -170,74 +198,158 @@ class DeviceAccessor(MountingAccessor):
 #        util.runCmd2(['/usr/bin/eject', self.device])
 
 class NFSAccessor(MountingAccessor):
-    def __init__(self, nfspath):
+    def __init__(self, nfspath, ro):
         if nfspath.startswith('nfs://'):
             nfspath = nfspath[6:]
-        super(NFSAccessor, self).__init__(['nfs'], nfspath, ['ro', 'tcp'])
+        opts = ['tcp']
+        if ro:
+            opts.append('ro')
+        super(NFSAccessor, self).__init__(['nfs'], nfspath, opts)
         self.nfspath = nfspath
 
     def __repr__(self):
         return "<NFSAccessor: %s>" % self.nfspath
 
-class URLAccessor(Accessor):
-    url_prefixes = ['http', 'https', 'ftp', 'file']
+class FileAccessor(Accessor):
+    def __init__(self, baseAddress, ro):
+        if baseAddress.startswith('file://'):
+            baseAddress = baseAddress[7:]
+        assert baseAddress.endswith('/')
+        super(FileAccessor, self).__init__(ro)
+        self.baseAddress = baseAddress
 
-    def __init__(self, baseAddress):
-        super(URLAccessor, self).__init__()
+    def openAddress(self, address):
+        return open(os.path.join(self.baseAddress, address))
+
+    def writeFile(self, in_fh, out_name):
+        logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
+        out_fh = open(os.path.join(self.baseAddress, out_name), 'w')
+        return self._writeFile(in_fh, out_fh)
+
+    def __repr__(self):
+        return "<FileAccessor: %s>" % self.baseAddress
+
+class FTPAccessor(Accessor):
+    def __init__(self, baseAddress, ro):
+        super(FTPAccessor, self).__init__(ro)
         assert baseAddress.endswith('/')
         self.url_parts = compat_urlsplit(baseAddress, allow_fragments = False)
-        assert self.url_parts.scheme in self.url_prefixes
+        self.baseAddress = baseAddress
+        self.start_count = 0
+        self.cleanup = False
 
-        if self.url_parts.scheme.startswith('http') and self.url_parts.username:
+    def _cleanup(self):
+        if self.cleanup:
+            # clean up after RETR
+            self.ftp.voidresp()
+            self.cleanup = False
+
+    def start(self):
+        if self.start_count == 0:
+            self.ftp = ftplib.FTP(self.url_parts.hostname)
+            #self.ftp.set_debuglevel(1)
+            username = self.url_parts.username
+            password = self.url_parts.password
+            if username:
+                username = urllib.unquote(username)
+            if password:
+                password = urllib.unquote(password)
+            self.ftp.login(username, password)
+
+        self.start_count += 1
+
+    def finish(self):
+        if self.start_count == 0:
+            return
+        self.start_count -= 1
+        if self.start_count == 0:
+            self.ftp.quit()
+
+    def access(self, path):
+        try:
+            logger.debug("Testing "+path)
+            self._cleanup()
+            url = urllib.unquote(os.path.join(self.url_parts.path[1:], path))
+
+            directory, fname = os.path.split(url)
+
+            if directory != '':
+                logger.debug("Changing to " + directory)
+                self.ftp.cwd(directory)
+
+            lst = self.ftp.nlst()
+            return fname in lst
+        except Exception, e:
+            logger.info(str(e))
+            return False
+
+    def openAddress(self, address):
+        logger.debug("Opening "+address)
+        self._cleanup()
+        url = urllib.unquote(os.path.join(self.url_parts.path[1:], address))
+
+        directory, fname = os.path.split(url)
+
+        if directory != '':
+            logger.debug("Changing to " + directory)
+            self.ftp.cwd(directory)
+
+        self.ftp.voidcmd('TYPE I')
+        s = self.ftp.transfercmd('RETR ' + fname).makefile('rb')
+        self.cleanup = True
+        return s
+
+    def writeFile(self, in_fh, out_name):
+        self._cleanup()
+        directory = urllib.unquote(self.url_parts.path[1:])
+        fname = urllib.unquote(out_name)
+
+        if directory != '':
+            logger.debug("Changing to " + directory)
+            self.ftp.cwd(directory)
+
+        logger.debug("Storing as " + fname)
+        self.ftp.storbinary('STOR ' + fname, in_fh)
+
+    def __repr__(self):
+        return "<FTPAccessor: %s>" % self.baseAddress
+
+class HTTPAccessor(Accessor):
+    def __init__(self, baseAddress, ro):
+        assert baseAddress.endswith('/')
+        assert ro
+        super(HTTPAccessor, self).__init__(ro)
+        self.url_parts = compat_urlsplit(baseAddress, allow_fragments = False)
+
+        if self.url_parts.username:
             self.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
             self.passman.add_password(None, self.url_parts.hostname,
-                                      self.url_parts.username,
-                                      self.url_parts.password)
+                                      urllib.unquote(self.url_parts.username),
+                                      urllib.unquote(self.url_parts.password))
             self.authhandler = urllib2.HTTPBasicAuthHandler(self.passman)
             self.opener = urllib2.build_opener(self.authhandler)
             urllib2.install_opener(self.opener)
-            # rebuild URL without auth components & escape special chars in path
-            self.baseAddress = urlparse.urlunsplit(
-                (self.url_parts.scheme, self.url_parts.hostname,
-                 urllib.quote(self.url_parts.path), '', ''))
-        else:
-            self.baseAddress = baseAddress
-
-    def access(self, path):
-        if self.url_parts.scheme != 'ftp':
-            return Accessor.access(self, path)
-
-        url = os.path.join(self.url_parts.path, path)[1:]
-
-        # if FTP, override by actually checking the file exists because urllib2
-        # seems to be not so good at this.
-        try:
-            directory, fname = os.path.split(url)
-
-            # now open a connection to the server and verify that fname is in 
-            ftp = ftplib.FTP(self.url_parts.hostname)
-            ftp.login(self.url_parts.username, self.url_parts.password)
-            if directory != '':
-                ftp.cwd(directory)
-            lst = ftp.nlst()
-            return fname in lst
-        except Exception:
-            return False
+        # rebuild URL without auth components
+        self.baseAddress = urlparse.urlunsplit(
+            (self.url_parts.scheme, self.url_parts.hostname,
+             self.url_parts.path, '', ''))
 
     def openAddress(self, address):
         return urllib2.urlopen(os.path.join(self.baseAddress, address))
 
     def __repr__(self):
-        return "<URLAccessor: %s>" % self.baseAddress
+        return "<HTTPAccessor: %s>" % self.baseAddress
 
 SUPPORTED_ACCESSORS = {'nfs': NFSAccessor,
-                       'http': URLAccessor,
-                       'https': URLAccessor,
-                       'ftp': URLAccessor,
-                       'file': URLAccessor}
+                       'http': HTTPAccessor,
+                       'https': HTTPAccessor,
+                       'ftp': FTPAccessor,
+                       'file': FileAccessor,
+                       'dev': DeviceAccessor,
+                       }
 
-def createAccessor(baseAddress):
+def createAccessor(baseAddress, *args):
     url_parts = compat_urlsplit(baseAddress, allow_fragments = False)
 
     assert url_parts.scheme in SUPPORTED_ACCESSORS.keys()
-    return SUPPORTED_ACCESSORS[url_parts.scheme](baseAddress)
+    return SUPPORTED_ACCESSORS[url_parts.scheme](baseAddress, *args)

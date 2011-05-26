@@ -16,6 +16,8 @@ import os.path
 import subprocess
 import tempfile
 
+import xcp.logger as logger
+
 class MountException(Exception):
     pass
 
@@ -40,14 +42,14 @@ def runCmd2(command, with_stdout = False, with_stderr = False,
             err += line
         rv = cmd.wait()
 
-    # l = "ran %s; rc %d" % (str(command), rv)
-    # if inputtext:
-    #     l += " with input %s" % inputtext
-    # if out != "":
-    #     l += "\nSTANDARD OUT:\n" + out
-    # if err != "":
-    #     l += "\nSTANDARD ERROR:\n" + err
-    # xelogging.log(l)
+    l = "ran %s; rc %d" % (str(command), rv)
+    if inputtext:
+        l += " with input %s" % inputtext
+    if out != "":
+        l += "\nSTANDARD OUT:\n" + out
+    if err != "":
+        l += "\nSTANDARD ERROR:\n" + err
+    logger.debug(l)
 
     if with_stdout and with_stderr:
         return rv, out, err

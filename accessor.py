@@ -256,6 +256,11 @@ class FTPAccessor(Accessor):
                 password = urllib.unquote(password)
             self.ftp.login(username, password)
 
+            directory = urllib.unquote(self.url_parts.path[1:])
+            if directory != '':
+                logger.debug("Changing to " + directory)
+                self.ftp.cwd(directory)
+
         self.start_count += 1
 
     def finish(self):
@@ -264,21 +269,16 @@ class FTPAccessor(Accessor):
         self.start_count -= 1
         if self.start_count == 0:
             self.ftp.quit()
+            self.ftp = None
 
     def access(self, path):
         try:
             logger.debug("Testing "+path)
             self._cleanup()
-            url = urllib.unquote(os.path.join(self.url_parts.path[1:], path))
+            url = urllib.unquote(path)
 
-            directory, fname = os.path.split(url)
-
-            if directory != '':
-                logger.debug("Changing to " + directory)
-                self.ftp.cwd(directory)
-
-            lst = self.ftp.nlst()
-            return fname in lst
+            lst = self.ftp.nlst(os.path.dirname(url))
+            return url in lst
         except Exception, e:
             logger.info(str(e))
             return False
@@ -286,27 +286,16 @@ class FTPAccessor(Accessor):
     def openAddress(self, address):
         logger.debug("Opening "+address)
         self._cleanup()
-        url = urllib.unquote(os.path.join(self.url_parts.path[1:], address))
-
-        directory, fname = os.path.split(url)
-
-        if directory != '':
-            logger.debug("Changing to " + directory)
-            self.ftp.cwd(directory)
+        url = urllib.unquote(address)
 
         self.ftp.voidcmd('TYPE I')
-        s = self.ftp.transfercmd('RETR ' + fname).makefile('rb')
+        s = self.ftp.transfercmd('RETR ' + url).makefile('rb')
         self.cleanup = True
         return s
 
     def writeFile(self, in_fh, out_name):
         self._cleanup()
-        directory = urllib.unquote(self.url_parts.path[1:])
         fname = urllib.unquote(out_name)
-
-        if directory != '':
-            logger.debug("Changing to " + directory)
-            self.ftp.cwd(directory)
 
         logger.debug("Storing as " + fname)
         self.ftp.storbinary('STOR ' + fname, in_fh)

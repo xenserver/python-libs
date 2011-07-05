@@ -34,7 +34,7 @@ def openLog(lfile, level=logging.INFO):
         handler = logging.StreamHandler(lfile)
     else:
         try:
-            h = open(lfile, 'w')
+            h = open(lfile, 'a')
             if h.isatty():
                 handler = logging.StreamHandler(h)
             else:

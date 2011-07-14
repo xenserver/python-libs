@@ -59,13 +59,22 @@ class Version:
 
         return cls(ver, build, build_suf)
 
-    def __str__(self):
-        val = '.'.join(map(lambda x: str(x), self.ver))
+    def ver_as_string(self):
+        return '.'.join(map(lambda x: str(x), self.ver))
+
+    def build_as_string(self):
+        val = ''
         if self.build:
-            val += '-'+str(self.build)
+            val += str(self.build)
         if self.build_suf:
             val += self.build_suf
         return val
+
+    def __str__(self):
+        build = self.build_as_string()
+        if build != '':
+            return self.ver_as_string() + '-' + self.build_as_string()
+        return self.ver_as_string()
 
     """ ************************************************************
     

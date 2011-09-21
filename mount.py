@@ -16,48 +16,11 @@ import os.path
 import subprocess
 import tempfile
 
+import xcp.cmd
 import xcp.logger as logger
 
 class MountException(Exception):
     pass
-
-def runCmd2(command, with_stdout = False, with_stderr = False,
-            inputtext = None):
-    out = ""
-    err = ""
-    cmd = subprocess.Popen(command, bufsize = 1,
-                           stdin = (inputtext and subprocess.PIPE or None),
-                           stdout = subprocess.PIPE,
-                           stderr = subprocess.PIPE,
-                           shell = isinstance(command, str))
-
-    if inputtext:
-        (out, err) = cmd.communicate(inputtext)
-        rv = cmd.returncode
-    else:
-        (stdout, stderr) = (cmd.stdout, cmd.stderr)
-        for line in stdout:
-            out += line
-        for line in stderr:
-            err += line
-        rv = cmd.wait()
-
-    l = "ran %s; rc %d" % (str(command), rv)
-    if inputtext:
-        l += " with input %s" % inputtext
-    if out != "":
-        l += "\nSTANDARD OUT:\n" + out
-    if err != "":
-        l += "\nSTANDARD ERROR:\n" + err
-    logger.debug(l)
-
-    if with_stdout and with_stderr:
-        return rv, out, err
-    elif with_stdout:
-        return rv, out
-    elif with_stderr:
-        return rv, err
-    return rv
 
 def mount(dev, mountpoint, options = None, fstype = None, label = None):
     cmd = ['/bin/mount']
@@ -77,13 +40,13 @@ def mount(dev, mountpoint, options = None, fstype = None, label = None):
         cmd.append(dev)
     cmd.append(mountpoint)
 
-    rc, out, err = runCmd2(cmd, with_stdout=True, with_stderr=True)
+    rc, out, err = xcp.cmd.runCmd(cmd, with_stdout=True, with_stderr=True)
     if rc != 0:
         raise MountException, "out: '%s' err: '%s'" % (out, err)
 
 def bindMount(source, mountpoint):
     cmd = [ '/bin/mount', '--bind', source, mountpoint]
-    rc, out, err = runCmd2(cmd, with_stdout=True, with_stderr=True)
+    rc, out, err = xcp.cmd.runCmd(cmd, with_stdout=True, with_stderr=True)
     if rc != 0:
         raise MountException, "out: '%s' err: '%s'" % (out, err)
 
@@ -94,7 +57,7 @@ def umount(mountpoint, force = False):
         cmd.append('-f')
     cmd.append(mountpoint)
 
-    rc = runCmd2(cmd)
+    rc = xcp.cmd.runCmd(cmd)
     return rc
 
 class TempMount(object):

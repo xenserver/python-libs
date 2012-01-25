@@ -10,7 +10,7 @@ include $(B_BASE)/rpmbuild.mk
 $(MY_OBJ_DIR)/version.inc:
 	$(version-makefile) > $@
 	$(call hg_cset_number,$(REPONAME)) >> $@
-	echo PYTHON_LIB_VERSION := \$$\(PRODUCT_VERSION\) >> $@
+	echo PYTHON_LIB_VERSION := \$$\(PLATFORM_VERSION\) >> $@
 	echo PYTHON_LIB_RELEASE := xs\$$\(CSET_NUMBER\) >> $@
 
 PYTHON_LIBS_SOURCES := $(wildcard *.py)

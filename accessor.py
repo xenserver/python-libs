@@ -64,6 +64,16 @@ class SplitResult(object):
             netloc = netloc.split(":", 1)[0]
         return netloc.lower() or None
 
+    @property
+    def port(self):
+        netloc = self.netloc
+        if "@" in netloc:
+            netloc = netloc.rsplit("@", 1)[1]
+        if ":" in netloc:
+            port = netloc.split(":", 1)[1]
+            return int(port, 10)
+        return None
+
 def compat_urlsplit(url, allow_fragments = True):
     ret = urlparse.urlsplit(url, allow_fragments = allow_fragments)
     if 'SplitResult' in dir(urlparse):
@@ -319,8 +329,14 @@ class HTTPAccessor(Accessor):
             self.opener = urllib2.build_opener(self.authhandler)
             urllib2.install_opener(self.opener)
         # rebuild URL without auth components
+        host = self.url_parts.hostname
+        try:
+            if self.url_parts.port:
+                host += ':' + str(self.url_parts.port)
+        except:
+            pass
         self.baseAddress = urlparse.urlunsplit(
-            (self.url_parts.scheme, self.url_parts.hostname,
+            (self.url_parts.scheme, host,
              self.url_parts.path, '', ''))
 
     def openAddress(self, address):

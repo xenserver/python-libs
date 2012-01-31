@@ -50,6 +50,7 @@ $(PYTHON_LIB_SRC): $(PYTHON_LIBS_SOURCES)
 	$(call mkdir_clean,$(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR))
 	mkdir -p $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)
 	cp -f $^ $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)
+	$(call brand-python) > $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)/branding.py
 	mv -f $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)/setup.py $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)
 	tar zcf $@ -C $(MY_OBJ_DIR) $(PYTHON_LIB_SRC_DIR)
 	rm -rf $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)

@@ -64,6 +64,16 @@ class SplitResult(object):
             netloc = netloc.split(":", 1)[0]
         return netloc.lower() or None
 
+    @property
+    def port(self):
+        netloc = self.netloc
+        if "@" in netloc:
+            netloc = netloc.rsplit("@", 1)[1]
+        if ":" in netloc:
+            port = netloc.split(":", 1)[1]
+            return int(port, 10)
+        return None
+
 def compat_urlsplit(url, allow_fragments = True):
     ret = urlparse.urlsplit(url, allow_fragments = allow_fragments)
     if 'SplitResult' in dir(urlparse):
@@ -246,8 +256,12 @@ class FTPAccessor(Accessor):
 
     def start(self):
         if self.start_count == 0:
-            self.ftp = ftplib.FTP(self.url_parts.hostname)
+            self.ftp = ftplib.FTP()
             #self.ftp.set_debuglevel(1)
+            port = ftplib.FTP_PORT
+            if self.url_parts.port:
+                port = self.url_parts.port
+            self.ftp.connect(self.url_parts.hostname, port)
             username = self.url_parts.username
             password = self.url_parts.password
             if username:
@@ -319,8 +333,14 @@ class HTTPAccessor(Accessor):
             self.opener = urllib2.build_opener(self.authhandler)
             urllib2.install_opener(self.opener)
         # rebuild URL without auth components
+        host = self.url_parts.hostname
+        try:
+            if self.url_parts.port:
+                host += ':' + str(self.url_parts.port)
+        except:
+            pass
         self.baseAddress = urlparse.urlunsplit(
-            (self.url_parts.scheme, self.url_parts.hostname,
+            (self.url_parts.scheme, host,
              self.url_parts.path, '', ''))
 
     def openAddress(self, address):

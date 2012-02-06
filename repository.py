@@ -164,13 +164,16 @@ class Repository(object):
 
         try:
             repo_node = xmlunwrap.getElementsByTagName(xmldoc, ['repository'], mandatory = True)
+
+            attrs = ('originator', 'name', 'product', 'version', 'build')
+            optional_attrs = ('build')
+
+            for attr in attrs:
+                self.__dict__[attr] = xmlunwrap.getStrAttribute(repo_node[0], [attr], default = None, 
+                                                                mandatory = (attr not in optional_attrs))
+
             desc_node = xmlunwrap.getElementsByTagName(xmldoc, ['description'], mandatory = True)
-            originator = xmlunwrap.getStrAttribute(repo_node[0], ['originator'], mandatory = True)
-            name = xmlunwrap.getStrAttribute(repo_node[0], ['name'], mandatory = True)
-            product = xmlunwrap.getStrAttribute(repo_node[0], ['product'], mandatory = True)
-            version_s = xmlunwrap.getStrAttribute(repo_node[0], ['version'], mandatory = True)
-            build = xmlunwrap.getStrAttribute(repo_node[0], ['build'], None)
-            description = xmlunwrap.getText(desc_node[0])
+            self.description = xmlunwrap.getText(desc_node[0])
 
             for req_node in xmlunwrap.getElementsByTagName(xmldoc, ['requires']):
                 req = {}
@@ -183,12 +186,10 @@ class Repository(object):
         except:
             raise RepoFormatError, "%s format error" % self.REPOSITORY_FILENAME
 
-        self.identifier = "%s:%s" % (originator, name)
-        self.name = description
-        self.product_brand = product
-        ver_str = version_s
-        if build:
-            ver_str += '-'+build
+        self.identifier = "%s:%s" % (self.originator, self.name)
+        ver_str = self.version
+        if self.build:
+            ver_str += '-'+self.build
         self.product_version = version.Version.from_string(ver_str)
 
     def _parse_packages(self, pkgfile):

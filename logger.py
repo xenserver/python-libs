@@ -45,7 +45,10 @@ def openLog(lfile, level=logging.INFO):
             fcntl.fcntl(handler.stream.fileno(),
                         fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)
         except Exception:
-            log("Error opening %s as a log output." % str(lfile))
+            if len(LOG.handlers):
+                log("Error opening %s as a log output." % str(lfile))
+            else:
+                sys.stderr.write("Error opening %s as a log output." % str(lfile))
             return False
 
     handler.setFormatter(FORMAT)

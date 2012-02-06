@@ -42,8 +42,9 @@ load-plugins=
 # W0603 - Using the global statement
 # W0613 - Unused argument
 # W0212 - Accessing protected member
+# W0141 - Use of builtin functions
 
-disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212
+disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141
 
 
 [REPORTS]

@@ -30,10 +30,10 @@ FORMAT = logging.Formatter(
 
 def openLog(lfile, level=logging.INFO):
     """Add a new file target to be logged to"""
-    if hasattr(lfile, 'name'):
-        handler = logging.StreamHandler(lfile)
-    else:
-        try:
+
+    try:
+        # if lfile is a string, assume we need to open() it
+        if isinstance(lfile, str):
             h = open(lfile, 'a')
             if h.isatty():
                 handler = logging.StreamHandler(h)
@@ -44,12 +44,17 @@ def openLog(lfile, level=logging.INFO):
             old = fcntl.fcntl(handler.stream.fileno(), fcntl.F_GETFD)
             fcntl.fcntl(handler.stream.fileno(),
                         fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)
-        except Exception:
-            if len(LOG.handlers):
-                log("Error opening %s as a log output." % str(lfile))
-            else:
-                sys.stderr.write("Error opening %s as a log output." % str(lfile))
-            return False
+
+        # or if it is not a string, assume its a file-like object
+        else:
+            handler = logging.StreamHandler(lfile)
+
+    except Exception:
+        if len(LOG.handlers):
+            log("Error opening %s as a log output." % str(lfile))
+        else:
+            sys.stderr.write("Error opening %s as a log output." % str(lfile))
+        return False
 
     handler.setFormatter(FORMAT)
     handler.setLevel(level)
@@ -60,6 +65,7 @@ def closeLogs():
     """Close all logs"""
     for h in LOG.handlers:
         LOG.removeHandler(h)
+        h.close()
 
 def logToStderr(level=logging.INFO):
     """Log to stderr"""

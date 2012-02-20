@@ -13,7 +13,8 @@ $(MY_OBJ_DIR)/version.inc:
 	echo PYTHON_LIB_VERSION := \$$\(PLATFORM_VERSION\) >> $@
 	echo PYTHON_LIB_RELEASE := xs\$$\(CSET_NUMBER\) >> $@
 
-PYTHON_LIBS_SOURCES := $(wildcard *.py)
+FIND_CMD = find -path "./.hg" -prune -o -path "./tests" -prune -o -name "*.py" -print
+PYTHON_LIBS_SOURCES := $(shell $(FIND_CMD))
 
 PYTHON_LIB_SPEC := xcp-python-libs.spec
 PYTHON_LIB_SRC_DIR := xcp-python-libs-$(PYTHON_LIB_VERSION)
@@ -49,7 +50,7 @@ clean:
 $(PYTHON_LIB_SRC): $(PYTHON_LIBS_SOURCES)
 	$(call mkdir_clean,$(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR))
 	mkdir -p $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)
-	cp -f $^ $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)
+	$(FIND_CMD) | cpio -pduv $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)
 	$(call brand-python) > $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)/branding.py
 	mv -f $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)/setup.py $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)
 	tar zcf $@ -C $(MY_OBJ_DIR) $(PYTHON_LIB_SRC_DIR)

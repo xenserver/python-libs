@@ -2,14 +2,13 @@
 
 import unittest, sys, os, os.path as path
 
-if __name__ == "__main__":
-    """Hack around the python2.x import system to
-    allow us to import from a parent directory"""
-    FPATH = path.normpath(path.join(os.getcwd(), __file__))
-    IPATH = path.normpath(path.join(path.dirname(FPATH),"../"))
-    sys.path.append(IPATH)
+try:
+    import xcp
+except ImportError:
+    print >>sys.stderr, "Must run with run-test.sh to bind mount 'xcp'"
 
-from mac import MAC
+
+from xcp.net.mac import MAC
 
 
 class TestInvalidMAC(unittest.TestCase):
@@ -33,7 +32,7 @@ class TestInvalidMAC(unittest.TestCase):
         val = "00:00:00:00:00"
         self.assertRaises(ValueError, MAC, val)
         self.assertFalse(MAC.is_valid(val))
-        
+
     def test_colon_invalid_octets(self):
 
         for val in [ "12:34:56:78:90:abc",
@@ -221,7 +220,7 @@ class TestCompaisons(unittest.TestCase):
 
         self.assertFalse(m1 == m2)
         self.assertTrue( m1 != m2)
-        
+
         self.assertTrue( m1 <  m2)
         self.assertTrue( m1 <= m2)
         self.assertFalse(m1 >  m2)

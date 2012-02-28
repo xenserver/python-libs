@@ -18,27 +18,31 @@ Provides the 'rename' function which takes 4 lists of state and returns a list
 of name transactions to rename network interfaces.
 
 [in]  static_rules - Static rules provided by the user, taking absolute priority
-        list of MACPCIName objects in form (mac, pci)->ethXX
+        list of MACPCI objects in form (mac, pci)->ethXX
 [in]  cur_state - Current state of network cards on the machine (pre rename)
-        list of MACPCIName objects in form ethXXX|side-XXX-ethXX->(mac, pci)
+        list of MACPCI objects in form ethXXX|side-XXX-ethXX->(mac, pci)
 [in]  last_state - Last boot state (post rename) of network cards on the machine
-        list of MACPCIName objects in form (mac, pci)->ethXX
+        list of MACPCI objects in form (mac, pci)->ethXX
 [in]  old_state - Any older nics which have disappeared in the meantime
-        list of MACPCIName objects in form (mac, pci)->ethXX
+        list of MACPCI objects in form (mac, pci)->ethXX
 
 [out] transactions
         list of string tuples as source and destination names for "ip link set
         name"
 """
 
-__version__ = "1.0"
+__version__ = "1.0.0"
 __author__  = "Andrew Cooper"
 
-from logger import LOG
-import re, random, pprint
+import re
+from xcp.logger import LOG
+from xcp.net.ifrename.macpci import MACPCI
 
 VALID_CUR_STATE_KNAME = re.compile("^(?:eth[\d]+|side-[\d]+-eth[\d]+)$")
 VALID_ETH_NAME = re.compile("^eth([\d])+$")
+
+# util needs to import VALID_ETH_NAME
+from xcp.net.ifrename import util
 
 class StaticRuleError(RuntimeError):
     """Error with static rules"""
@@ -51,90 +55,6 @@ class OldStateError(RuntimeError):
 class LogicError(RuntimeError):
     """Logical Error.  Needs fixing"""
 
-class MACPCIName(object):
-
-    def __init__(self, mac, pci, kname=None, tname=None, order=0):
-        self.mac = mac.upper()
-        self.pci = pci.upper()
-        self.kname = kname
-        self.tname = tname
-        self.order = order
-
-    def __str__(self):
-        res = ""
-        if self.kname:
-            res += "%s->" % (self.kname,)
-        res += "(%s,%s)" % (self.mac, self.pci)
-        if self.tname:
-            res += "->%s" % (self.tname,)
-        return res
-
-    def __repr__(self):
-        return str(self)
-        #return "<MACPCIName object '%s'>" % (self,)
-
-    def __eq__(self, other):
-        return ( self.mac == other.mac and
-                 self.pci == other.pci )
-
-    def __ne__(self, other):
-        return ( self.mac != other.mac or
-                 self.pci != other.pci )
-
-    def __lt__(self, other):
-        return self.order < other.order
-
-def __niceformat(obj):
-    """conditional pprint"""
-    try:
-        if len(obj) > 1:
-            return pprint.pformat(obj, indent=2)
-    except Exception:
-        return str(obj)
-    else:
-        return str(obj)
-
-
-def __get_nic_with_kname(nics, kname):
-    """Search for nic with kname"""
-    for nic in nics:
-        if nic.kname == kname:
-            return nic
-    return None
-
-def __tname_free(nics, name):
-    """Check that name is not taken by any nics"""
-    return name not in map(lambda x: x.tname, nics)
-
-def __get_nic_with_mac(nics, mac):
-    """Search for nic with mac"""
-    for nic in nics:
-        if nic.mac == mac:
-            return nic
-    return None
-
-def __get_nic_with_pci(nics, pci):
-    """Search for nic with pci"""
-    for nic in nics:
-        if nic.pci == pci:
-            return nic
-    return None
-
-def __get_new_temp_name(nics, eth):
-    """Generate a new temporary name"""
-    names = ( [ x.kname for x in nics if x.kname ] +
-              [ x.tname for x in nics if x.tname ] )
-    while True:
-        rn = random.randrange(1, 2**16-1)
-        name = "side-%d-%s" % (rn, eth)
-        if name not in names:
-            return name
-
-def __needs_renaming(nic):
-    """Check whether a nic needs renaming or not"""
-    if nic.tname and VALID_ETH_NAME.match(nic.tname) is not None:
-        return False
-    return True
 
 def __rename_nic(nic, name, transactions, cur_state):
     """
@@ -152,7 +72,7 @@ def __rename_nic(nic, name, transactions, cur_state):
 
     # Given the previous assert, only un-renamed nics in the current state can
     # possibly alias the new name
-    aliased = __get_nic_with_kname(
+    aliased = util.get_nic_with_kname(
         filter(lambda x: x.tname is None, cur_state), name)
 
     if aliased is None:
@@ -169,7 +89,7 @@ def __rename_nic(nic, name, transactions, cur_state):
         else:
             aliased_eth = aliased.kname
 
-        tempname = __get_new_temp_name(cur_state, aliased_eth)
+        tempname = util.get_new_temp_name(cur_state, aliased_eth)
         LOG.debug("Nic '%s' aliases rename of '%s' to '%s'"
                   % (aliased, nic, name))
 
@@ -192,13 +112,13 @@ def rename_logic( static_rules,
     Core logic of renaming the current state based on the rules and past state.
     This function assumes all inputs have been suitably sanitised.
     @param static_rules
-        List of MACPCIName objects representing rules
+        List of MACPCI objects representing rules
     @param cur_state
-        List of MACPCIName objects representing the current state
+        List of MACPCI objects representing the current state
     @param last_state
-        List of MACPCIName objects representing the last boot state
+        List of MACPCI objects representing the last boot state
     @param old_state
-        List of MACPCIName objects representing the old state
+        List of MACPCI objects representing the old state
     @returns List of tuples...
     @throws AssertionError (Should not be thrown, but better to know about logic
     errors if they occur)
@@ -218,12 +138,12 @@ def rename_logic( static_rules,
     pci_functions = set()
     for nic in cur_state:
         if nic.pci in pci_functions:
-            multinic_functions.update(nic.pci)
+            multinic_functions.add(nic.pci)
         else:
-            pci_functions.update(nic.pci)
+            pci_functions.add(nic.pci)
     if len(multinic_functions):
         LOG.debug("Detected the following PCI functions with multiple nics\n%s"
-                  % (__niceformat(multinic_functions),))
+                  % (util.niceformat(multinic_functions),))
 
     # 1st pass.  Force current state into line according to the static rules
     for rule in static_rules:
@@ -238,11 +158,11 @@ def rename_logic( static_rules,
         __rename_nic(nic, rule.tname, transactions, cur_state)
 
     LOG.debug("Finished static rules. Transactions are \n%s\n"
-              "Current State is \n%s" % (__niceformat(transactions),
-                                         __niceformat(cur_state)))
+              "Current State is \n%s" % (util.niceformat(transactions),
+                                         util.niceformat(cur_state)))
 
     # 2nd pass. This logic should cover nics referenced by last or old state
-    for nic in filter(__needs_renaming, cur_state):
+    for nic in filter(util.needs_renaming, cur_state):
         LOG.info("Considering '%s'" % (nic,))
 
         # Did this nic appear in the same pci location as last boot?
@@ -252,7 +172,7 @@ def rename_logic( static_rules,
             # No it did not appear in the same location as before
             pass
         else:
-            can_rename = __tname_free(cur_state, lastnic.tname)
+            can_rename = util.tname_free(cur_state, lastnic.tname)
 
             # Warn if UDEV failed to rename the nic.  Either there is a logical
             # bug somewhere, or the user is messing around with our files.
@@ -294,7 +214,7 @@ def rename_logic( static_rules,
 
         # if we saw this nic last time but its pci location is different, we
         # have just moved hardware on the bus so give it the old name
-        lastnic = __get_nic_with_mac(last_state, nic.mac)
+        lastnic = util.get_nic_with_mac(last_state, nic.mac)
         LOG.debug("nic_with_mac(last_state, %s) = %s" % (nic.mac, lastnic))
         if lastnic:
             LOG.info("nic '%s' moved on the pci bus from '%s'"
@@ -311,13 +231,13 @@ def rename_logic( static_rules,
             continue
 
         # this nic is not on a multinic function.  Has it displaced another nic?
-        lastnic = __get_nic_with_pci(last_state+old_state, nic.pci)
+        lastnic = util.get_nic_with_pci(last_state+old_state, nic.pci)
         LOG.debug("nic_with_pci(last_state+old_state, %s) = %s"
                   % (nic.mac, lastnic))
         if lastnic:
             # This nic is in the place of an older nic.  Is that older nic still
             # present elsewhere in the system?
-            if __get_nic_with_mac(cur_state, lastnic.mac) is not None:
+            if util.get_nic_with_mac(cur_state, lastnic.mac) is not None:
                 # Yes - the displaced nic is still preset.  Therefore, that nic
                 # has moved and this current nic is new.
                 LOG.info("nic '%s' displaced older nic '%s' which is still "
@@ -332,12 +252,12 @@ def rename_logic( static_rules,
                 continue
 
         # have we ever seen this nic before?
-        lastnic = __get_nic_with_mac(old_state, nic.mac)
+        lastnic = util.get_nic_with_mac(old_state, nic.mac)
         LOG.debug("nic_with_mac(old_state, %s) = %s" % (nic.mac, lastnic))
         if lastnic:
             # Yes - this nic was once present but not present last boot
             # Is its old name still availble?
-            if __tname_free(cur_state, lastnic.tname):
+            if util.tname_free(cur_state, lastnic.tname):
                 # Old name is available - give it its old name back
                 LOG.info("old nic '%s' returned and its name is free"
                          % (nic,))
@@ -353,8 +273,8 @@ def rename_logic( static_rules,
 
 
     LOG.debug("Finished dynamic rules. Transactions are \n%s\n"
-              "Current State is \n%s" % (__niceformat(transactions),
-                                         __niceformat(cur_state)))
+              "Current State is \n%s" % (util.niceformat(transactions),
+                                         util.niceformat(cur_state)))
 
 
     # For completely new network cards which we have never seen before, work out
@@ -372,7 +292,7 @@ def rename_logic( static_rules,
 
     # 3rd pass. This should only affect brand new network cards unreferenced
     # by previous state
-    for nic in filter(__needs_renaming, cur_state):
+    for nic in filter(util.needs_renaming, cur_state):
         LOG.info("Renaming brand new nic '%s'" % (nic,))
 
         if ( VALID_ETH_NAME.match(nic.kname) is not None and
@@ -390,8 +310,8 @@ def rename_logic( static_rules,
 
 
     LOG.debug("Finished all logic. Transactions are \n%s\n"
-              "Current State is \n%s" % (__niceformat(transactions),
-                                         __niceformat(cur_state)))
+              "Current State is \n%s" % (util.niceformat(transactions),
+                                         util.niceformat(cur_state)))
     return transactions
 
 def rename( static_rules,
@@ -403,13 +323,13 @@ def rename( static_rules,
     This function sanitises the input and delgates the renaming logic to
     __rename.
     @param static_rules
-        List of MACPCIName objects representing rules
+        List of MACPCI objects representing rules
     @param cur_state
-        List of MACPCIName objects representing the current state
+        List of MACPCI objects representing the current state
     @param last_state
-        List of MACPCIName objects representing the last boot state
+        List of MACPCI objects representing the last boot state
     @param old_state
-        List of MACPCIName objects representing the old state
+        List of MACPCI objects representing the old state
 
     @throws StaticRuleError, CurrentStateError, LastStateError, TypeError
 
@@ -421,8 +341,8 @@ def rename( static_rules,
         # Verify types and properties of the list
         for e in static_rules:
             # Verify type
-            if not isinstance(e, MACPCIName):
-                raise TypeError("Expected List of MACPCIName objects")
+            if not isinstance(e, MACPCI):
+                raise TypeError("Expected List of MACPCI objects")
 
             # Verify kname is None
             if e.kname is not None:
@@ -449,8 +369,8 @@ def rename( static_rules,
 
         # Verify types and properties of the list
         for e in cur_state:
-            if not isinstance(e, MACPCIName):
-                raise TypeError("Expected List of MACPCIName objects")
+            if not isinstance(e, MACPCI):
+                raise TypeError("Expected List of MACPCI objects")
 
             # Verify tname is None
             if e.tname is not None:
@@ -480,8 +400,8 @@ def rename( static_rules,
 
         # Verify types in the list
         for e in last_state:
-            if not isinstance(e, MACPCIName):
-                raise TypeError("Expected List of MACPCIName objects")
+            if not isinstance(e, MACPCI):
+                raise TypeError("Expected List of MACPCI objects")
 
             # Verify kname is None
             if e.kname is not None:
@@ -509,8 +429,8 @@ def rename( static_rules,
 
         # Verify types in the list
         for e in old_state:
-            if not isinstance(e, MACPCIName):
-                raise TypeError("Expected List of MACPCIName objects")
+            if not isinstance(e, MACPCI):
+                raise TypeError("Expected List of MACPCI objects")
 
             # Verify tname is None
             if e.tname is not None:

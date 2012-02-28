@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 
-import unittest, sys, os, os.path as path, StringIO, logging
+import unittest, sys, os, os.path as path, logging
 from copy import deepcopy
 
-if __name__ == "__main__":
-    """Hack around the python2.x import system to
-    allow us to import from a parent directory"""
-    FPATH = path.normpath(path.join(os.getcwd(), __file__))
-    IPATH = path.normpath(path.join(path.dirname(FPATH),"../"))
-    sys.path.append(IPATH)
+try:
+    import cStringIO as StringIO
+except ImportError:
+    import StringIO
 
-from ifrename import *
-from logger import LOG, openLog, closeLogs
+try:
+    import xcp
+except ImportError:
+    print >>sys.stderr, "Must run with run-test.sh to bind mount 'xcp'"
+
+
+from xcp.net.ifrename.logic import *
+from xcp.logger import LOG, openLog, closeLogs
 
 def apply_transactions(lst, trans):
 
@@ -62,7 +66,7 @@ class TestSimpleLogic(unittest.TestCase):
         it to be named as eth0
         """
 
-        eth0 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0","side-12-eth1")
+        eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0","side-12-eth1")
         cur_state = [eth0]
 
         ts = rename_logic([],
@@ -80,8 +84,8 @@ class TestSimpleLogic(unittest.TestCase):
         them to be renamed to eth0 and 1 respectivly
         """
 
-        eth0 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0","side-12-eth1")
-        eth1 = MACPCIName("aa:cd:ef:12:34:56","0000:00:01:0","side-33-eth0")
+        eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0","side-12-eth1")
+        eth1 = MACPCI("aa:cd:ef:12:34:56","0000:00:01.0","side-33-eth0")
         cur_state = [eth0, eth1]
 
         ts = rename_logic([],
@@ -100,8 +104,8 @@ class TestSimpleLogic(unittest.TestCase):
         Expecting it to be named to eth0 as per the static rule.
         """
 
-        eth0 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", "side-12-eth1")
-        srule_eth0 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", None, "eth0")
+        eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", "side-12-eth1")
+        srule_eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", None, "eth0")
         cur_state = [eth0]
 
         ts = rename_logic([srule_eth0],
@@ -120,9 +124,9 @@ class TestSimpleLogic(unittest.TestCase):
         rule
         """
 
-        cur_eth0 = MACPCIName("12:34:56:78:90:12","0000:00:01:0", "eth0")
-        srule_eth0 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", None, "eth0")
-        srule_eth1 = MACPCIName("12:34:56:78:90:12","0000:00:01:0", None, "eth1")
+        cur_eth0 = MACPCI("12:34:56:78:90:12","0000:00:01.0", "eth0")
+        srule_eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", None, "eth0")
+        srule_eth1 = MACPCI("12:34:56:78:90:12","0000:00:01.0", None, "eth1")
         cur_state = [cur_eth0]
 
         ts = rename_logic([srule_eth0, srule_eth1],
@@ -143,10 +147,10 @@ class TestSimpleLogic(unittest.TestCase):
         sideways nic to be named eth0
         """
 
-        cur_eth0 = MACPCIName("12:34:56:78:90:12","0000:00:01:0", "eth0")
-        cur_eth1 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", "side-12-eth1")
-        srule_eth0 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", None, "eth0")
-        srule_eth1 = MACPCIName("12:34:56:78:90:12","0000:00:01:0", None, "eth1")
+        cur_eth0 = MACPCI("12:34:56:78:90:12","0000:00:01.0", "eth0")
+        cur_eth1 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", "side-12-eth1")
+        srule_eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", None, "eth0")
+        srule_eth1 = MACPCI("12:34:56:78:90:12","0000:00:01.0", None, "eth1")
         cur_state = [cur_eth0, cur_eth1]
 
         ts = rename_logic([srule_eth0, srule_eth1],
@@ -167,8 +171,8 @@ class TestSimpleLogic(unittest.TestCase):
         information.  It should be renamed as per the last state entry to eth3
         """
 
-        cur_eth0 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", "side-12-eth0")
-        last_eth3 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", None, "eth3")
+        cur_eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", "side-12-eth0")
+        last_eth3 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", None, "eth3")
         cur_state = [cur_eth0]
 
         ts = rename_logic([],
@@ -189,8 +193,8 @@ class TestSimpleLogic(unittest.TestCase):
         and 0 transactions should take place.
         """
 
-        cur_eth1 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", "eth1")
-        last_eth1 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", None, "eth1")
+        cur_eth1 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", "eth1")
+        last_eth1 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", None, "eth1")
         cur_state = [cur_eth1]
 
         ts = rename_logic([],
@@ -208,9 +212,9 @@ class TestSimpleLogic(unittest.TestCase):
         renamed to eth0 as per the static rule
         """
 
-        cur_eth1 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", "eth1")
-        srule_eth0 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", None, "eth0")
-        last_eth1 = MACPCIName("ab:cd:ef:12:34:56","0000:00:0f:0", None, "eth1")
+        cur_eth1 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", "eth1")
+        srule_eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", None, "eth0")
+        last_eth1 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0", None, "eth1")
         cur_state = [cur_eth1]
 
         ts = rename_logic([srule_eth0],
@@ -252,18 +256,18 @@ class TestUseCases(unittest.TestCase):
         No changes from last boot.  No transactions and all nics
         retain their same name
         """
-        cur_eth0 = MACPCIName("01:23:45:67:89:01", "0000:01:00.0", "eth0")
-        cur_eth1 = MACPCIName("11:23:45:67:89:01", "0000:02:00.0", "eth1")
-        cur_eth2 = MACPCIName("21:23:45:67:89:01", "0000:03:00.0", "eth2")
-        cur_eth3 = MACPCIName("31:23:45:67:89:01", "0000:04:00.0", "eth3")
-        cur_eth4 = MACPCIName("41:23:45:67:89:01", "0000:05:00.0", "eth4")
+        cur_eth0 = MACPCI("01:23:45:67:89:01", "0000:01:00.0", "eth0")
+        cur_eth1 = MACPCI("11:23:45:67:89:01", "0000:02:00.0", "eth1")
+        cur_eth2 = MACPCI("21:23:45:67:89:01", "0000:03:00.0", "eth2")
+        cur_eth3 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", "eth3")
+        cur_eth4 = MACPCI("41:23:45:67:89:01", "0000:05:00.0", "eth4")
         cur_state = [cur_eth0, cur_eth1, cur_eth2, cur_eth3, cur_eth4]
 
-        last_eth0 = MACPCIName("01:23:45:67:89:01", "0000:01:00.0", None, "eth0")
-        last_eth1 = MACPCIName("11:23:45:67:89:01", "0000:02:00.0", None, "eth1")
-        last_eth2 = MACPCIName("21:23:45:67:89:01", "0000:03:00.0", None, "eth2")
-        last_eth3 = MACPCIName("31:23:45:67:89:01", "0000:04:00.0", None, "eth3")
-        last_eth4 = MACPCIName("41:23:45:67:89:01", "0000:05:00.0", None, "eth4")
+        last_eth0 = MACPCI("01:23:45:67:89:01", "0000:01:00.0", None, "eth0")
+        last_eth1 = MACPCI("11:23:45:67:89:01", "0000:02:00.0", None, "eth1")
+        last_eth2 = MACPCI("21:23:45:67:89:01", "0000:03:00.0", None, "eth2")
+        last_eth3 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", None, "eth3")
+        last_eth4 = MACPCI("41:23:45:67:89:01", "0000:05:00.0", None, "eth4")
         last_state = [last_eth0, last_eth1, last_eth2, last_eth3, last_eth4]
 
         ts = rename([], cur_state, last_state, [])
@@ -278,18 +282,18 @@ class TestUseCases(unittest.TestCase):
         Brand new hardware.  (Use case based upon plugging the hard drive from
         a broken server into a new identical one).
         """
-        cur_eth0 = MACPCIName("02:23:45:67:89:01", "0000:01:00.0", "side-1-eth0")
-        cur_eth1 = MACPCIName("12:23:45:67:89:01", "0000:02:00.0", "side-34-eth1")
-        cur_eth2 = MACPCIName("22:23:45:67:89:01", "0000:03:00.0", "side-71-eth2")
-        cur_eth3 = MACPCIName("32:23:45:67:89:01", "0000:04:00.0", "side-3012-eth3")
-        cur_eth4 = MACPCIName("42:23:45:67:89:01", "0000:05:00.0", "side-4332-eth4")
+        cur_eth0 = MACPCI("02:23:45:67:89:01", "0000:01:00.0", "side-1-eth0")
+        cur_eth1 = MACPCI("12:23:45:67:89:01", "0000:02:00.0", "side-34-eth1")
+        cur_eth2 = MACPCI("22:23:45:67:89:01", "0000:03:00.0", "side-71-eth2")
+        cur_eth3 = MACPCI("32:23:45:67:89:01", "0000:04:00.0", "side-3012-eth3")
+        cur_eth4 = MACPCI("42:23:45:67:89:01", "0000:05:00.0", "side-4332-eth4")
         cur_state = [cur_eth0, cur_eth1, cur_eth2, cur_eth3, cur_eth4]
 
-        last_eth0 = MACPCIName("01:23:45:67:89:01", "0000:01:00.0", None, "eth0")
-        last_eth1 = MACPCIName("11:23:45:67:89:01", "0000:02:00.0", None, "eth1")
-        last_eth2 = MACPCIName("21:23:45:67:89:01", "0000:03:00.0", None, "eth2")
-        last_eth3 = MACPCIName("31:23:45:67:89:01", "0000:04:00.0", None, "eth3")
-        last_eth4 = MACPCIName("41:23:45:67:89:01", "0000:05:00.0", None, "eth4")
+        last_eth0 = MACPCI("01:23:45:67:89:01", "0000:01:00.0", None, "eth0")
+        last_eth1 = MACPCI("11:23:45:67:89:01", "0000:02:00.0", None, "eth1")
+        last_eth2 = MACPCI("21:23:45:67:89:01", "0000:03:00.0", None, "eth2")
+        last_eth3 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", None, "eth3")
+        last_eth4 = MACPCI("41:23:45:67:89:01", "0000:05:00.0", None, "eth4")
         last_state = [last_eth0, last_eth1, last_eth2, last_eth3, last_eth4]
 
         ts = rename([], deepcopy(cur_state), last_state, [])
@@ -305,7 +309,7 @@ class TestInputSanitisation(unittest.TestCase):
 
     def setUp(self):
         """
-        Set up a lot of MACPCIName objects.
+        Set up a lot of MACPCI objects.
 
         This reflection magic creates many self.cXXX objects where XXX
         represents the indicies of mac, pci and eth names.
@@ -328,9 +332,9 @@ class TestInputSanitisation(unittest.TestCase):
             for (pn, p) in enumerate(pcis):
                 for (en, e) in enumerate(eths):
                     setattr(self, "c%d%d%d" % (mn+1, pn+1, en+1),
-                            MACPCIName(m, p, e, None))
+                            MACPCI(m, p, e, None))
                     setattr(self, "s%d%d%d" % (mn+1, pn+1, en+1),
-                            MACPCIName(m, p, None, e))
+                            MACPCI(m, p, None, e))
 
     def tearDown(self):
 

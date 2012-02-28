@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2011 Citrix Systems, Inc.
+# Copyright (c) 2011,2012 Citrix Systems, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published
@@ -13,6 +13,143 @@
 
 import os.path
 import subprocess
+import re
+
+VALID_SBDF = re.compile(
+    r"^(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
+    "     (?P<bus>     [\da-fA-F]{2}):"   # Bus
+    "     (?P<device>  [\da-fA-F]{2})\."  # Device
+    "     (?P<function>[\da-fA-F])$"      # Function"
+    , re.X)
+
+
+class PCI(object):
+    """PCI address object for manipulation and comparison"""
+
+    @classmethod
+    def is_valid(cls, addr):
+        """
+        Static method to assertain whether addr is a recognised PCI address
+        or not
+        """
+        try:
+            PCI(addr)
+        except Exception:
+            return False
+        return True
+
+    def __init__(self, addr):
+        """Constructor"""
+
+        self.integer = -1
+        self.segment = -1
+        self.bus = -1
+        self.device = -1
+        self.function = -1
+
+        if isinstance(addr, (str, unicode)):
+
+            res = VALID_SBDF.match(addr)
+            if res:
+                groups = res.groupdict()
+
+                if "segment" in groups and groups["segment"] is not None:
+                    self.segment = int(groups["segment"], 16)
+                else:
+                    self.segment = 0
+
+                self.bus = int(groups["bus"], 16)
+                if not ( 0 <= self.bus < 2**8 ):
+                    raise ValueError("Bus '%d' out of range 0 <= bus < 256"
+                                     % (self.bus,))
+
+                self.device = int(groups["device"], 16)
+                if not ( 0 <= self.device < 2**5):
+                    raise ValueError("Device '%d' out of range 0 <= device < 32"
+                                     % (self.device,))
+
+                self.function = int(groups["function"], 16)
+                if not ( 0 <= self.function < 2**3):
+                    raise ValueError("Function '%d' out of range 0 <= device "
+                                     "< 8" % (self.function,))
+
+                self.integer = int( self.segment      << 16 |
+                                     self.bus      << 8  |
+                                     self.device   << 3  |
+                                     self.function
+                                     )
+                return
+
+            raise ValueError("Unrecognised PCI address '%s'" % addr)
+
+        else:
+            raise TypeError("String expected")
+
+
+    def __str__(self):
+        return "%04x:%02x:%02x.%1x" % (self.segment, self.bus,
+                                       self.device, self.function)
+
+    def __repr__(self):
+        return "<PCI %s>" % (self,)
+
+    def __eq__(self, rhs):
+        if hasattr(rhs, "integer"):
+            return self.integer == rhs.integer
+        else:
+            try:
+                return self.integer == PCI(rhs).integer
+            except:
+                return NotImplemented
+
+    def __ne__(self, rhs):
+        if hasattr(rhs, "integer"):
+            return self.integer != rhs.integer
+        else:
+            try:
+                return self.integer != PCI(rhs).integer
+            except:
+                return NotImplemented
+
+    def __hash__(self):
+        return self.__str__().__hash__()
+
+    def __lt__(self, rhs):
+        if hasattr(rhs, "integer"):
+            return self.integer < rhs.integer
+        else:
+            try:
+                return self.integer < PCI(rhs).integer
+            except:
+                return NotImplemented
+
+    def __le__(self, rhs):
+        if hasattr(rhs, "integer"):
+            return self.integer <= rhs.integer
+        else:
+            try:
+                return self.integer <= PCI(rhs).integer
+            except:
+                return NotImplemented
+
+    def __gt__(self, rhs):
+        if hasattr(rhs, "integer"):
+            return self.integer > rhs.integer
+        else:
+            try:
+                return self.integer > PCI(rhs).integer
+            except:
+                return NotImplemented
+
+    def __ge__(self, rhs):
+        if hasattr(rhs, "integer"):
+            return self.integer >= rhs.integer
+        else:
+            try:
+                return self.integer >= PCI(rhs).integer
+            except:
+                return NotImplemented
+
 
 class PCIIds(object):
     def __init__(self, fn):

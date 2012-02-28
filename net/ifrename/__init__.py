@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2011 Citrix Systems, Inc.
+# Copyright (c) 2012 Citrix Systems, Inc.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published
@@ -10,13 +10,3 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
-
-from distutils.core import setup
-
-setup(name='python-libs',
-      description='Common XenServer Python classes',
-      packages=['xcp',
-                'xcp.net',
-                'xcp.net.ifrename'
-                ],
-     )

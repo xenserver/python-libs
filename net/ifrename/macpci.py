@@ -25,7 +25,8 @@ from xcp.net.mac import MAC
 
 class MACPCI(object):
 
-    def __init__(self, mac, pci, kname=None, tname=None, order=0):
+    def __init__(self, mac, pci, kname=None, tname=None, order=0,
+                 ppn=None, label=None):
 
         if isinstance(mac, MAC):
             self.mac = mac
@@ -40,6 +41,9 @@ class MACPCI(object):
         self.kname = kname
         self.tname = tname
         self.order = order
+
+        self.ppn = ppn
+        self.label = label
 
     def __str__(self):
         res = ""

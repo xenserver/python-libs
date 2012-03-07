@@ -80,6 +80,12 @@ def __rename_nic(nic, name, transactions, cur_state):
         LOG.debug("Renaming unaliased nic '%s' to '%s'" % (nic, name))
         nic.tname = name
         transactions.append((nic.kname, name))
+
+    elif aliased == nic and aliased.kname == nic.kname:
+        # The nic is already named correctly.  Just update tname
+        LOG.debug("Nic '%s' is already named correctly" % (nic,))
+        nic.tname = nic.kname
+
     else:
         # Another nic is in the way for applying the rule.  Move it sideways
 

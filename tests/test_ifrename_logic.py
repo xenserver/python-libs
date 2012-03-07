@@ -228,6 +228,40 @@ class TestSimpleLogic(unittest.TestCase):
 
         self.assertTrue(cur_eth1.tname == "eth0")
 
+    def test_1srule_1eth_already_complete(self):
+        """
+        One recognised nic, and a static rule for that nic.  Expecting no
+        transactions at all.
+        """
+
+        cur_eth0 = MACPCI("00:13:72:2d:2a:ec", "0000:04:00.0", "eth0")
+        srule_eth0 = MACPCI("00:13:72:2d:2a:ec", "0000:04:00.0", None, "eth0")
+        cur_state = [cur_eth0]
+
+        ts = rename_logic([srule_eth0],
+                          deepcopy(cur_state),
+                          [],
+                          [])
+
+        self.assertTrue(len(ts) == 0)
+
+    def test_1drule_1eth_already_complete(self):
+        """
+        One recognised nic, and a dynamic rule for that nic.  Expecting no
+        transactions at all.
+        """
+
+        cur_eth0 = MACPCI("00:13:72:2d:2a:ec", "0000:04:00.0", "eth0")
+        drule_eth0 = MACPCI("00:13:72:2d:2a:ec", "0000:04:00.0", None, "eth0")
+        cur_state = [cur_eth0]
+
+        ts = rename_logic([],
+                          deepcopy(cur_state),
+                          [drule_eth0],
+                          [])
+
+        self.assertTrue(len(ts) == 0)
+
 class TestUseCases(unittest.TestCase):
 
     def setUp(self):

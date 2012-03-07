@@ -12,15 +12,25 @@
 # GNU Lesser General Public License for more details.
 
 """
-Python function using /sbin/ip for convenience
+Python function using 'ip' for convenience
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "Andrew Cooper"
 
 from subprocess import Popen, PIPE
 
 from xcp.logger import LOG
+
+# Deal with lack of environment more sensibly than hard coding /sbin/ip
+# which happens to be false in the installer.
+from os import environ
+paths = environ["PATH"].split(":")
+if "/sbin" not in paths:
+    environ["PATH"] += ":/sbin"
+if "/bin" not in paths:
+    environ["PATH"] += ":/bin"
+
 
 def ip_link_set_name(src_name, dst_name):
     """
@@ -31,7 +41,7 @@ def ip_link_set_name(src_name, dst_name):
     LOG.debug("Attempting rename %s -> %s" % (src_name, dst_name))
 
     # Is the interface currently up?
-    link_show = Popen(["/sbin/ip", "link", "show", src_name], stdout = PIPE)
+    link_show = Popen(["ip", "link", "show", src_name], stdout = PIPE)
     stdout, _ = link_show.communicate()
 
     if link_show.returncode != 0:
@@ -44,7 +54,7 @@ def ip_link_set_name(src_name, dst_name):
 
     # If it is up, bring it down for the rename
     if isup:
-        link_down = Popen(["/sbin/ip", "link", "set", src_name, "down"])
+        link_down = Popen(["ip", "link", "set", src_name, "down"])
         link_down.wait()
 
         if link_down.returncode != 0:
@@ -53,7 +63,7 @@ def ip_link_set_name(src_name, dst_name):
             return
 
     # Perform the rename
-    link_rename = Popen(["/sbin/ip", "link", "set", src_name, "name", dst_name])
+    link_rename = Popen(["ip", "link", "set", src_name, "name", dst_name])
     link_rename.wait()
 
     if link_rename.returncode != 0:
@@ -69,7 +79,7 @@ def ip_link_set_name(src_name, dst_name):
         # its final name.  However, i cant think of a non-hacky way of doing
         # this with the current implementation
 
-        link_up = Popen(["/sbin/ip", "link", "set", dst_name, "up"])
+        link_up = Popen(["ip", "link", "set", dst_name, "up"])
         link_up.wait()
 
         if link_up.returncode != 0:

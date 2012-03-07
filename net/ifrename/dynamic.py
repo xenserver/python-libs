@@ -58,6 +58,9 @@ class DynamicRules(object):
         self.lastboot = []
         self.old = []
 
+        self.formulae = {}
+        self.rules = []
+
     def load_and_parse(self):
         """
         Parse the dynamic rules file.
@@ -137,6 +140,80 @@ class DynamicRules(object):
                 self.old.append(macpci)
 
         return True
+
+    def generate(self, state):
+        """
+        Make rules from the formulae based on global state.
+        """
+
+        for target, (method, value) in self.formulae.iteritems():
+
+            if method == "mac":
+
+                for nic in state:
+                    if nic.mac == value:
+                        try:
+                            rule = MACPCI(nic.mac, nic.pci, tname=target)
+                        except Exception, e:
+                            LOG.warning("Error creating rule: %s" % (e,))
+                            continue
+                        self.rules.append(rule)
+                        break
+                else:
+                    LOG.warning("No NIC found with a MAC address of '%s' for "
+                                "the %s dynamic rule" % (value, target))
+                continue
+
+            elif method == "ppn":
+
+                for nic in state:
+                    if nic.ppn == value:
+                        try:
+                            rule = MACPCI(nic.mac, nic.pci, tname=target)
+                        except Exception, e:
+                            LOG.warning("Error creating rule: %s" % (e,))
+                            continue
+                        self.rules.append(rule)
+                        break
+                else:
+                    LOG.warning("No NIC found with a ppn of '%s' for the "
+                                "%s dynamic rule" % (value, target))
+                continue
+
+            elif method == "pci":
+
+                for nic in state:
+                    if nic.pci == value:
+                        try:
+                            rule = MACPCI(nic.mac, nic.pci, tname=target)
+                        except Exception, e:
+                            LOG.warning("Error creating rule: %s" % (e,))
+                            continue
+                        self.rules.append(rule)
+                        break
+                else:
+                    LOG.warning("No NIC found with a PCI ID of '%s' for the "
+                                "%s dynamic rule" % (value, target))
+                continue
+
+            elif method == "label":
+
+                for nic in state:
+                    if nic.label == value:
+                        try:
+                            rule = MACPCI(nic.mac, nic.pci, tname=target)
+                        except Exception, e:
+                            LOG.warning("Error creating rule: %s" % (e,))
+                            continue
+                        self.rules.append(rule)
+                        break
+                else:
+                    LOG.warning("No NIC found with an SMBios Label of '%s' for "
+                                "the %s dynamic rule" % (value, target))
+                continue
+
+            else:
+                LOG.critical("Unknown dynamic rule method %s" % method)
 
 
     def write(self, header = True):

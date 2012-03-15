@@ -91,6 +91,37 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(dr.old,
                          [MACPCI("01:23:45:67:89:0a","00:10.2", tname="eth2")])
 
+class TestGenerate(unittest.TestCase):
+
+    def setUp(self):
+        self.logbuf = StringIO.StringIO()
+        openLog(self.logbuf, logging.NOTSET)
+
+    def tearDown(self):
+
+        closeLogs()
+        self.logbuf.close()
+
+    def test_ppn_quirks(self):
+        # Test case taken from example on CA-75599
+
+        dr = DynamicRules()
+        dr.formulae = { "eth0" : ("ppn", "em1"),
+                        "eth1" : ("ppn", "em2")
+                        }
+
+        dr.generate([
+                MACPCI("00:1E:67:31:59:89", "0000:00:19.0", kname="eth0",
+                       ppn="em1", label="Intel 82579LM VPRO"),
+                MACPCI("00:1E:67:31:59:88", "0000:02:00.0", kname="eth1",
+                       ppn="em1", label="Intel 82574L")
+                ])
+
+        # The quirks test should kick in and prevent any ppn rules from
+        # being generated
+        self.assertEqual(dr.rules, [])
+
+
 
 class TestSave(unittest.TestCase):
 

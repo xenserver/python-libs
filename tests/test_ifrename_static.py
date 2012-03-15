@@ -141,7 +141,7 @@ class TestGenerate(unittest.TestCase):
 
         self.state = [
             MACPCI("01:23:45:67:89:0a", "0000:00:01.0", kname="side-11-eth2",
-                   ppn="pci2p1", label="Ethernet1"),
+                   ppn="pci1p1", label="Ethernet1"),
             MACPCI("03:23:45:67:89:0a", "0000:00:10.0", kname="side-12-eth34",
                    ppn="pci2p1", label=""),
             MACPCI("04:23:45:67:89:0a", "0000:00:10.1", kname="side-123-eth23",
@@ -218,6 +218,25 @@ class TestGenerate(unittest.TestCase):
         self.assertEqual(sr.rules,[
                 MACPCI("01:23:45:67:89:0a", "0000:00:01.0", tname="eth0")
                 ])
+
+    def test_ppn_quirks(self):
+        # Test case taken from example on CA-75599
+
+        fd = StringIO.StringIO('eth0:ppn="em1"\n'
+                               'eth1:ppn="em2"')
+        sr = StaticRules(fd = fd)
+        self.assertTrue(sr.load_and_parse())
+
+        sr.generate([
+                MACPCI("00:1E:67:31:59:89", "0000:00:19.0", kname="eth0",
+                       ppn="em1", label="Intel 82579LM VPRO"),
+                MACPCI("00:1E:67:31:59:88", "0000:02:00.0", kname="eth1",
+                       ppn="em1", label="Intel 82574L")
+                ])
+
+        # The quirks test should kick in and prevent any ppn rules from
+        # being generated
+        self.assertEqual(sr.rules, [])
 
 
 class TestSave(unittest.TestCase):

@@ -166,6 +166,15 @@ class StaticRules(object):
         Make rules from the formulae based on global state.
         """
 
+        # CA-75599 - check that state has no shared ppns.
+        #  See net.biodevname.has_ppn_quirks() for full reason
+        ppns = [ x.ppn for x in state if x.ppn is not None ]
+        ppn_quirks = ( len(ppns) != len(set(ppns)) )
+
+        if ppn_quirks:
+            LOG.warning("Discovered physical policy naming quirks in provided "
+                        "state.  Disabling 'method=ppn' generation")
+
         for target, (method, value) in self.formulae.iteritems():
 
             if method == "mac":
@@ -185,6 +194,11 @@ class StaticRules(object):
                 continue
 
             elif method == "ppn":
+
+                if ppn_quirks:
+                    LOG.info("Not considering formula for '%s' due to ppn "
+                             "quirks" % (target,))
+                    continue
 
                 for nic in state:
                     if nic.ppn == value:

@@ -86,3 +86,22 @@ def all_devices_all_names():
                 devices[kname]["BIOS device"] = {policy: dinfo["BIOS device"]}
 
     return devices
+
+def has_ppn_quirks(bdn_dicts):
+    # CA-75599 - Assert that no devices share the same SMBIOS Instance.  Some
+    # BIOSes have multiple different nics with the same value set, which causes
+    # biosdevname to mis-name its physical policy names (emXX, pciXpX etc)
+
+    smbios_instances = set()
+
+    for info in bdn_dicts:
+
+        instance = info.get("SMBIOS Instance", None)
+
+        if instance:
+            if instance in smbios_instances:
+                return True
+            else:
+                smbios_instances.add(instance)
+
+    return False

@@ -74,7 +74,7 @@ class DynamicRules(object):
                 # If we were given a path, try opening and reading it
                 if self.path:
                     if not pathexists(self.path):
-                        LOG.error("Static rule file '%s' does not exist"
+                        LOG.error("Dynamic rule file '%s' does not exist"
                                   % (self.path,))
                         return False
                     fd = open(self.path, "r")

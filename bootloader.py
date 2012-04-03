@@ -131,7 +131,7 @@ class Bootloader(object):
     def readGrub(cls, src_file):
         menu = {}
         menu_order = []
-        default = None
+        default = 0
         timeout = None
         location = None
         serial = None
@@ -195,8 +195,8 @@ class Bootloader(object):
                     title = l.split(None, 1)[1]
                 elif title:
                     if els[0] == 'kernel' and len(els) > 2:
-                        hypervisor, hypervisor_args =  (l.split(None, 1)
-                                                        [1].split(None, 1))
+                        hypervisor, hypervisor_args = (l.split(None, 1)
+                                                       [1].split(None, 1))
                     elif els[0] == 'module' and len(els) > 1:
                         if kernel and hypervisor:
                             # second module == initrd
@@ -210,6 +210,18 @@ class Bootloader(object):
                         else:
                             kernel, kernel_args = (l.split(None, 1)
                                                    [1].split(None, 1))
+                    elif els[0] == 'initrd' and len(els) > 1:
+                        # not multiboot
+                        kernel = hypervisor
+                        kernel_args = hypervisor_args
+                        label = create_label(title)
+                        menu_order.append(label)
+                        menu[label] = MenuEntry(None, None,
+                                                kernel, kernel_args,
+                                                els[1], title)
+                        hypervisor = None
+                        hypervisor_args = None
+
             # fixup default
             if len(menu_order) > default:
                 default = menu_order[default]
@@ -249,9 +261,14 @@ class Bootloader(object):
             m = self.menu[label]
             if m.title:
                 print >> fh, "  # " + m.title
-            print >> fh, "  kernel mboot.c32"
-            print >> fh, "  append %s %s --- %s %s --- %s" % (m.hypervisor, 
-                     m.hypervisor_args, m.kernel, m.kernel_args, m.initrd)
+            if m.hypervisor:
+                print >> fh, "  kernel mboot.c32"
+                print >> fh, "  append %s %s --- %s %s --- %s" % \
+                    (m.hypervisor, m.hypervisor_args, m.kernel, m.kernel_args, m.initrd)
+            else:
+                print >> fh, "  kernel " + m.kernel
+                print >> fh, "  append " + m.kernel_args
+                print >> fh, "  initrd " + m.initrd
         if not hasattr(dst_file, 'name'):
             fh.close()
 
@@ -279,9 +296,13 @@ class Bootloader(object):
         for label in self.menu_order:
             m = self.menu[label]
             print >> fh, "\ntitle " + m.title
-            print >> fh, "   kernel " + m.hypervisor + " " + m.hypervisor_args
-            print >> fh, "   module " + m.kernel + " " + m.kernel_args
-            print >> fh, "   module " + m.initrd
+            if m.hypervisor:
+                print >> fh, "   kernel " + m.hypervisor + " " + m.hypervisor_args
+                print >> fh, "   module " + m.kernel + " " + m.kernel_args
+                print >> fh, "   module " + m.initrd
+            else:
+                print >> fh, "   kernel " + m.kernel + " " + m.kernel_args
+                print >> fh, "   initrd " + m.initrd
         if not hasattr(dst_file, 'name'):
             fh.close()
 

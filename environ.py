@@ -13,5 +13,8 @@
 
 import os.path
 
+def installerPath():
+    return '/opt/xensource/installer'
+
 def installerRunning():
-    return os.path.isdir('/opt/xensource/installer')
+    return os.path.isdir(installerPath())

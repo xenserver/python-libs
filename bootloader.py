@@ -14,7 +14,6 @@
 import os
 import os.path
 import re
-# import sys
 import tempfile
 
 COUNTER = 0
@@ -321,3 +320,30 @@ class Bootloader(object):
         # atomically replace destination file
         os.close(fd)
         os.rename(tmp_file, dst_file)
+
+    @classmethod
+    def newDefault(cls, kernel_link_name, initrd_link_name, root = '/'):
+        b = cls.loadExisting(root)
+        # FIXME handle initial case
+        if b.menu[b.default].kernel != kernel_link_name:
+            backup = []
+            if not os.path.exists(kernel_link_name):
+                raise RuntimeError, "kernel symlink not found"
+            if not os.path.exists(initrd_link_name):
+                raise RuntimeError, "initrd symlink not found"
+            old_kernel_link = b.menu[b.default].kernel
+            old_ver = 'old'
+            m = re.search(r'(-\d+\.\d+)-', old_kernel_link)
+            if m:
+                old_ver = m.group(1)
+
+            for k, v in b.menu.items():
+                if v.kernel == old_kernel_link:
+                    backup.append((k+old_ver, MenuEntry(**v.__dict__)))
+                    v.kernel = kernel_link_name
+                    v.initrd = initrd_link_name
+
+            if len(backup) > 0:
+                for l, e in backup:
+                    b.append(l, e)
+            b.commit()

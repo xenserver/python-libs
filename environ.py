@@ -13,8 +13,7 @@
 
 import os.path
 
-def installerPath():
-    return '/opt/xensource/installer'
+EXTRA_SCRIPTS_DIR = '/tmp/extra-scripts'
 
 def installerRunning():
-    return os.path.isdir(installerPath())
+    return os.path.isdir(EXTRA_SCRIPTS_DIR)

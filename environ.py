@@ -11,9 +11,9 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 
-import os.path
+import os
 
-EXTRA_SCRIPTS_DIR = '/tmp/extra-scripts'
+EXTRA_SCRIPTS_DIR = '/mnt'
 
 def installerRunning():
-    return os.path.isdir(EXTRA_SCRIPTS_DIR)
+    return os.environ.get('XS_INSTALLATION', '0') != '0'

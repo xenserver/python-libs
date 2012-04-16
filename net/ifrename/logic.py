@@ -438,13 +438,13 @@ def rename( static_rules,
             if not isinstance(e, MACPCI):
                 raise TypeError("Expected List of MACPCI objects")
 
-            # Verify tname is None
-            if e.tname is not None:
-                raise OldStateError("Expected last state tname to be None")
+            # Verify kname is None
+            if e.kname is not None:
+                raise OldStateError("Expected old state kname to be None")
 
-            # Verify kname points to 'eth<foo>'
-            if not e.kname.startswith("eth"):
-                raise OldStateError("Old state '%s' expected kname to "
+            # Verify tname points to 'eth<foo>'
+            if not e.tname.startswith("eth"):
+                raise OldStateError("Old state '%s' expected tname to "
                                       "'eth<num>'" % (e, ))
 
 

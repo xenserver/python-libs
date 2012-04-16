@@ -449,5 +449,29 @@ class TestInputSanitisation(unittest.TestCase):
             self.assertRaises(CurrentStateError, rename,
                               [], i, [], [])
 
+    def test_laststate_input(self):
+        """
+        Ensure that last state only accepts rules in the form
+          (xx:xx.x,xx:xx:xx:xx:xx:xx)->eth##
+        """
+
+        self.assertRaises(LastStateError, rename,
+                          [], [], [self.c123], [])
+
+        self.assertNotRaises(LastStateError, rename,
+                          [], [], [self.s123], [])
+
+    def test_oldstate_input(self):
+        """
+        Ensure that old state only accepts rules in the form
+          (xx:xx.x,xx:xx:xx:xx:xx:xx)->eth##
+        """
+
+        self.assertRaises(OldStateError, rename,
+                          [], [], [], [self.c123])
+
+        self.assertNotRaises(OldStateError, rename,
+                          [], [], [], [self.s123])
+
 if __name__ == "__main__":
     unittest.main()

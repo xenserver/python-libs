@@ -71,12 +71,14 @@ def logToStderr(level=logging.INFO):
     """Log to stderr"""
     return openLog(sys.stderr, level)
 
-def logToSyslog(ident = os.path.basename(sys.argv[0]), level = logging.INFO):
+def logToSyslog(ident = os.path.basename(sys.argv[0]), level = logging.INFO, 
+                facility = logging.handlers.SysLogHandler.LOG_USER):
     """Log to syslog"""
     if os.path.exists("/dev/log"):
-        syslog = logging.handlers.SysLogHandler("/dev/log")
+        syslog = logging.handlers.SysLogHandler("/dev/log", facility)
     else:
-        syslog = logging.handlers.SysLogHandler()
+        syslog = logging.handlers.SysLogHandler(('localhost', 
+                                                 logging.handlers.SYSLOG_UDP_PORT), facility)
     syslog.setLevel(level)
     fmt = logging.Formatter(ident+" %(levelname)s: %(message)s")
     syslog.setFormatter(fmt)

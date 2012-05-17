@@ -327,9 +327,9 @@ class Bootloader(object):
         # FIXME handle initial case
         if b.menu[b.default].kernel != kernel_link_name:
             backup = []
-            if not os.path.exists(kernel_link_name):
+            if not os.path.exists(os.path.join(root, kernel_link_name[1:])):
                 raise RuntimeError, "kernel symlink not found"
-            if not os.path.exists(initrd_link_name):
+            if not os.path.exists(os.path.join(root, initrd_link_name[1:])):
                 raise RuntimeError, "initrd symlink not found"
             old_kernel_link = b.menu[b.default].kernel
             old_ver = 'old'

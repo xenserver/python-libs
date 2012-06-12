@@ -292,7 +292,7 @@ class FTPAccessor(Accessor):
             url = urllib.unquote(path)
 
             lst = self.ftp.nlst(os.path.dirname(url))
-            return url in lst
+            return os.path.basename(url) in map(os.path.basename, lst)
         except Exception, e:
             logger.info(str(e))
             return False

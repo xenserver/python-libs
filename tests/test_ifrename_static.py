@@ -114,7 +114,16 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(sr.formulae, {})
         self.assertEqual(sr.rules, [])
 
-    def test_single_ppn(self):
+    def test_single_ppn_embedded(self):
+
+        fd = StringIO.StringIO('eth0:ppn="em2"')
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("ppn", "em2")})
+        self.assertEqual(sr.rules, [])
+
+    def test_single_ppn_slot(self):
 
         fd = StringIO.StringIO('eth0:ppn="pci2p3"')
         sr = StaticRules(fd = fd)
@@ -132,6 +141,71 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(sr.formulae, {"eth0": ("label", "somestring")})
         self.assertEqual(sr.rules, [])
 
+class TestLoadAndParseGuess(unittest.TestCase):
+
+    def setUp(self):
+        self.logbuf = StringIO.StringIO()
+        openLog(self.logbuf, logging.NOTSET)
+
+    def tearDown(self):
+
+        closeLogs()
+        self.logbuf.close()
+
+    def test_single_explicit_label(self):
+
+        fd = StringIO.StringIO("eth0=\"foo\"")
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("label", "foo")})
+        self.assertEqual(sr.rules, [])
+
+    def test_single_implicit_label(self):
+
+        fd = StringIO.StringIO("eth0=foo")
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("label", "foo")})
+        self.assertEqual(sr.rules, [])
+
+    def test_single_mac(self):
+
+        fd = StringIO.StringIO("eth0=00:00:00:00:00:00")
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("mac", "00:00:00:00:00:00")})
+        self.assertEqual(sr.rules, [])
+
+    def test_single_pci(self):
+
+        fd = StringIO.StringIO("eth0=0000:00:00.0")
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("pci", "0000:00:00.0")})
+        self.assertEqual(sr.rules, [])
+
+    def test_single_ppn_embedded(self):
+
+        fd = StringIO.StringIO("eth0=em4")
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("ppn", "em4")})
+        self.assertEqual(sr.rules, [])
+
+    def test_single_ppn_slot(self):
+
+        fd = StringIO.StringIO("eth0=pci1p2")
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("ppn", "pci1p2")})
+        self.assertEqual(sr.rules, [])
+
 
 class TestGenerate(unittest.TestCase):
 
@@ -144,6 +218,8 @@ class TestGenerate(unittest.TestCase):
                    ppn="pci1p1", label="Ethernet1"),
             MACPCI("03:23:45:67:89:0a", "0000:00:10.0", kname="side-12-eth34",
                    ppn="pci2p1", label=""),
+            MACPCI("03:23:45:67:89:0a", "0000:00:02.0", kname="side-4-eth23",
+                   ppn="em1", label=""),
             MACPCI("04:23:45:67:89:0a", "0000:00:10.1", kname="side-123-eth23",
                    ppn="pci2p2", label="")
             ]
@@ -195,7 +271,19 @@ class TestGenerate(unittest.TestCase):
                 MACPCI("03:23:45:67:89:0a", "0000:00:10.0", tname="eth0")
                 ])
 
-    def test_single_ppn_matching(self):
+    def test_single_ppn_embedded_matching(self):
+
+        fd = StringIO.StringIO('eth0:ppn="em1"')
+        sr = StaticRules(fd = fd)
+        self.assertTrue(sr.load_and_parse())
+
+        sr.generate(self.state)
+
+        self.assertEqual(sr.rules,[
+                MACPCI("03:23:45:67:89:0a", "0000:00:02.0", tname="eth0")
+                ])
+
+    def test_single_ppn_slot_matching(self):
 
         fd = StringIO.StringIO('eth0:ppn="pci2p2"')
         sr = StaticRules(fd = fd)

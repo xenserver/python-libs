@@ -17,7 +17,7 @@ MACPCI object.
 Used extensivly for interface rename logic.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__  = "Andrew Cooper"
 
 from xcp.pci import PCI
@@ -56,6 +56,9 @@ class MACPCI(object):
 
     def __repr__(self):
         return str(self)
+
+    def __hash__(self):
+        return hash("%s-%s" % (self.mac, self.pci))
 
     def __eq__(self, other):
         return ( self.mac == other.mac and

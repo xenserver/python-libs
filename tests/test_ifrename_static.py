@@ -125,11 +125,20 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_ppn_slot(self):
 
+        fd = StringIO.StringIO('eth0:ppn="p2p3"')
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("ppn", "p2p3")})
+        self.assertEqual(sr.rules, [])
+
+    def test_single_oldsytle_ppn_slot(self):
+        # CA-82901 - Accept old-style PPNs but translate them to new-style
         fd = StringIO.StringIO('eth0:ppn="pci2p3"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
-        self.assertEqual(sr.formulae, {"eth0": ("ppn", "pci2p3")})
+        self.assertEqual(sr.formulae, {"eth0": ("ppn", "p2p3")})
         self.assertEqual(sr.rules, [])
 
     def test_single_label(self):
@@ -199,11 +208,11 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
     def test_single_ppn_slot(self):
 
-        fd = StringIO.StringIO("eth0=pci1p2")
+        fd = StringIO.StringIO("eth0=p1p2")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
-        self.assertEqual(sr.formulae, {"eth0": ("ppn", "pci1p2")})
+        self.assertEqual(sr.formulae, {"eth0": ("ppn", "p1p2")})
         self.assertEqual(sr.rules, [])
 
 
@@ -215,13 +224,13 @@ class TestGenerate(unittest.TestCase):
 
         self.state = [
             MACPCI("01:23:45:67:89:0a", "0000:00:01.0", kname="side-11-eth2",
-                   ppn="pci1p1", label="Ethernet1"),
+                   ppn="p1p1", label="Ethernet1"),
             MACPCI("03:23:45:67:89:0a", "0000:00:10.0", kname="side-12-eth34",
-                   ppn="pci2p1", label=""),
+                   ppn="p2p1", label=""),
             MACPCI("03:23:45:67:89:0a", "0000:00:02.0", kname="side-4-eth23",
                    ppn="em1", label=""),
             MACPCI("04:23:45:67:89:0a", "0000:00:10.1", kname="side-123-eth23",
-                   ppn="pci2p2", label="")
+                   ppn="p2p2", label="")
             ]
 
     def tearDown(self):
@@ -285,7 +294,7 @@ class TestGenerate(unittest.TestCase):
 
     def test_single_ppn_slot_matching(self):
 
-        fd = StringIO.StringIO('eth0:ppn="pci2p2"')
+        fd = StringIO.StringIO('eth0:ppn="p2p2"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -346,10 +355,10 @@ class TestSave(unittest.TestCase):
     def test_one_valid(self):
 
         sr = StaticRules()
-        sr.formulae = {"eth0": ("ppn", "pci1p1"),
+        sr.formulae = {"eth0": ("ppn", "p1p1"),
                        }
 
-        desired_result = "eth0:ppn=\"pci1p1\"\n"
+        desired_result = "eth0:ppn=\"p1p1\"\n"
 
         self.assertEqual(sr.write(False), desired_result)
 
@@ -365,12 +374,12 @@ class TestSave(unittest.TestCase):
     def test_two_valid(self):
 
         sr = StaticRules()
-        sr.formulae = {"eth0": ("ppn", "pci1p1"),
+        sr.formulae = {"eth0": ("ppn", "p1p1"),
                        "eth1": ("label", "Ethernet1"),
                        }
 
         desired_result = (
-            "eth0:ppn=\"pci1p1\"\n"
+            "eth0:ppn=\"p1p1\"\n"
             "eth1:label=\"Ethernet1\"\n"
             )
 

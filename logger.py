@@ -67,6 +67,10 @@ def closeLogs():
         LOG.removeHandler(h)
         h.close()
 
+def logToStdout(level=logging.INFO):
+    """Log to stdout"""
+    return openLog(sys.stdout, level)
+
 def logToStderr(level=logging.INFO):
     """Log to stderr"""
     return openLog(sys.stderr, level)

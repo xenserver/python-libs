@@ -36,7 +36,7 @@ from xcp.net.ifrename.macpci import MACPCI
 from os.path import exists as pathexists
 
 SAVE_HEADER = (
-    "# Automatically adjusted file.  Do not edit unless you are"
+    "# Automatically adjusted file.  Do not edit unless you are "
     "certain you know how to\n"
     )
 

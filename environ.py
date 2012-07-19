@@ -19,9 +19,36 @@ EXTRA_SCRIPTS_DIR = '/mnt'
 def installerRunning():
     return os.environ.get('XS_INSTALLATION', '0') != '0'
 
+class InventoryError(Exception):
+    pass
+
 def readInventory(root = '/'):
-    fh = open(os.path.join(root, 'etc/xensource-inventory'))
-    d = dict(map(lambda x: [x[:x.find('=')], x[x.find('=')+1:].strip().strip("'")], fh))
-    fh.close()
+
+    fh = None
+    d = {}
+
+    try:
+
+        try:
+            fh = open(os.path.join(root, 'etc/xensource-inventory'))
+
+            for line in ( x for x in ( y.strip() for y in fh.xreadlines() )
+                          if not x.startswith('#') ):
+
+                vals = line.split('=', 1)
+
+                if ( len(vals) != 2 or
+                     vals[0].endswith(" ") or vals[0].endswith("\t") or
+                     vals[1].startswith(" ") or vals[1].startswith("\t") ):
+                    raise InventoryError("Invalid line found '%s'" % (line,))
+
+                d[vals[0]] = vals[1].strip('"\'')
+
+        except IOError, e:
+            raise InventoryError("Error reading from file '%s'" % (e,))
+
+    finally:
+        if fh:
+            fh.close()
 
     return d

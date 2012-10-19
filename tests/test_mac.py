@@ -6,6 +6,7 @@ try:
     import xcp
 except ImportError:
     print >>sys.stderr, "Must run with run-test.sh to bind mount 'xcp'"
+    sys.exit(1)
 
 
 from xcp.net.mac import MAC

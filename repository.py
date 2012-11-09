@@ -37,29 +37,31 @@ class BzippedPackage(Package):
         return "<BzippedPackage '%s'>" % self.label
 
 class RPMPackage(Package):
-    def __init__(self, repository, label, size, md5sum, optional, fname):
+    def __init__(self, repository, label, size, md5sum, optional, fname, options):
         (
             self.repository,
             self.label,
             self.size,
             self.md5sum,
             self.optional,
-            self.filename
-            ) = ( repository, label, long(size), md5sum, (optional==True), fname )
+            self.filename,
+            self.options
+            ) = ( repository, label, long(size), md5sum, (optional==True), fname, options )
 
     def __repr__(self):
         return "<RPMPackage '%s'>" % self.label
 
 class DriverRPMPackage(RPMPackage):
-    def __init__(self, repository, label, size, md5sum, fname, kernel):
+    def __init__(self, repository, label, size, md5sum, fname, kernel, options):
         (
             self.repository,
             self.label,
             self.size,
             self.md5sum,
             self.filename,
-            self.kernel
-            ) = ( repository, label, long(size), md5sum, fname, kernel )
+            self.kernel,
+            self.options
+            ) = ( repository, label, long(size), md5sum, fname, kernel, options )
 
     def __repr__(self):
         return "<DriverRPMPackage '%s', kernel '%s'>" % (self.label, self.kernel)
@@ -211,14 +213,14 @@ class Repository(object):
 
     constructor_map = {
         'tbz2': [ BzippedPackage, ( 'label', 'size', 'md5', 'optional', 'fname', 'root' ) ],
-        'rpm': [ RPMPackage, ( 'label', 'size', 'md5', 'optional', 'fname' ) ],
-        'driver-rpm': [ DriverRPMPackage, ( 'label', 'size', 'md5', 'fname', 'kernel' ) ],
+        'rpm': [ RPMPackage, ( 'label', 'size', 'md5', 'optional', 'fname', 'options' ) ],
+        'driver-rpm': [ DriverRPMPackage, ( 'label', 'size', 'md5', 'fname', 'kernel', 'options' ) ],
         # obsolete
         'driver': [ DriverPackage, ( 'label', 'size', 'md5', 'fname', 'root' ) ],
         'firmware': [ FirmwarePackage, ('label', 'size', 'md5', 'fname') ]
         }
 
-    optional_attrs = ['optional']
+    optional_attrs = ['optional', 'options']
 
     def _create_package(self, node):
         args = [ self ]

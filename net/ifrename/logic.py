@@ -297,8 +297,10 @@ def rename_logic( static_rules,
 
 
     # 3rd pass. This should only affect brand new network cards unreferenced
-    # by previous state
-    for nic in filter(util.needs_renaming, cur_state):
+    # by previous state.  Prefer the order (e.g. from biosdevname), given
+    # no other objections.
+    for nic in sorted(filter(util.needs_renaming, cur_state),
+                      key=lambda x: x.order):
         LOG.info("Renaming brand new nic '%s'" % (nic,))
 
         if ( VALID_ETH_NAME.match(nic.kname) is not None and

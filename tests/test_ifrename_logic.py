@@ -339,6 +339,33 @@ class TestUseCases(unittest.TestCase):
         for cur, last in zip(cur_state, last_state):
             self.assertTrue(cur.tname == last.tname)
 
+    def test_CA_94279(self):
+        """
+        CA-94279 occured because the logic did no honour the order paramater
+        from biosdevname if it was the only deciding factor.  (It appears rare
+        for the embedded network cards to have a greater PCI sbdf than the non-
+        embedded cards)
+
+        Check that in the order is honoured in the case where it is the only
+        deciding factor.
+        """
+
+        cur_eth0 = MACPCI("00:1b:21:aa:ef:f0", "0000:03:00.0", "side-1-eth0", order=2)
+        cur_eth1 = MACPCI("00:1b:21:aa:ef:f1", "0000:03:00.1", "side-2-eth1", order=3)
+        cur_eth2 = MACPCI("00:1b:21:aa:ef:f4", "0000:04:00.0", "side-3-eth2", order=4)
+        cur_eth3 = MACPCI("00:1b:21:aa:ef:f5", "0000:04:00.1", "side-4-eth3", order=5)
+        cur_eth4 = MACPCI("60:eb:69:ed:9a:16", "0000:06:00.0", "side-5-eth4", order=0)
+        cur_eth5 = MACPCI("60:eb:69:ed:9a:17", "0000:06:00.1", "side-6-eth5", order=1)
+        cur_state = [ cur_eth0, cur_eth1, cur_eth2, cur_eth3, cur_eth4, cur_eth5 ]
+
+        ts = rename([], deepcopy(cur_state), [], [])
+        apply_transactions(cur_state, ts)
+
+        expected_names = [ "eth2", "eth3", "eth4", "eth5", "eth0", "eth1" ]
+
+        for cur, exp in zip(cur_state, expected_names):
+            self.assertEqual(cur.tname, exp)
+
 
 class TestInputSanitisation(unittest.TestCase):
 

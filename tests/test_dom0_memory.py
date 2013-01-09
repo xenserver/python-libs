@@ -8,7 +8,7 @@ except ImportError:
     print >>sys.stderr, "Must run with run-test.sh to bind mount 'xcp'"
     sys.exit(1)
 
-from xcp.dom0_memory import default_dom0_memory
+from xcp.dom0_memory import default_dom0_memory, parse_dom0_mem
 
 class TestDom0Memory(unittest.TestCase):
 
@@ -30,6 +30,47 @@ class TestDom0Memory(unittest.TestCase):
         for host_gib, dom0_mib in test_values:
             expected = dom0_mib * 1024;
             calculated = default_dom0_memory(host_gib * 1024 * 1024)
+            self.assertEqual(calculated, expected)
+
+    def test_parse_dom0_mem_arg(self):
+        k = 1024
+        M = 1024*1024
+        G = 1024*1024*1024
+
+        test_args = [
+            # Invalid options
+            ("", (None, None, None)),
+            ("option", (None, None, None)),
+            ("option=123", (None, None, None)),
+            ("dom0_mem", (None, None, None)),
+            ("dom0_mem=bad", (None, None, None)),
+            # Values and units
+            ("dom0_mem=100", (100*k, None, None)), # defaults to KiB
+            ("dom0_mem=-100", (-100*k, None, None)), # negative
+            ("dom0_mem=100b", (100, None, None)),
+            ("dom0_mem=100B", (100, None, None)),
+            ("dom0_mem=100k", (100*k, None, None)),
+            ("dom0_mem=100K", (100*k, None, None)),
+            ("dom0_mem=100m", (100*M, None, None)),
+            ("dom0_mem=100M", (100*M, None, None)),
+            ("dom0_mem=100g", (100*G, None, None)),
+            ("dom0_mem=100G", (100*G, None, None)),
+            # Combinations
+            ("dom0_mem=100,min:200,max:300", (100*k, 200*k, 300*k)),
+            ("dom0_mem=min:100,200,max:300", (200*k, 100*k, 300*k)),
+            # Bad prefixes etc.  Some of these look odd but this is
+            # the behaviour of Xen itself.
+            ("dom0_mem=bad:100,200", (200*k, None, None)),
+            ("dom0_mem=100,bad", (None, None, None)),
+            ("dom0_mem=bad,100", (100*k, None, None)),
+            ("dom0_mem=bad,max:100", (None, None, 100*k)),
+            # Typical values
+            ("dom0_mem=752M", (752*M, None, None)),
+            ("dom0_mem=752M,max:752M", (752*M, None, 752*M)),
+            ]
+
+        for arg, expected in test_args:
+            calculated = parse_dom0_mem(arg)
             self.assertEqual(calculated, expected)
 
 if __name__ == "__main__":

@@ -19,6 +19,9 @@ EXTRA_SCRIPTS_DIR = '/mnt'
 def installerRunning():
     return os.environ.get('XS_INSTALLATION', '0') != '0'
 
+def buildingInitialTar():
+    return 'CARBON_DISTROS_DIR' in os.environ
+
 class InventoryError(Exception):
     pass
 

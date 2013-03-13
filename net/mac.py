@@ -18,7 +18,6 @@ Mac address object for manipulation and comparison.
 __version__ = "1.0.1"
 __author__  = "Andrew Cooper"
 
-import sys
 import re
 
 VALID_COLON_MAC = re.compile(r"^([\da-fA-F]{1,2}:){5}[\da-fA-F]{1,2}$")

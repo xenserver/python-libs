@@ -15,8 +15,6 @@
 
 import ftplib
 import os
-import socket
-import sys
 import tempfile
 import types
 import urllib
@@ -83,7 +81,7 @@ def compat_urlsplit(url, allow_fragments = True):
 class Accessor(object):
 
     def __init__(self, ro):
-        self.read_only = ro;
+        self.read_only = ro
 
     def access(self, name):
         """ Return boolean determining where 'name' is an accessible object
@@ -118,7 +116,7 @@ class Accessor(object):
             out_fh.write(data)
         out_fh.close()
         return True
-    
+
 class FilesystemAccessor(Accessor):
     def __init__(self, location, ro):
         super(FilesystemAccessor, self).__init__(ro)
@@ -247,6 +245,7 @@ class FTPAccessor(Accessor):
         self.baseAddress = baseAddress
         self.start_count = 0
         self.cleanup = False
+        self.ftp = None
 
     def _cleanup(self):
         if self.cleanup:
@@ -337,7 +336,7 @@ class HTTPAccessor(Accessor):
         try:
             if self.url_parts.port:
                 host += ':' + str(self.url_parts.port)
-        except:
+        except StandardError:
             pass
         self.baseAddress = urlparse.urlunsplit(
             (self.url_parts.scheme, host,

@@ -99,7 +99,7 @@ class PCI(object):
         else:
             try:
                 return self.integer == PCI(rhs).integer
-            except:
+            except StandardError:
                 return NotImplemented
 
     def __ne__(self, rhs):
@@ -108,7 +108,7 @@ class PCI(object):
         else:
             try:
                 return self.integer != PCI(rhs).integer
-            except:
+            except StandardError:
                 return NotImplemented
 
     def __hash__(self):
@@ -120,7 +120,7 @@ class PCI(object):
         else:
             try:
                 return self.integer < PCI(rhs).integer
-            except:
+            except StandardError:
                 return NotImplemented
 
     def __le__(self, rhs):
@@ -129,7 +129,7 @@ class PCI(object):
         else:
             try:
                 return self.integer <= PCI(rhs).integer
-            except:
+            except StandardError:
                 return NotImplemented
 
     def __gt__(self, rhs):
@@ -138,7 +138,7 @@ class PCI(object):
         else:
             try:
                 return self.integer > PCI(rhs).integer
-            except:
+            except StandardError:
                 return NotImplemented
 
     def __ge__(self, rhs):
@@ -147,7 +147,7 @@ class PCI(object):
         else:
             try:
                 return self.integer >= PCI(rhs).integer
-            except:
+            except StandardError:
                 return NotImplemented
 
 

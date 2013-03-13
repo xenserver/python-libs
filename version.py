@@ -41,7 +41,7 @@ class Version:
 
         a positive integer
         a sequence of subarcs, s-t-u"""
-        
+
         build = None
         build_suf = None
 
@@ -60,7 +60,7 @@ class Version:
         return cls(ver, build, build_suf)
 
     def ver_as_string(self):
-        return '.'.join(map(lambda x: str(x), self.ver))
+        return '.'.join(map(str, self.ver))
 
     def build_as_string(self):
         val = ''
@@ -76,18 +76,18 @@ class Version:
             return self.ver_as_string() + '-' + self.build_as_string()
         return self.ver_as_string()
 
-    """ ************************************************************
-    
-    NOTE: Comparisons are performed as follows
-
-    The version is always compared.
-
-    If rhs has a build it is compared. If lhs has no build it evaluates
-    to -1.
-
-    Build suffix is ignored.
-
-    ************************************************************ """ 
+    #************************************************************
+    #
+    # NOTE: Comparisons are performed as follows
+    #
+    # The version is always compared.
+    #
+    # If rhs has a build it is compared. If lhs has no build it evaluates
+    # to -1.
+    #
+    # Build suffix is ignored.
+    #
+    #************************************************************
 
     @classmethod
     def arc_cmp(cls, l, r):
@@ -103,13 +103,13 @@ class Version:
             return cls.ver_cmp([l], map(cls.intify, r.split('-')))
         else:
             raise RuntimeError, "Invalid arc types"
-    
+
     @classmethod
     def ver_cmp(cls, l, r):
         assert type(l) is list
         assert type(r) is list
 
-        # iterate over arcs in turn, zip() returns min(len(l), len(r)) tuples 
+        # iterate over arcs in turn, zip() returns min(len(l), len(r)) tuples
         for la, ra in zip(l, r):
             ret = cls.arc_cmp(la, ra)
             if ret != 0:
@@ -127,7 +127,7 @@ class Version:
             r.append(v.build)
 
         return self.ver_cmp(l, r)
-    
+
     def __eq__(self, v):
         return self.ver_build_cmp(v) == 0
 

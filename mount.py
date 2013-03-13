@@ -13,11 +13,9 @@
 
 import os
 import os.path
-import subprocess
 import tempfile
 
 import xcp.cmd
-import xcp.logger as logger
 
 class MountException(Exception):
     pass
@@ -52,7 +50,7 @@ def bindMount(source, mountpoint):
 
 def umount(mountpoint, force = False):
     # -d option also removes the loop device (if present)
-    cmd = ['/bin/umount', '-d'] 
+    cmd = ['/bin/umount', '-d']
     if force:
         cmd.append('-f')
     cmd.append(mountpoint)
@@ -61,7 +59,8 @@ def umount(mountpoint, force = False):
     return rc
 
 class TempMount(object):
-    def __init__(self, device, tmp_prefix, options = None, fstype = None, label = None):
+    def __init__(self, device, tmp_prefix, options = None, fstype = None,
+                 label = None):
         self.mounted = False
         self.mount_point = tempfile.mkdtemp(dir = "/tmp", prefix = tmp_prefix)
         try:

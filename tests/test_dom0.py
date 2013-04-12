@@ -8,11 +8,11 @@ except ImportError:
     print >>sys.stderr, "Must run with run-test.sh to bind mount 'xcp'"
     sys.exit(1)
 
-from xcp.dom0_memory import default_dom0_memory, parse_dom0_mem
+from xcp.dom0 import default_memory, parse_mem, default_vcpus
 
-class TestDom0Memory(unittest.TestCase):
+class TestDom0(unittest.TestCase):
 
-    def test_default_dom0_memory(self):
+    def test_default_memory(self):
         test_values = [
             (0, 752),         # Special case: zero
             (1, 752),         # Below min
@@ -29,10 +29,10 @@ class TestDom0Memory(unittest.TestCase):
 
         for host_gib, dom0_mib in test_values:
             expected = dom0_mib * 1024;
-            calculated = default_dom0_memory(host_gib * 1024 * 1024)
+            calculated = default_memory(host_gib * 1024 * 1024)
             self.assertEqual(calculated, expected)
 
-    def test_parse_dom0_mem_arg(self):
+    def test_parse_mem_arg(self):
         k = 1024
         M = 1024*1024
         G = 1024*1024*1024
@@ -70,7 +70,25 @@ class TestDom0Memory(unittest.TestCase):
             ]
 
         for arg, expected in test_args:
-            calculated = parse_dom0_mem(arg)
+            calculated = parse_mem(arg)
+            self.assertEqual(calculated, expected)
+
+    def test_default_vcpus(self):
+        test_values = [
+            (0, 1), # Special case: Zero
+            (1, 1), # Minimum
+            (2, 2),
+            (3, 3),
+            (4, 4), # 4 vCPUs threshold
+            (5, 4), # Aboue threshold
+            (23, 4), # Below 6 vCPUs threshold
+            (24, 6), # Threshold
+            (31, 6), # Below 8 vCPUs threshold
+            (32, 8), # Threshold
+            ]
+
+        for host_pcpus, expected in test_values:
+            calculated = default_vcpus(host_pcpus)
             self.assertEqual(calculated, expected)
 
 if __name__ == "__main__":

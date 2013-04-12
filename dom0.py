@@ -4,7 +4,7 @@
 
 import re
 
-def default_dom0_memory(host_mem_kib):
+def default_memory(host_mem_kib):
     """Return the default for the amount of dom0 memory for the
     specified amount of host memory."""
 
@@ -45,7 +45,7 @@ def _parse_size_and_unit(s):
 
     return val
 
-def parse_dom0_mem(arg):
+def parse_mem(arg):
     """Parse Xen's dom0_mem command line option.
 
     Return tuple of (amount, min, max) memory in bytes from a string
@@ -76,3 +76,20 @@ def parse_dom0_mem(arg):
             dom0_mem = _parse_size_and_unit(s)
 
     return (dom0_mem, dom0_mem_min, dom0_mem_max)
+
+def default_vcpus(host_pcpus):
+    """Return the default number of dom0 vcpus for the specified number
+    of host pcpus."""
+
+    if host_pcpus < 2:
+        return 1
+    elif host_pcpus < 3:
+        return 2
+    elif host_pcpus < 4:
+        return 3
+    elif host_pcpus < 24:
+        return 4
+    elif host_pcpus < 32:
+        return 6
+    else:
+        return 8

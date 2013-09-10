@@ -9,11 +9,11 @@ include $(B_BASE)/rpmbuild.mk
 .PHONY: $(MY_OBJ_DIR)/version.inc
 $(MY_OBJ_DIR)/version.inc:
 	$(version-makefile) > $@
-	$(call hg_cset_number,$(REPONAME)) >> $@
+	$(call git_cset_number,$(REPONAME)) >> $@
 	echo PYTHON_LIB_VERSION := \$$\(PLATFORM_VERSION\) >> $@
 	echo PYTHON_LIB_RELEASE := xs\$$\(CSET_NUMBER\) >> $@
 
-FIND_CMD = find -path "./.hg" -prune -o -path "./tests" -prune -o -name "*.py" -print
+FIND_CMD = find -path "./.git" -prune -o -path "./tests" -prune -o -name "*.py" -print
 PYTHON_LIBS_SOURCES := $(shell $(FIND_CMD))
 
 PYTHON_LIB_SPEC := xcp-python-libs.spec

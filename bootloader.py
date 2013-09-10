@@ -34,13 +34,21 @@ COUNTER = 0
 
 class MenuEntry(object):
     def __init__(self, hypervisor, hypervisor_args, kernel, kernel_args,
-                 initrd, title = None):
+                 initrd, tboot = None, tboot_args = None, title = None):
+        self.tboot = tboot
+        self.tboot_args = tboot_args
         self.hypervisor = hypervisor
         self.hypervisor_args = hypervisor_args
         self.kernel = kernel
         self.kernel_args = kernel_args
         self.initrd = initrd
         self.title = title
+
+    def getTbootArgs(self):
+        return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.tboot_args)
+
+    def setTbootArgs(self, args):
+        self.tboot_args = ' '.join(args)
 
     def getHypervisorArgs(self):
         return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.hypervisor_args)
@@ -56,7 +64,7 @@ class MenuEntry(object):
     
 class Bootloader(object):
     def __init__(self, src_fmt, src_file, menu = None, menu_order = None,
-                 default = None, timeout = None, serial = None, 
+                 default = None, timeout = None, serial = None,
                  location = None):
 
         if menu is None:
@@ -92,6 +100,7 @@ class Bootloader(object):
         serial = None
         label = None
         title = None
+        kernel = None
 
         fh = open(src_file)
         try:
@@ -124,16 +133,40 @@ class Bootloader(object):
                 elif label:
                     if els[0] == '#':
                         title = l[1:].lstrip()
-                    elif els[0] == 'append' and len(els) > 1:
-                        # els[2] contains hypervisor args, kernel,
-                        # kernel args & initrd
-                        args = map(lambda x: x.strip(), els[2].split('---'))
-                        if len(args) == 3:
-                            kernel = args[1].split(None, 1)
-                            if len(kernel) == 2:
-                                menu[label] = MenuEntry(els[1], args[0], 
-                                                        kernel[0], kernel[1],
-                                                        args[2], title)
+                    elif els[0] == 'kernel' and len(els) > 1:
+                        kernel = els[1]
+                    elif els[0] == 'append' and len(els) > 1 and \
+                            kernel == 'mboot.c32':
+                        if 'tboot' in els[1]:
+                            # els[2] contains tboot args, hypervisor,
+                            # hypervisor args, kernel,
+                            # kernel args & initrd
+                            args = map(lambda x: x.strip(), els[2].split('---'))
+                            if len(args) == 4:
+                                hypervisor = args[1].split(None, 1)
+                                kernel = args[2].split(None, 1)
+                                if len(hypervisor) == 2 and len(kernel) == 2:
+                                    menu[label] = MenuEntry(tboot = els[1],
+                                                            tboot_args = args[0],
+                                                            hypervisor = hypervisor[0],
+                                                            hypervisor_args = hypervisor[1],
+                                                            kernel = kernel[0],
+                                                            kernel_args = kernel[1],
+                                                            initrd = args[3],
+                                                            title = title)
+                        elif 'xen' in els[1]:
+                            # els[2] contains hypervisor args, kernel,
+                            # kernel args & initrd
+                            args = map(lambda x: x.strip(), els[2].split('---'))
+                            if len(args) == 3:
+                                kernel = args[1].split(None, 1)
+                                if len(kernel) == 2:
+                                    menu[label] = MenuEntry(hypervisor = els[1],
+                                                            hypervisor_args = args[0],
+                                                            kernel = kernel[0],
+                                                            kernel_args = kernel[1],
+                                                            initrd = args[2],
+                                                            title = title)
         finally:
             fh.close()
 
@@ -215,9 +248,11 @@ class Bootloader(object):
                             # second module == initrd
                             label = create_label(title)
                             menu_order.append(label)
-                            menu[label] = MenuEntry(hypervisor, hypervisor_args,
-                                                    kernel, kernel_args,
-                                                    els[1], title)
+                            menu[label] = MenuEntry(hypervisor = hypervisor,
+                                                    hypervisor_args = hypervisor_args,
+                                                    kernel = kernel,
+                                                    kernel_args = kernel_args,
+                                                    initrd = els[1], title = title)
                             hypervisor = None
                             kernel = None
                         else:
@@ -229,9 +264,9 @@ class Bootloader(object):
                         kernel_args = hypervisor_args
                         label = create_label(title)
                         menu_order.append(label)
-                        menu[label] = MenuEntry(None, None,
-                                                kernel, kernel_args,
-                                                els[1], title)
+                        menu[label] = MenuEntry(kernel = kernel,
+                                                kernel_args = kernel_args,
+                                                initrd = els[1], title = title)
                         hypervisor = None
                         hypervisor_args = None
 
@@ -274,7 +309,12 @@ class Bootloader(object):
             m = self.menu[label]
             if m.title:
                 print >> fh, "  # " + m.title
-            if m.hypervisor:
+            if m.tboot:
+                print >> fh, "  kernel mboot.c32"
+                print >> fh, "  append %s %s --- %s %s --- %s %s --- %s" % \
+                    (m.tboot, m.tboot_args, m.hypervisor, m.hypervisor_args,
+                     m.kernel, m.kernel_args, m.initrd)
+            elif m.hypervisor:
                 print >> fh, "  kernel mboot.c32"
                 print >> fh, "  append %s %s --- %s %s --- %s" % \
                     (m.hypervisor, m.hypervisor_args, m.kernel, m.kernel_args, m.initrd)

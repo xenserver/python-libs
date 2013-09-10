@@ -109,33 +109,34 @@ class Bootloader(object):
                 els = l.split(None, 2)
                 if len(els) == 0:
                     continue
+                keywrd = els[0].lower()
 
                 # header
                 if (l.startswith('# location ') and len(els) == 3 and 
                     els[2] in ['mbr', 'partition']):
                     location = els[2]
-                elif els[0] == 'serial' and len(els) > 1:
+                elif keywrd == 'serial' and len(els) > 1:
                     baud = 9600
                     if len(els) > 2:
                         baud = int(els[2])
                     serial = {'port': int(els[1]), 'baud': baud}
-                elif els[0] == 'default' and len(els) == 2:
+                elif keywrd == 'default' and len(els) == 2:
                     default = els[1]
-                elif els[0] == 'timeout' and len(els) == 2:
+                elif keywrd == 'timeout' and len(els) == 2:
                     timeout = int(els[1])
 
                 # menu
-                elif els[0] == 'label' and len(els) == 2:
+                elif keywrd == 'label' and len(els) == 2:
                     label = els[1]
                     menu[label] = {}
                     menu_order.append(label)
                     title = None
                 elif label:
-                    if els[0] == '#':
+                    if keywrd == '#':
                         title = l[1:].lstrip()
-                    elif els[0] == 'kernel' and len(els) > 1:
+                    elif keywrd == 'kernel' and len(els) > 1:
                         kernel = els[1]
-                    elif els[0] == 'append' and len(els) > 1 and \
+                    elif keywrd == 'append' and len(els) > 1 and \
                             kernel == 'mboot.c32':
                         if 'tboot' in els[1]:
                             # els[2] contains tboot args, hypervisor,

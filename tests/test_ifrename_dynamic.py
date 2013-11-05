@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
-import unittest, sys, os, os.path as path, logging, json
+import unittest, sys, os, os.path as path, logging
+try:
+    import json
+except:
+    import simplejson as json
 from copy import deepcopy
 
 try:

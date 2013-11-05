@@ -408,7 +408,7 @@ class TestInputSanitisation(unittest.TestCase):
         """Because unittest.TestCase seems to be missing this functionality"""
         try:
             fn(*argl, **kwargs)
-        except excp as e:
+        except excp, e:
             self.fail("function raised %s unexpectedly: %s"
                       % (excp, e))
 

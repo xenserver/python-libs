@@ -5,7 +5,7 @@ import unittest, sys
 try:
     import xcp
 except ImportError:
-    print >>sys.stderr, "Must run with run-test.sh to bind mount 'xcp'"
+    print >>sys.stderr, "Must run with run-test.sh"
     sys.exit(1)
 
 from xcp.dom0 import default_memory, parse_mem, default_vcpus
@@ -92,4 +92,4 @@ class TestDom0(unittest.TestCase):
             self.assertEqual(calculated, expected)
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(unittest.main())

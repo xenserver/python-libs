@@ -11,7 +11,7 @@ except ImportError:
 try:
     import xcp
 except ImportError:
-    print >>sys.stderr, "Must run with run-test.sh to bind mount 'xcp'"
+    print >>sys.stderr, "Must run with run-test.sh"
     sys.exit(1)
 
 
@@ -502,4 +502,4 @@ class TestInputSanitisation(unittest.TestCase):
                           [], [], [], [self.s123])
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(unittest.main())

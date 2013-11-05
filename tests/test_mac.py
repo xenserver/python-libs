@@ -5,7 +5,7 @@ import unittest, sys, os, os.path as path
 try:
     import xcp
 except ImportError:
-    print >>sys.stderr, "Must run with run-test.sh to bind mount 'xcp'"
+    print >>sys.stderr, "Must run with run-test.sh"
     sys.exit(1)
 
 
@@ -254,4 +254,4 @@ class TestHashability(unittest.TestCase):
         self.assertEqual(d[m3], "random")
 
 if __name__ == "__main__":
-    unittest.main()
+    sys.exit(unittest.main())

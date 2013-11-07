@@ -279,6 +279,18 @@ class _Stream(object):
             else:
                 self.cmp = bz2.BZ2Compressor()
 
+        if comptype == "xz":
+            try:
+                import lzma
+            except ImportError:
+                raise CompressionError("lzma module is not available")
+            if mode == "r":
+                self.dbuf = ""
+                self.cmp = lzma.LZMADecompressor()
+            else:
+                self.cmp = lzma.LZMACompressor()
+
+
     def __del__(self):
         if hasattr(self, "closed") and not self.closed:
             self.close()
@@ -465,39 +477,24 @@ class _StreamProxy(object):
             return "gz"
         if self.buf.startswith("BZh91"):
             return "bz2"
+        if self.buf.startswith("\xfd7zXZ"):
+            return "xz"
         return "cpio"
 
     def close(self):
         self.fileobj.close()
 # class StreamProxy
 
-class _BZ2Proxy(object):
-    """Small proxy class that enables external file object
-       support for "r:bz2" and "w:bz2" modes. This is actually
-       a workaround for a limitation in bz2 module's BZ2File
-       class which (unlike gzip.GzipFile) has no support for
-       a file object argument.
-    """
+class _CMPProxy(object):
 
     blocksize = 16 * 1024
 
     def __init__(self, fileobj, mode):
         self.fileobj = fileobj
         self.mode = mode
-        self.bz2obj = None
+        self.cmpobj = None
         self.buf = None
         self.pos = None
-        self.init()
-
-    def init(self):
-        import bz2
-        self.pos = 0
-        if self.mode == "r":
-            self.bz2obj = bz2.BZ2Decompressor()
-            self.fileobj.seek(0)
-            self.buf = ""
-        else:
-            self.bz2obj = bz2.BZ2Compressor()
 
     def read(self, size):
         b = [self.buf]
@@ -505,7 +502,7 @@ class _BZ2Proxy(object):
         while x < size:
             try:
                 raw = self.fileobj.read(self.blocksize)
-                data = self.bz2obj.decompress(raw)
+                data = self.cmpobj.decompress(raw)
                 b.append(data)
             except EOFError:
                 break
@@ -527,15 +524,62 @@ class _BZ2Proxy(object):
 
     def write(self, data):
         self.pos += len(data)
-        raw = self.bz2obj.compress(data)
+        raw = self.cmpobj.compress(data)
         self.fileobj.write(raw)
 
     def close(self):
         if self.mode == "w":
-            raw = self.bz2obj.flush()
+            raw = self.cmpobj.flush()
             self.fileobj.write(raw)
         self.fileobj.close()
+# class _CMPProxy
+
+
+class _BZ2Proxy(_CMPProxy):
+    """Small proxy class that enables external file object
+       support for "r:bz2" and "w:bz2" modes. This is actually
+       a workaround for a limitation in bz2 module's BZ2File
+       class which (unlike gzip.GzipFile) has no support for
+       a file object argument.
+    """
+
+    def __init__(self, fileobj, mode):
+        _CMPProxy.__init__(self, fileobj, mode)
+        self.init()
+
+    def init(self):
+        import bz2
+        self.pos = 0
+        if self.mode == "r":
+            self.cmpobj = bz2.BZ2Decompressor()
+            self.fileobj.seek(0)
+            self.buf = ""
+        else:
+            self.cmpobj = bz2.BZ2Compressor()
+
 # class _BZ2Proxy
+
+class _XZProxy(_CMPProxy):
+    """Small proxy class that enables external file object
+       support for "r:xz" and "w:xz" modes.
+    """
+
+    def __init__(self, fileobj, mode):
+        _CMPProxy.__init__(self, fileobj, mode)
+        self.init()
+
+    def init(self):
+        import lzma
+        self.pos = 0
+        if self.mode == "r":
+            self.cmpobj = lzma.BZ2Decompressor()
+            self.fileobj.seek(0)
+            self.buf = ""
+        else:
+            self.cmpobj = lzma.BZ2Compressor()
+
+# class _XZProxy
+
 
 #------------------------
 # Extraction file object
@@ -967,18 +1011,22 @@ class CpioFile(object):
            'r:'         open for reading exclusively uncompressed
            'r:gz'       open for reading with gzip compression
            'r:bz2'      open for reading with bzip2 compression
+           'r:xz'       open for reading with xz compression
            'a' or 'a:'  open for appending
            'w' or 'w:'  open for writing without compression
            'w:gz'       open for writing with gzip compression
            'w:bz2'      open for writing with bzip2 compression
+           'w:xz'       open for writing with xz compression
 
            'r|*'        open a stream of cpio blocks with transparent compression
            'r|'         open an uncompressed stream of cpio blocks for reading
            'r|gz'       open a gzip compressed stream of cpio blocks
            'r|bz2'      open a bzip2 compressed stream of cpio blocks
+           'r|xz'       open a xz compressed stream of cpio blocks
            'w|'         open an uncompressed stream for writing
            'w|gz'       open a gzip compressed stream for writing
            'w|bz2'      open a bzip2 compressed stream for writing
+           'w|xz'       open a xz compressed stream for writing
         """
 
         if not name and not fileobj:
@@ -1089,11 +1137,38 @@ class CpioFile(object):
         t._extfileobj = False
         return t
 
+    @classmethod
+    def xzopen(cls, name, mode="r", fileobj=None, compresslevel=6):
+        """
+        Open xz compressed cpio archive name for reading or writing.
+        Appending is not allowed.
+        """
+        if len(mode) > 1 or mode not in "rw":
+            raise ValueError("mode must be 'r' or 'w'.")
+
+        try:
+            import lzma
+        except ImportError:
+            raise CompressionError("lzma module is not available")
+
+        if fileobj is not None:
+            fileobj = _XZProxy(fileobj, mode)
+        else:
+            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, dict_size: 20 })
+
+        try:
+            t = cls.cpioopen(name, mode, fileobj)
+        except IOError:
+            raise ReadError("not a XZ file")
+        t._extfileobj = False
+        return t
+
     # All *open() methods are registered here.
     OPEN_METH = {
         "cpio": "cpioopen",   # uncompressed cpio
         "gz":  "gzopen",    # gzip compressed cpio
-        "bz2": "bz2open"    # bzip2 compressed cpio
+        "bz2": "bz2open",   # bzip2 compressed cpio
+        "xz":  "xzopen "    # xz compressed cpio
     }
 
     #--------------------------------------------------------------------------

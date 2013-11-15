@@ -34,7 +34,7 @@ COUNTER = 0
 
 class MenuEntry(object):
     def __init__(self, hypervisor, hypervisor_args, kernel, kernel_args,
-                 initrd, tboot = None, tboot_args = None, title = None):
+                 initrd, title = None, tboot = None, tboot_args = None):
         self.tboot = tboot
         self.tboot_args = tboot_args
         self.hypervisor = hypervisor

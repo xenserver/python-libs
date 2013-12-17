@@ -5,13 +5,13 @@ Copyright (c) 2013, Citrix Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
+modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
+   list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
+   and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -61,7 +61,7 @@ class MenuEntry(object):
 
     def setKernelArgs(self, args):
         self.kernel_args = ' '.join(args)
-    
+
 class Bootloader(object):
     def __init__(self, src_fmt, src_file, menu = None, menu_order = None,
                  default = None, timeout = None, serial = None,
@@ -85,11 +85,11 @@ class Bootloader(object):
     def append(self, label, entry):
         self.menu[label] = entry
         self.menu_order.append(label)
-        
+
     def remove(self, label):
         del self.menu[label]
         self.menu_order.remove(label)
-        
+
     @classmethod
     def readExtLinux(cls, src_file):
         menu = {}
@@ -112,7 +112,7 @@ class Bootloader(object):
                 keywrd = els[0].lower()
 
                 # header
-                if (l.startswith('# location ') and len(els) == 3 and 
+                if (l.startswith('# location ') and len(els) == 3 and
                     els[2] in ['mbr', 'partition']):
                     location = els[2]
                 elif keywrd == 'serial' and len(els) > 1:
@@ -191,7 +191,7 @@ class Bootloader(object):
 
         def create_label(title):
             global COUNTER
-            
+
             # FIXME use branding
             if title == 'XenServer':
                 return 'xe'
@@ -217,7 +217,7 @@ class Bootloader(object):
                     continue
 
                 # header
-                if (l.startswith('# location ') and len(els) == 3 and 
+                if (l.startswith('# location ') and len(els) == 3 and
                     els[2] in ['mbr', 'partition']):
                     location = els[2]
                 elif els[0] == 'serial' and len(els) > 1:

@@ -5,13 +5,13 @@ Copyright (c) 2013, Citrix Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
+modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
+   list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
+   and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -171,7 +171,7 @@ class PCIIds(object):
         self.sub_dict = {}
         self.main_dict = {}
         self.class_dict = {}
-        
+
         vendor = None
         cls = None
 
@@ -213,7 +213,7 @@ class PCIIds(object):
                 vendor, text = line.split(None, 1)
                 if vendor not in self.vendor_dict:
                     self.vendor_dict[vendor] = text
-    
+
         fh.close()
 
     @classmethod
@@ -244,7 +244,7 @@ class PCIIds(object):
 class PCIDevices(object):
     def __init__(self):
         self.devs = {}
-        
+
         cmd = subprocess.Popen(['lspci', '-mn'], bufsize = 1,
                                stdout = subprocess.PIPE)
         for l in cmd.stdout:

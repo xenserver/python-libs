@@ -5,13 +5,13 @@ Copyright (c) 2013, Citrix Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
+modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
+   list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
+   and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -90,7 +90,7 @@ class DriverPackage(Package):
             self.filename,
             self.destination
             ) = ( repository, label, long(size), md5sum, fname, root )
-        
+
     def __repr__(self):
         return "<DriverPackage '%s'>" % self.label
 
@@ -165,7 +165,7 @@ class Repository(object):
 
     def _parse_repofile(self, repofile):
         """ Parse repository data -- get repository identifier and name. """
-        
+
         repofile_contents = repofile.read()
         repofile.close()
 
@@ -185,7 +185,7 @@ class Repository(object):
             optional_attrs = ('build')
 
             for attr in attrs:
-                self.__dict__[attr] = xmlunwrap.getStrAttribute(repo_node[0], [attr], default = None, 
+                self.__dict__[attr] = xmlunwrap.getStrAttribute(repo_node[0], [attr], default = None,
                                                                 mandatory = (attr not in optional_attrs))
 
             desc_node = xmlunwrap.getElementsByTagName(xmldoc, ['description'], mandatory = True)
@@ -211,7 +211,7 @@ class Repository(object):
     def _parse_packages(self, pkgfile):
         pkgfile_contents = pkgfile.read()
         pkgfile.close()
-        
+
         # update md5sum for repo
         self._md5.update(pkgfile_contents)
 
@@ -272,7 +272,7 @@ class Repository(object):
                 is_group = True
         except Exception:
             pass
-            
+
         for repo_dir in repo_dirs:
             if cls.isRepo(access, repo_dir):
                 repos.append(cls(access, repo_dir, is_group))

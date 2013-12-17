@@ -9,13 +9,13 @@ Copyright (c) 2013, Citrix Inc.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met: 
+modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
+   list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution. 
+   and/or other materials provided with the distribution.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -1187,7 +1187,7 @@ class CpioFile(object):
             buf = trailer.tobuf()
             self.fileobj.write(buf)
             self.offset += len(buf)
-            
+
 #            blocks, remainder = divmod(self.offset, BLOCKSIZE)
 #            if remainder > 0:
 #                self.fileobj.write((BLOCKSIZE - remainder) * NUL)
@@ -1576,7 +1576,7 @@ class CpioFile(object):
             if self.inodes.has_key(cpioinfo.ino):
                 # actual file exists, create link
                 # FIXME handle platforms that don't support hardlinks
-                os.link(os.path.join(cpioinfo._link_path, 
+                os.link(os.path.join(cpioinfo._link_path,
                                      self.inodes[cpioinfo.ino][0]), cpiogetpath)
             else:
                 extractinfo = self._datamember(cpioinfo)

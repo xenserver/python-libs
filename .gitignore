@@ -5,4 +5,7 @@
 *~
 
 # 'xcp' symlink for test harness
-tests/xcp
+/tests/xcp
+
+# 'xcp' symlink for pylint
+/xcp

@@ -68,6 +68,10 @@ def get_nic_with_pci(nics, pci):
             return nic
     return None
 
+def get_nics_with_pci(nics, pci):
+    """Search for all nics with a PCI for multi-eth-per-function cards"""
+    return [ n for n in nics if n.pci == pci ]
+
 def get_new_temp_name(nics, eth):
     """Generate a new temporary name"""
     names = ( [ x.kname for x in nics if x.kname ] +

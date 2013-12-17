@@ -296,6 +296,44 @@ def rename_logic( static_rules,
               "Current State is \n%s" % (util.niceformat(transactions),
                                          util.niceformat(cur_state)))
 
+    # 3rd pass.  This logic should cover multi-nic functions
+    if len(multinic_functions):
+
+        for fn in multinic_functions:
+            lastnics = util.get_nics_with_pci(last_state + old_state, fn)
+            newnics  = util.get_nics_with_pci(cur_state, fn)
+
+            # Check that the function still has the same number of nics
+            if len(lastnics) != len(newnics):
+                LOG.warn("multi-nic function %s had %d nics but now has %d.  "
+                         "Defering all until later for renaming"
+                         % (fn, len(lastnics), len(newnics)))
+                continue
+
+            # Check that all nics are still pending a rename
+            if False in (util.needs_renaming(n) for n in newnics):
+                LOG.info("Some of %s's nics have alrealdy been renamed.  "
+                         "Defering the rest until later for renaming"
+                         % (fn, ))
+                continue
+
+            # Check that all expected target names are free
+            if False in (util.tname_free(cur_state, n.tname) for n in lastnics):
+                LOG.info("Some of %s's nics target names already used.  "
+                         "Defering the rest until later for renaming"
+                         % (fn, ))
+                continue
+
+            # Assume the MACs are ordered reliably.  They are typically adjacent
+            lastnics.sort(key = lambda n: n.mac.integer)
+            newnics.sort(key = lambda n: n.mac.integer)
+
+            for new, old in zip(newnics, lastnics):
+                __rename_nic(new, old.tname, transactions, cur_state)
+
+        LOG.debug("Finished multi-nic logic.  Transactions are \n%s\n"
+                  "Current State is \n%s" % (util.niceformat(transactions),
+                                             util.niceformat(cur_state)))
 
     # For completely new network cards which we have never seen before, work out
     # a safe new number to assign it

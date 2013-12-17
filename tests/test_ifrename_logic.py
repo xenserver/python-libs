@@ -366,6 +366,38 @@ class TestUseCases(unittest.TestCase):
         for cur, exp in zip(cur_state, expected_names):
             self.assertEqual(cur.tname, exp)
 
+    def test_rshp_new_hardware(self):
+        """
+        Brand new hardware - including duplicate PCI ID.  (Use case based upon
+        plugging the hard drive from a broken server into a new identical one,
+        for the Rackspace HP blades with Mellanox cards with two eths per
+        function).
+        """
+        cur_eth0 = MACPCI("02:23:45:67:89:01", "0000:01:00.0", "side-1-eth0")
+        cur_eth1 = MACPCI("12:23:45:67:89:01", "0000:02:00.0", "side-34-eth1")
+        cur_eth2 = MACPCI("22:23:45:67:89:01", "0000:03:00.0", "side-71-eth2")
+        # Devices with the same PCI ID are assumed to differ by 1 in the MAC
+        cur_eth3 = MACPCI("32:23:45:67:89:01", "0000:04:00.0", "side-3012-eth3")
+        cur_eth4 = MACPCI("32:23:45:67:89:02", "0000:04:00.0", "side-4332-eth4")
+        cur_state = [cur_eth0, cur_eth1, cur_eth2, cur_eth3, cur_eth4]
+
+        last_eth0 = MACPCI("01:23:45:67:89:01", "0000:01:00.0", None, "eth0")
+        last_eth1 = MACPCI("11:23:45:67:89:01", "0000:02:00.0", None, "eth1")
+        last_eth2 = MACPCI("21:23:45:67:89:01", "0000:03:00.0", None, "eth2")
+        # Devices with the same PCI ID are assumed to differ by 1 in the MAC
+        # Make eth3 have a MAC higher than eth4 to ensure that we order the new NICs correctly
+        last_eth3 = MACPCI("31:23:45:67:89:02", "0000:04:00.0", None, "eth3")
+        last_eth4 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", None, "eth4")
+        last_state = [last_eth0, last_eth1, last_eth2, last_eth4, last_eth3]
+
+        ts = rename([], deepcopy(cur_state), last_state, [])
+
+        self.assertTrue(len(ts) == 5)
+        apply_transactions(cur_state, ts)
+
+        for cur, last in zip(cur_state, last_state):
+            self.assertTrue(cur.tname == last.tname)
+
 
 class TestInputSanitisation(unittest.TestCase):
 

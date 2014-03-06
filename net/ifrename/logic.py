@@ -196,33 +196,13 @@ def rename_logic( static_rules,
 
             # Warn if UDEV failed to rename the nic.  Either there is a logical
             # bug somewhere, or the user is messing around with our files.
-            if VALID_ETH_NAME.match(nic.kname) is None:
-                LOG.warning("nic '%s' in same location as last boot was not "
-                            "renamed by udev." % (nic,))
-
-            # Warn if UDEV did rename the nic, but not as per the last boot
-            # information
-            elif nic.kname != lastnic.tname:
-                LOG.warning("nic '%s' in same location as last boot was "
-                            "renamed by udev but to an unexpected name."
-                            % (nic,))
-
-            # It seems that UDEV is in order and it did successfully rename
-            # the nic as instructed
-            else:
-                # If all is in order, and the nic currently has the same name
-                # as it should end up having, fake a rename and make no
-                # transactions for "ip link" to perform
-                if can_rename:
-                    LOG.info("nic '%s' in the same location as before. Keeping "
-                             "it in the same location" % (nic,))
-                    nic.tname = lastnic.tname
-                    continue
+            if VALID_CUR_STATE_KNAME.match(nic.kname) is None:
+                LOG.warning("nic '%s' was not renamed by udev." % (nic,))
 
             # If the correct target name is free, attempt to rename to it.
             if can_rename:
-                LOG.info("nic '%s' in the same location as before but with a "
-                         "wrong name.  Renaming to %s" % (nic, lastnic.tname))
+                LOG.info("nic '%s' in the same location as before. "
+                         "Renaming to %s" % (nic, lastnic.tname))
                 __rename_nic(nic, lastnic.tname, transactions, cur_state)
             else:
                 # If the target name is already taken, warn about it

@@ -48,7 +48,9 @@ def runCmd(command, with_stdout = False, with_stderr = False, inputtext = None):
         l += "\nSTANDARD OUT:\n" + out
     if err != "":
         l += "\nSTANDARD ERROR:\n" + err
-    logger.debug(l)
+
+    for line in l.split('\n'):
+        logger.debug(line)
 
     if with_stdout and with_stderr:
         return rv, out, err

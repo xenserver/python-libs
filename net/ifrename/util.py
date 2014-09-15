@@ -77,7 +77,10 @@ def get_new_temp_name(nics, eth):
     names = ( [ x.kname for x in nics if x.kname ] +
               [ x.tname for x in nics if x.tname ] )
     while True:
-        rn = random.randrange(1, 2**16-1)
+        # len(name) cannot be greater than 15. Using a 4 digit random number
+        # allows for 100 (eth0-eth99) devices to have a temp name without going
+        # over 15 byte limit
+        rn = random.randrange(1, 10000)
         name = "side-%d-%s" % (rn, eth)
         if name not in names:
             return name

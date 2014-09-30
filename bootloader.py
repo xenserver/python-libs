@@ -301,7 +301,7 @@ class Bootloader(object):
         print >> fh, "# location " + self.location
 
         if self.serial:
-            if self.serial['flow'] is None: 
+            if self.serial.get('flow', None) is None: 
                 print >> fh, "serial %d %d" % (self.serial['port'],
                                                self.serial['baud'])
             else:

@@ -116,10 +116,14 @@ class Bootloader(object):
                     els[2] in ['mbr', 'partition']):
                     location = els[2]
                 elif keywrd == 'serial' and len(els) > 1:
-                    baud = 9600
+                    baud = '9600'
                     if len(els) > 2:
-                        baud = int(els[2])
-                    serial = {'port': int(els[1]), 'baud': baud}
+                        if ' ' in els[2]:
+                            baud, flow = els[2].split(None, 1)
+                        else:
+                            baud = els[2]
+                            flow = None
+                    serial = {'port': int(els[1]), 'baud': int(baud), 'flow': flow}
                 elif keywrd == 'default' and len(els) == 2:
                     default = els[1]
                 elif keywrd == 'timeout' and len(els) == 2:
@@ -297,8 +301,13 @@ class Bootloader(object):
         print >> fh, "# location " + self.location
 
         if self.serial:
-            print >> fh, "serial %d %d" % (self.serial['port'],
-                                           self.serial['baud'])
+            if self.serial['flow'] is None: 
+                print >> fh, "serial %d %d" % (self.serial['port'],
+                                               self.serial['baud'])
+            else:
+                print >> fh, "serial %d %d %s" % (self.serial['port'],
+                                                  self.serial['baud'],
+                                                  self.serial['flow'])
         if self.default:
             print >> fh, "default " + self.default
         print >> fh, "prompt 1"

@@ -352,10 +352,10 @@ class Bootloader(object):
                     boilerplates.append(boilerplate)
                     boilerplate = []
                 elif title:
-                    if l.startswith("multiboot"):
+                    if l.startswith("multiboot2"):
                         hypervisor, hypervisor_args = (l.split(None, 1)
                                                        [1].split(None, 1))
-                    elif l.startswith("module"):
+                    elif l.startswith("module2"):
                         if kernel:
                             initrd = l.split(None, 1)[1]
                         else:
@@ -543,11 +543,11 @@ class Bootloader(object):
                 pass
 
             if m.hypervisor:
-                print >> fh, "\tmultiboot %s %s" % (m.hypervisor, m.hypervisor_args)
+                print >> fh, "\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args)
                 if m.kernel:
-                    print >> fh, "\tmodule %s %s" % (m.kernel, m.kernel_args)
+                    print >> fh, "\tmodule2 %s %s" % (m.kernel, m.kernel_args)
                 if m.initrd:
-                    print >> fh, "\tmodule %s" % m.initrd
+                    print >> fh, "\tmodule2 %s" % m.initrd
             else:
                 if m.kernel:
                     print >> fh, "\tlinux %s %s" % (m.kernel, m.kernel_args)

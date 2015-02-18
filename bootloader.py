@@ -35,7 +35,8 @@ COUNTER = 0
 
 class MenuEntry(object):
     def __init__(self, hypervisor, hypervisor_args, kernel, kernel_args,
-                 initrd, title = None, tboot = None, tboot_args = None):
+                 initrd, title = None, tboot = None, tboot_args = None,
+                 root = None):
         self.tboot = tboot
         self.tboot_args = tboot_args
         self.hypervisor = hypervisor
@@ -44,6 +45,7 @@ class MenuEntry(object):
         self.kernel_args = kernel_args
         self.initrd = initrd
         self.title = title
+        self.root = root
 
     def getTbootArgs(self):
         return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.tboot_args)
@@ -298,6 +300,7 @@ class Bootloader(object):
         kernel = None
         kernel_args = None
         initrd = None
+        root = None
         menu_entry_extra = None
         menu_entry_contents = []
         boilerplate = []
@@ -366,6 +369,8 @@ class Bootloader(object):
                                                [1].split(None, 1))
                     elif l.startswith("initrd"):
                         initrd = l.split(None, 1)[1]
+                    elif l.startswith("search --label --set root"):
+                        root = l.split()[4]
                     elif l == "}":
                         label = create_label(title)
                         menu_order.append(label)
@@ -373,7 +378,8 @@ class Bootloader(object):
                                                 hypervisor_args = hypervisor_args,
                                                 kernel = kernel,
                                                 kernel_args = kernel_args,
-                                                initrd = initrd, title = title)
+                                                initrd = initrd, title = title,
+                                                root = root)
                         menu[label].extra = menu_entry_extra
                         menu[label].contents = menu_entry_contents
 
@@ -383,6 +389,7 @@ class Bootloader(object):
                         kernel = None
                         kernel_args = None
                         initrd = None
+                        root = None
                         menu_entry_extra = None
                         menu_entry_contents = []
 
@@ -541,6 +548,9 @@ class Bootloader(object):
                     print >> fh, contents
             except AttributeError:
                 pass
+
+            if m.root:
+                print >> fh, "\tsearch --label --set root %s" % m.root
 
             if m.hypervisor:
                 print >> fh, "\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args)

@@ -317,6 +317,8 @@ class Bootloader(object):
                 return 'xe-serial'
             if title.endswith('Safe Mode'):
                 return 'safe'
+            if title.endswith('upgrade'):
+                return 'upgrade'
             if ' / ' in title:
                 if '(Serial,' in title:
                     return 'fallback-serial'

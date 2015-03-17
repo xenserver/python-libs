@@ -295,6 +295,8 @@ class Bootloader(object):
         timeout = None
         serial = None
         title = None
+        tboot = None
+        tboot_args = None
         hypervisor = None
         hypervisor_args = None
         kernel = None
@@ -312,9 +314,13 @@ class Bootloader(object):
             # FIXME use branding
             if title == 'XenServer':
                 return 'xe'
+            if title == 'XenServer (Trusted Boot)':
+                return 'xe-tboot'
 
             if title.endswith('(Serial)'):
                 return 'xe-serial'
+            if title.endswith('(Serial) (Trusted Boot)'):
+                return 'xe-serial-tboot'
             if title.endswith('Safe Mode'):
                 return 'safe'
             if title.endswith('upgrade'):
@@ -358,10 +364,17 @@ class Bootloader(object):
                     boilerplate = []
                 elif title:
                     if l.startswith("multiboot2"):
-                        hypervisor, hypervisor_args = (l.split(None, 1)
-                                                       [1].split(None, 1))
+                        if "tboot" in l:
+                            tboot, tboot_args = (l.split(None, 1)
+                                                 [1].split(None, 1))
+                        else:
+                            hypervisor, hypervisor_args = (l.split(None, 1)
+                                                           [1].split(None, 1))
                     elif l.startswith("module2"):
-                        if kernel:
+                        if not hypervisor:
+                            hypervisor, hypervisor_args = (l.split(None, 1)
+                                                           [1].split(None, 1))
+                        elif kernel:
                             initrd = l.split(None, 1)[1]
                         else:
                             kernel, kernel_args = (l.split(None, 1)
@@ -376,7 +389,9 @@ class Bootloader(object):
                     elif l == "}":
                         label = create_label(title)
                         menu_order.append(label)
-                        menu[label] = MenuEntry(hypervisor = hypervisor,
+                        menu[label] = MenuEntry(tboot = tboot,
+                                                tboot_args = tboot_args,
+                                                hypervisor = hypervisor,
                                                 hypervisor_args = hypervisor_args,
                                                 kernel = kernel,
                                                 kernel_args = kernel_args,
@@ -386,6 +401,8 @@ class Bootloader(object):
                         menu[label].contents = menu_entry_contents
 
                         title = None
+                        tboot = None
+                        tboot_args = None
                         hypervisor = None
                         hypervisor_args = None
                         kernel = None
@@ -555,7 +572,11 @@ class Bootloader(object):
                 print >> fh, "\tsearch --label --set root %s" % m.root
 
             if m.hypervisor:
-                print >> fh, "\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args)
+                if m.tboot:
+                    print >> fh, "\tmultiboot2 %s %s" % (m.tboot, m.tboot_args)
+                    print >> fh, "\tmodule2 %s %s" % (m.hypervisor, m.hypervisor_args)
+                else:
+                    print >> fh, "\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args)
                 if m.kernel:
                     print >> fh, "\tmodule2 %s %s" % (m.kernel, m.kernel_args)
                 if m.initrd:

@@ -398,6 +398,84 @@ class TestUseCases(unittest.TestCase):
         for cur, last in zip(cur_state, last_state):
             self.assertTrue(cur.tname == last.tname)
 
+    def test_ibft_new_hardware(self):
+        """
+        Brand new hardware.  (Use case based upon plugging the hard drive from
+        a broken server into a new identical one).
+        """
+        cur_eth0 = MACPCI("02:23:45:67:89:01", "0000:01:00.0", "side-1-eth0")
+        cur_eth1 = MACPCI("12:23:45:67:89:01", "0000:02:00.0", "side-34-eth1")
+        cur_eth2 = MACPCI("22:23:45:67:89:01", "0000:03:00.0", "ibft0")
+        cur_eth3 = MACPCI("32:23:45:67:89:01", "0000:04:00.0", "side-3012-eth3")
+        cur_eth4 = MACPCI("42:23:45:67:89:01", "0000:05:00.0", "side-4332-eth4")
+        cur_state = [cur_eth0, cur_eth1, cur_eth2, cur_eth3, cur_eth4]
+
+        ts = rename([], deepcopy(cur_state), [], [])
+
+        self.assertEqual(len(ts), 4)
+        apply_transactions(cur_state, ts)
+        self.assertEqual(cur_eth0.tname, "eth0")
+        self.assertEqual(cur_eth1.tname, "eth1")
+        self.assertEqual(cur_eth3.tname, "eth2")
+        self.assertEqual(cur_eth4.tname, "eth3")
+
+    def test_ibft_no_change(self):
+        """
+        No changes from last boot.  No transactions and all nics
+        retain their same name
+        """
+        cur_eth0 = MACPCI("01:23:45:67:89:01", "0000:01:00.0", "eth0")
+        cur_eth1 = MACPCI("11:23:45:67:89:01", "0000:02:00.0", "eth1")
+        cur_eth2 = MACPCI("21:23:45:67:89:01", "0000:03:00.0", "ibft0")
+        cur_eth3 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", "eth2")
+        cur_eth4 = MACPCI("41:23:45:67:89:01", "0000:05:00.0", "eth3")
+        cur_state = [cur_eth0, cur_eth1, cur_eth2, cur_eth3, cur_eth4]
+
+        last_eth0 = MACPCI("01:23:45:67:89:01", "0000:01:00.0", None, "eth0")
+        last_eth1 = MACPCI("11:23:45:67:89:01", "0000:02:00.0", None, "eth1")
+        last_eth3 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", None, "eth2")
+        last_eth4 = MACPCI("41:23:45:67:89:01", "0000:05:00.0", None, "eth3")
+        last_state = [last_eth0, last_eth1, last_eth3, last_eth4]
+
+        ts = rename([], cur_state, last_state, [])
+
+        self.assertEqual(len(ts), 0)
+
+        for eth in cur_state:
+            # Skip the iBFT NIC since it doesn't get a tname and is completely
+            # ignored.
+            if eth.kname != "ibft0":
+                self.assertEqual(eth.kname, eth.tname)
+
+    def test_ibft_nic_to_ibft(self):
+        """
+        Convert a NIC to iBFT.  Since iBFT NICs are ignored, no transactions
+        are expected.
+        """
+        cur_eth0 = MACPCI("01:23:45:67:89:01", "0000:01:00.0", "eth0")
+        cur_eth1 = MACPCI("11:23:45:67:89:01", "0000:02:00.0", "eth1")
+        cur_eth2 = MACPCI("21:23:45:67:89:01", "0000:03:00.0", "ibft0")
+        cur_eth3 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", "eth3")
+        cur_eth4 = MACPCI("41:23:45:67:89:01", "0000:05:00.0", "eth4")
+        cur_state = [cur_eth0, cur_eth1, cur_eth2, cur_eth3, cur_eth4]
+
+        last_eth0 = MACPCI("01:23:45:67:89:01", "0000:01:00.0", None, "eth0")
+        last_eth1 = MACPCI("11:23:45:67:89:01", "0000:02:00.0", None, "eth1")
+        last_eth2 = MACPCI("21:23:45:67:89:01", "0000:03:00.0", None, "eth2")
+        last_eth3 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", None, "eth3")
+        last_eth4 = MACPCI("41:23:45:67:89:01", "0000:05:00.0", None, "eth4")
+        last_state = [last_eth0, last_eth1, last_eth2, last_eth3, last_eth4]
+
+        ts = rename([], cur_state, last_state, [])
+
+        self.assertEqual(len(ts), 0)
+
+        for eth in cur_state:
+            # Skip the iBFT NIC since it doesn't get a tname and is completely
+            # ignored.
+            if eth.kname != "ibft0":
+                self.assertEqual(eth.kname, eth.tname)
+
 
 class TestInputSanitisation(unittest.TestCase):
 

@@ -54,6 +54,7 @@ from xcp.net.ifrename.macpci import MACPCI
 
 VALID_CUR_STATE_KNAME = re.compile("^(?:eth[\d]+|side-[\d]+-eth[\d]+)$")
 VALID_ETH_NAME = re.compile("^eth([\d])+$")
+VALID_IBFT_NAME = re.compile("^ibft([\d])+$")
 
 # util needs to import VALID_ETH_NAME
 from xcp.net.ifrename import util
@@ -406,6 +407,9 @@ def rename( static_rules,
                                   "address")
 
     if len(cur_state):
+        # Filter out iBFT NICs
+        cur_state = filter(lambda x: VALID_IBFT_NAME.match(x.kname) is None,
+                           cur_state)
 
         # Verify types and properties of the list
         for e in cur_state:

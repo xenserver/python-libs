@@ -256,6 +256,9 @@ class DynamicRules(object):
 
         def validate(entry):
             try:
+                # iBFT NICs are ignored so don't have a tname
+                if entry[2] is None:
+                    return False
                 MACPCI(entry[0], entry[1], tname=entry[2])
                 return True
             except Exception, e:

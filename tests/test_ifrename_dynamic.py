@@ -149,6 +149,14 @@ class TestSave(unittest.TestCase):
         except Exception:
             self.fail()
 
+    def test_one_ibft_lastboot(self):
+
+        dr = DynamicRules()
+        dr.lastboot = [["00:1E:67:31:59:89", "0000:00:19.0", None]]
+
+        self.assertEqual(json.loads(dr.write(False)), {'lastboot': [],
+                                                       'old': []})
+
 
 if __name__ == "__main__":
     sys.exit(unittest.main())

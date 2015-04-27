@@ -532,7 +532,7 @@ class Bootloader(object):
             print >> fh, "serial --unit=%d --speed=%s" % (self.serial['port'],
                                                           self.serial['baud'])
             print >> fh, "terminal_input serial console"
-            print >> fh, "terminal_output serial"
+            print >> fh, "terminal_output serial console"
         if self.default:
             for i in range(len(self.menu_order)):
                 if self.menu_order[i] == self.default:

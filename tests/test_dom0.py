@@ -77,14 +77,11 @@ class TestDom0(unittest.TestCase):
         test_values = [
             (0, 1), # Special case: Zero
             (1, 1), # Minimum
-            (2, 2),
-            (3, 3),
-            (4, 4), # 4 vCPUs threshold
-            (5, 4), # Aboue threshold
-            (23, 4), # Below 6 vCPUs threshold
-            (24, 6), # Threshold
-            (31, 6), # Below 8 vCPUs threshold
-            (32, 8), # Threshold
+            (4, 4),
+            (8, 8),
+            (16, 16), # 16 vCPUs threshold
+            (17, 16), # Above threshold
+            (24, 16),
             ]
 
         for host_pcpus, expected in test_values:

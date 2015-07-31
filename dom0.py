@@ -104,15 +104,13 @@ def default_vcpus(host_pcpus):
     """Return the default number of dom0 vcpus for the specified number
     of host pcpus."""
 
-    if host_pcpus < 2:
+    # Special case (minimum)
+    if host_pcpus == 0:
         return 1
-    elif host_pcpus < 3:
-        return 2
-    elif host_pcpus < 4:
-        return 3
-    elif host_pcpus < 24:
-        return 4
-    elif host_pcpus < 32:
-        return 6
-    else:
-        return 8
+
+    # vCPUs = host_pcpus for host pcpus <= 16
+    if host_pcpus <= 16:
+        return host_pcpus
+
+    # 16 for anything greater than 16
+    return 16

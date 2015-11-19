@@ -30,6 +30,7 @@ import os.path
 import re
 import tempfile
 import copy
+import branding
 
 COUNTER = 0
 
@@ -199,8 +200,7 @@ class Bootloader(object):
         def create_label(title):
             global COUNTER
 
-            # FIXME use branding
-            if title == 'XenServer':
+            if title == branding.PRODUCT_BRAND:
                 return 'xe'
 
             if title.endswith('(Serial)'):

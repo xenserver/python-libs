@@ -74,18 +74,25 @@ class TestDom0(unittest.TestCase):
             self.assertEqual(calculated, expected)
 
     def test_default_vcpus(self):
+        G = 1024
         test_values = [
-            (0, 1), # Special case: Zero
-            (1, 1), # Minimum
-            (4, 4),
-            (8, 8),
-            (16, 16), # 16 vCPUs threshold
-            (17, 16), # Above threshold
-            (24, 16),
+            (0, None, 1), # Special case: Zero
+            (1, None, 1), # Minimum
+            (4, None, 4),
+            (8, None, 8),
+            (8, 1*G, 4),
+            (8, 3*G, 8),
+            (8, 5*G, 8),
+            (16, None, 16), # 16 vCPUs threshold
+            (16, 1*G, 4),
+            (16, 3*G, 8),
+            (16, 5*G, 16),
+            (17, None, 16), # Above threshold
+            (24, None, 16),
             ]
 
-        for host_pcpus, expected in test_values:
-            calculated = default_vcpus(host_pcpus)
+        for host_pcpus, mem, expected in test_values:
+            calculated = default_vcpus(host_pcpus, mem)
             self.assertEqual(calculated, expected)
 
 if __name__ == "__main__":

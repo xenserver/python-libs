@@ -100,9 +100,19 @@ def parse_mem(arg):
 
     return (dom0_mem, dom0_mem_min, dom0_mem_max)
 
-def default_vcpus(host_pcpus):
+def default_vcpus(host_pcpus, dom0_mem_mb = None):
     """Return the default number of dom0 vcpus for the specified number
-    of host pcpus."""
+    of host pcpus and the amount of dom0 memory."""
+
+    max_vcpus = 16
+
+    # Calculate max number of vCPUs
+    # based on the amount of available memory
+    if dom0_mem_mb is not None:
+        if dom0_mem_mb < 2 * 1024:
+            max_vcpus = 4
+        elif dom0_mem_mb < 4 * 1024:
+            max_vcpus = 8
 
     # Special case (minimum)
     if host_pcpus == 0:
@@ -110,7 +120,7 @@ def default_vcpus(host_pcpus):
 
     # vCPUs = host_pcpus for host pcpus <= 16
     if host_pcpus <= 16:
-        return host_pcpus
+        return min(host_pcpus, max_vcpus)
 
     # 16 for anything greater than 16
-    return 16
+    return min(16, max_vcpus)

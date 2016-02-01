@@ -118,6 +118,7 @@ class Repository(object):
     PKGDATA_FILENAME = "XS-PACKAGES"
     REPOLIST_FILENAME = "XS-REPOSITORY-LIST"
 
+    XCP_MAIN_IDENT = "xcp:main"
     XS_MAIN_IDENT = "xs:main"
 
     OPER_MAP = {'eq': ' = ', 'ne': ' != ', 'lt': ' < ', 'gt': ' > ', 'le': ' <= ', 'ge': ' >= '}

@@ -4,7 +4,11 @@ import unittest, sys, os, os.path as path, logging
 try:
     import json
 except:
-    import simplejson as json
+    try:
+        import simplejson as json
+    except:
+        print >>sys.stderr, "No json module, skipping"
+        sys.exit(0)
 from copy import deepcopy
 
 try:

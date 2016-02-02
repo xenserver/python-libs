@@ -14,7 +14,7 @@ import subprocess, shutil
 try:
     from hashlib import md5
 except:
-    import md5
+    from md5 import md5
 
 def writeRandomFile(fn, size, start='', add='a'):
     f = open(fn, 'wb')

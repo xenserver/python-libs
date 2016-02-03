@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import md5
 import os.path
 import xml.dom.minidom
+import ConfigParser
 
 import xcp.version as version
 import xcp.xmlunwrap as xmlunwrap
@@ -121,11 +122,61 @@ class Repository(object):
 
     @classmethod
     def findRepositories(cls, access):
-        return LegacyRepository.findRepositories(access)
+        repos = []
+
+        if YumRepository.isRepo(access, ""):
+            repos += YumRepository.findRepositories(access)
+        if LegacyRepository.isRepo(access, ""):
+            repos += LegacyRepository.findRepositories(access)
+        return repos
 
     @classmethod
     def getRepoVer(cls, access):
+        repo_ver = YumRepository.getRepoVer(access)
+        if repo_ver:
+            return repo_ver
         return LegacyRepository.getRepoVer(access)
+
+class YumRepository(Repository):
+    """ Represents a Yum repository containing packages and associated meta data. """
+    REPOMD_FILENAME = "repodata/repomd.xml"
+    TREEINFO_FILENAME = ".treeinfo"
+
+    @classmethod
+    def findRepositories(cls, access):
+        access.start()
+        is_repo = cls.isRepo(access, "")
+        access.finish()
+        if not is_repo:
+            return []
+        return [ YumRepository(access, "") ]
+
+    def __init__(self, access, base = ""):
+        Repository.__init__(self, access, base)
+
+    @classmethod
+    def isRepo(cls, access, base):
+        """ Return whether there is a repository at base address
+        'base' accessible using accessor."""
+        return access.access(os.path.join(base, cls.REPOMD_FILENAME))
+
+    @classmethod
+    def getRepoVer(cls, access):
+        repo_ver = None
+
+        access.start()
+        try:
+            treeinfofp = access.openAddress(cls.TREEINFO_FILENAME)
+            treeinfo = ConfigParser.SafeConfigParser()
+            treeinfo.readfp(treeinfofp)
+            treeinfofp.close()
+            ver_str = treeinfo.get('platform', 'version')
+            repo_ver = version.Version.from_string(ver_str)
+
+        except Exception, e:
+            raise RepoFormatError, "Failed to open %s: %s" % (cls.TREEINFO_FILENAME, str(e))
+        access.finish()
+        return repo_ver
 
 class LegacyRepository(Repository):
     """ Represents a XenSource repository containing packages and associated

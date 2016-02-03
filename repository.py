@@ -280,3 +280,18 @@ class Repository(object):
         access.finish()
 
         return repos
+
+    @classmethod
+    def getRepoVer(cls, access):
+        repo_ver = None
+
+        try:
+            repos = cls.findRepositories(access)
+            for r in repos:
+                if r.identifier == cls.XCP_MAIN_IDENT:
+                    repo_ver = r.product_version
+                    break
+        except:
+            pass
+
+        return repo_ver

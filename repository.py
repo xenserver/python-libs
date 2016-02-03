@@ -114,6 +114,22 @@ class RepoFormatError(Exception):
     pass
 
 class Repository(object):
+    """ Represents a repository containing packages and associated meta data. """
+    def __init__(self, access, base = ""):
+        self.access = access
+        self.base = base
+
+    @classmethod
+    def findRepositories(cls, access):
+        return LegacyRepository.findRepositories(access)
+
+    @classmethod
+    def getRepoVer(cls, access):
+        return LegacyRepository.getRepoVer(access)
+
+class LegacyRepository(Repository):
+    """ Represents a XenSource repository containing packages and associated
+    meta data. """
     REPOSITORY_FILENAME = "XS-REPOSITORY"
     PKGDATA_FILENAME = "XS-PACKAGES"
     REPOLIST_FILENAME = "XS-REPOSITORY-LIST"
@@ -123,12 +139,32 @@ class Repository(object):
 
     OPER_MAP = {'eq': ' = ', 'ne': ' != ', 'lt': ' < ', 'gt': ' > ', 'le': ' <= ', 'ge': ' >= '}
 
+    @classmethod
+    def findRepositories(cls, access):
+        # Check known locations:
+        package_list = ['', 'packages', 'packages.main', 'packages.linux',
+                        'packages.site']
+        repos = []
+
+        access.start()
+        try:
+            extra = access.openAddress(cls.REPOLIST_FILENAME)
+            if extra:
+                for line in extra:
+                    package_list.append(line.strip())
+                extra.close()
+        except Exception, e:
+            raise RepoFormatError, "Failed to open %s: %s" % (cls.REPOLIST_FILENAME, str(e))
+
+        for loc in package_list:
+            if cls.isRepo(access, loc):
+                repos.append(LegacyRepository(access, loc))
+        access.finish()
+        return repos
+
     def __init__(self, access, base, is_group = False):
-        (
-            self.accessor,
-            self.base,
-            self.is_group
-        ) = (access, base, is_group)
+        Repository.__init__(self, access, base)
+        self.is_group = is_group
         self._md5 = md5.new()
         self.requires = []
         self.packages = []
@@ -253,33 +289,6 @@ class Repository(object):
         'base' accessible using accessor."""
         return False not in map(lambda x: access.access(os.path.join(base, x)),
                                 [cls.REPOSITORY_FILENAME, cls.PKGDATA_FILENAME])
-
-    @classmethod
-    def findRepositories(cls, access):
-        # Check known locations:
-        repo_dirs = ['']
-        is_group = False
-        repos = []
-
-        access.start()
-        # extend if repo list is present
-        try:
-            extra = access.openAddress(cls.REPOLIST_FILENAME)
-            if extra:
-                repo_dirs.extend(['packages', 'packages.main', 'packages.linux',
-                                  'packages.site'])
-                repo_dirs.extend(map(lambda x: x.strip(), extra))
-                extra.close()
-                is_group = True
-        except Exception:
-            pass
-
-        for repo_dir in repo_dirs:
-            if cls.isRepo(access, repo_dir):
-                repos.append(cls(access, repo_dir, is_group))
-        access.finish()
-
-        return repos
 
     @classmethod
     def getRepoVer(cls, access):

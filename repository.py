@@ -114,7 +114,7 @@ class NoRepository(Exception):
 class RepoFormatError(Exception):
     pass
 
-class Repository(object):
+class BaseRepository(object):
     """ Represents a repository containing packages and associated meta data. """
     def __init__(self, access, base = ""):
         self.access = access
@@ -126,8 +126,8 @@ class Repository(object):
 
         if YumRepository.isRepo(access, ""):
             repos += YumRepository.findRepositories(access)
-        if LegacyRepository.isRepo(access, ""):
-            repos += LegacyRepository.findRepositories(access)
+        if Repository.isRepo(access, ""):
+            repos += Repository.findRepositories(access)
         return repos
 
     @classmethod
@@ -135,9 +135,9 @@ class Repository(object):
         repo_ver = YumRepository.getRepoVer(access)
         if repo_ver:
             return repo_ver
-        return LegacyRepository.getRepoVer(access)
+        return Repository.getRepoVer(access)
 
-class YumRepository(Repository):
+class YumRepository(BaseRepository):
     """ Represents a Yum repository containing packages and associated meta data. """
     REPOMD_FILENAME = "repodata/repomd.xml"
     TREEINFO_FILENAME = ".treeinfo"
@@ -152,7 +152,7 @@ class YumRepository(Repository):
         return [ YumRepository(access, "") ]
 
     def __init__(self, access, base = ""):
-        Repository.__init__(self, access, base)
+        BaseRepository.__init__(self, access, base)
 
     @classmethod
     def isRepo(cls, access, base):
@@ -178,7 +178,7 @@ class YumRepository(Repository):
         access.finish()
         return repo_ver
 
-class LegacyRepository(Repository):
+class Repository(BaseRepository):
     """ Represents a XenSource repository containing packages and associated
     meta data. """
     REPOSITORY_FILENAME = "XS-REPOSITORY"
@@ -209,12 +209,12 @@ class LegacyRepository(Repository):
 
         for loc in package_list:
             if cls.isRepo(access, loc):
-                repos.append(LegacyRepository(access, loc))
+                repos.append(Repository(access, loc))
         access.finish()
         return repos
 
     def __init__(self, access, base, is_group = False):
-        Repository.__init__(self, access, base)
+        BaseRepository.__init__(self, access, base)
         self.is_group = is_group
         self._md5 = md5.new()
         self.requires = []
@@ -309,7 +309,7 @@ class LegacyRepository(Repository):
         except:
             raise RepoFormatError, "%s not in XML" % self.PKGDATA_FILENAME
 
-        for pkg_node in xmlunwrap.getElementsByTagName(xmldoc, ['package'], mandatory = True):
+        for pkg_node in xmlunwrap.getElementsByTagName(xmldoc, ['package']):
             pkg = self._create_package(pkg_node)
             self.packages.append(pkg)
 

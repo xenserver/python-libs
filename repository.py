@@ -126,8 +126,10 @@ class BaseRepository(object):
 
         if YumRepository.isRepo(access, ""):
             repos += YumRepository.findRepositories(access)
-        if Repository.isRepo(access, ""):
+        try:
             repos += Repository.findRepositories(access)
+        except RepoFormatError:
+            pass
         return repos
 
     @classmethod

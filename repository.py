@@ -134,9 +134,8 @@ class BaseRepository(object):
 
     @classmethod
     def getRepoVer(cls, access):
-        repo_ver = YumRepository.getRepoVer(access)
-        if repo_ver:
-            return repo_ver
+        if YumRepository.isRepo(access, ""):
+            return YumRepository.getRepoVer(access)
         return Repository.getRepoVer(access)
 
 class YumRepository(BaseRepository):

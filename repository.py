@@ -159,7 +159,8 @@ class YumRepository(BaseRepository):
     def isRepo(cls, access, base):
         """ Return whether there is a repository at base address
         'base' accessible using accessor."""
-        return access.access(os.path.join(base, cls.REPOMD_FILENAME))
+        return False not in map(lambda x: access.access(os.path.join(base, x)),
+                                [cls.TREEINFO_FILENAME, cls.REPOMD_FILENAME])
 
     @classmethod
     def getRepoVer(cls, access):

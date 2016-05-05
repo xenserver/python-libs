@@ -296,6 +296,7 @@ class FTPAccessor(Accessor):
         self.start_count -= 1
         if self.start_count == 0:
             self.ftp.quit()
+            self.cleanup = False
             self.ftp = None
 
     def access(self, path):

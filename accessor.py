@@ -304,6 +304,8 @@ class FTPAccessor(Accessor):
             self._cleanup()
             url = urllib.unquote(path)
 
+            if self.ftp.size(url) is not None:
+                return True
             lst = self.ftp.nlst(os.path.dirname(url))
             return os.path.basename(url) in map(os.path.basename, lst)
         except Exception, e:

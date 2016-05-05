@@ -122,10 +122,7 @@ class BaseRepository(object):
 
     @classmethod
     def findRepositories(cls, access):
-        repos = []
-
-        if YumRepository.isRepo(access, ""):
-            repos += YumRepository.findRepositories(access)
+        repos = YumRepository.findRepositories(access)
         try:
             repos += Repository.findRepositories(access)
         except RepoFormatError:
@@ -134,7 +131,11 @@ class BaseRepository(object):
 
     @classmethod
     def getRepoVer(cls, access):
-        if YumRepository.isRepo(access, ""):
+        access.start()
+        is_yum = YumRepository.isRepo(access, "")
+        access.finish()
+        
+        if is_yum:
             return YumRepository.getRepoVer(access)
         return Repository.getRepoVer(access)
 

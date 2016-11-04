@@ -5,7 +5,7 @@ DIRNAME := xcp
 include $(B_BASE)/common.mk
 include $(B_BASE)/rpmbuild.mk
 
-PYTHON_LIB_VERSION := 1.9.0
+PYTHON_LIB_VERSION := 2.0.0
 PYTHON_LIB_RELEASE := $(shell $(shell $(call git_cset_number,$(REPONAME))); echo $$CSET_NUMBER)
 
 REPO = $(call git_loc,python-libs)

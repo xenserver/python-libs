@@ -8,8 +8,7 @@ include $(B_BASE)/rpmbuild.mk
 PYTHON_LIB_VERSION := 1.9.0
 PYTHON_LIB_RELEASE := $(shell $(shell $(call git_cset_number,$(REPONAME))); echo $$CSET_NUMBER)
 
-FIND_CMD = find -path "./.git" -prune -o -path "./tests" -prune -o -name "*.py" -print
-PYTHON_LIBS_SOURCES := $(shell $(FIND_CMD))
+REPO = $(call git_loc,python-libs)
 
 PYTHON_LIB_SPEC := xcp-python-libs.spec
 PYTHON_LIB_SRC_DIR := xcp-python-libs-$(PYTHON_LIB_VERSION)
@@ -39,7 +38,20 @@ clean:
 	rm -f $(PYTHON_LIB_STAMP) $(PYTHON_LIB_SRC) $(RPM_SPECSDIR)/$(PYTHON_LIB_SPEC)
 
 .SECONDARY: $(PYTHON_LIB_SRC)
-$(PYTHON_LIB_SRC): $(PYTHON_LIBS_SOURCES)
+$(PYTHON_LIB_SRC): $(RPM_SOURCESDIR)/.dirstamp
+	cd $(REPO) && git archive --format=tar --prefix=$(PYTHON_LIB_SRC_DIR)/ HEAD >$(@:%.gz=%)
+	mkdir -p $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)
+	{ $(call brand-python); \
+	  echo "try:"; \
+	  echo "    from oem_version import *"; \
+	  echo "except:"; \
+	  echo "    pass"; \
+	} > $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)/branding.py
+	tar rvf $(@:%.gz=%) -C $(MY_OBJ_DIR) $(PYTHON_LIB_SRC_DIR)/$(DIRNAME)/branding.py
+	gzip $(@:%.gz=%)
+
+.SECONDARY: $(xPYTHON_LIB_SRC)
+$(xPYTHON_LIB_SRC): $(PYTHON_LIBS_SOURCES)
 	$(call mkdir_clean,$(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR))
 	mkdir -p $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)
 	$(FIND_CMD) | cpio -pduv $(MY_OBJ_DIR)/$(PYTHON_LIB_SRC_DIR)/$(DIRNAME)

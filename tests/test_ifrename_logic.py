@@ -390,13 +390,61 @@ class TestUseCases(unittest.TestCase):
         last_eth4 = MACPCI("31:23:45:67:89:01", "0000:04:00.0", None, "eth4")
         last_state = [last_eth0, last_eth1, last_eth2, last_eth4, last_eth3]
 
-        ts = rename([], deepcopy(cur_state), last_state, [])
+        # Reverse order of input to ensure logic copes correctly
+        ts = rename([], deepcopy(cur_state[::-1]), last_state, [])
 
         self.assertTrue(len(ts) == 5)
         apply_transactions(cur_state, ts)
 
         for cur, last in zip(cur_state, last_state):
-            self.assertTrue(cur.tname == last.tname)
+            self.assertEqual(cur.tname, last.tname)
+
+    def test_bad_biosdevname_order(self):
+        """
+        Brand new hardware - including multi-nic functions and incorrect biosdevname ordering
+        """
+
+        # Devices with the same PCI ID are assumed to differ by 1 in the MAC
+        # Interlace two multi-nic functions, and have single-nic functions scattered around
+        cur_state = []
+        cur_state.append(MACPCI("00:00:00:00:00:01", "0000:01:00.0", order=0, kname="side-0-eth0"))
+
+        cur_state.append(MACPCI("00:00:44:00:01:01", "0000:02:00.0", order=2, kname="side-0-eth2"))
+        cur_state.append(MACPCI("00:00:44:00:01:02", "0000:02:00.0", order=6, kname="side-0-eth6"))
+        cur_state.append(MACPCI("00:00:44:00:01:03", "0000:02:00.0", order=1, kname="side-0-eth1"))
+
+        cur_state.append(MACPCI("00:00:00:00:02:01", "0000:03:00.0", order=4, kname="side-0-eth4"))
+
+        # Second set of multi-nic functions has a lower MAC address than the first to make sure
+        # orders aren't mixed between multi-nic functions
+        cur_state.append(MACPCI("00:00:22:00:03:01", "0000:04:00.0", order=7, kname="side-0-eth5"))
+        cur_state.append(MACPCI("00:00:22:00:03:02", "0000:04:00.0", order=3, kname="side-0-eth3"))
+        cur_state.append(MACPCI("00:00:22:00:03:03", "0000:04:00.0", order=5, kname="side-0-eth7"))
+
+        cur_state.append(MACPCI("00:00:00:00:04:01", "0000:05:00.0", order=8, kname="side-0-eth8"))
+
+        expected_order = []
+        expected_order.append(("eth0", "00:00:00:00:00:01")) # non-MNF; biosdevname order
+        expected_order.append(("eth1", "00:00:44:00:01:01")) # MNF 1, ordered by MAC
+        expected_order.append(("eth2", "00:00:44:00:01:02")) # MNF 1, ordered by MAC
+        expected_order.append(("eth3", "00:00:22:00:03:01")) # MNF 2, ordered by MAC
+        expected_order.append(("eth4", "00:00:00:00:02:01")) # non-MNF; biosdevname order
+        expected_order.append(("eth5", "00:00:22:00:03:02")) # MNF 2, ordered by MAC
+        expected_order.append(("eth6", "00:00:44:00:01:03")) # MNF 1, ordered by MAC
+        expected_order.append(("eth7", "00:00:22:00:03:03")) # MNF 2, ordered by MAC
+        expected_order.append(("eth8", "00:00:00:00:04:01")) # non-MNF; biosdevname order
+
+        # Reverse order of input to ensure logic copes correctly
+        ts = rename([], deepcopy(cur_state[::-1]), [], [])
+
+        self.assertEqual(len(ts), 9)
+
+        apply_transactions(cur_state, ts)
+        cur_state.sort(key=lambda x: x.tname)
+
+        for cur, expected in zip(cur_state, expected_order):
+            self.assertEqual(cur.tname, expected[0])
+            self.assertEqual(cur.mac, expected[1])
 
     def test_ibft_new_hardware(self):
         """

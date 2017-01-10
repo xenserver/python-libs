@@ -277,7 +277,10 @@ def rename_logic( static_rules,
               "Current State is \n%s" % (util.niceformat(transactions),
                                          util.niceformat(cur_state)))
 
-    # 3rd pass.  This logic should cover multi-nic functions
+    # 3rd pass.  This pass ensures that replaced multi-nic functions
+    # are ordered the same as a the previous state, relative to MACs.
+    #
+    # New multi-nic functions get ordered below.
     if len(multinic_functions):
 
         for fn in multinic_functions:
@@ -316,6 +319,20 @@ def rename_logic( static_rules,
                   "Current State is \n%s" % (util.niceformat(transactions),
                                              util.niceformat(cur_state)))
 
+    # There may be some new multinic functions.  We can't trust biosdevname's
+    # order for these NICs, so for each NIC collect the reported "order" <n>
+    # (derived directly from eth<n>) and sort them according to the MACs
+    if len(multinic_functions):
+        LOG.debug("New multi-nic logic - attempting to re-order")
+        for fn in multinic_functions:
+            newnics  = util.get_nics_with_pci(filter(util.needs_renaming, cur_state),
+                                              fn)
+            orders = sorted(map(lambda x: x.order, newnics))
+            newnics.sort(key = lambda n: n.mac.integer)
+            for nic, neworder in zip(newnics, orders):
+                LOG.debug("NIC '%s' getting new order '%s'" % (nic, neworder))
+                nic.order = neworder
+
     # For completely new network cards which we have never seen before, work out
     # a safe new number to assign it
     ethnumbers = sorted(
@@ -328,8 +345,7 @@ def rename_logic( static_rules,
     else:
         nextethnum = 0
 
-
-    # 3rd pass. This should only affect brand new network cards unreferenced
+    # 4th pass. This should only affect brand new network cards unreferenced
     # by previous state.  Prefer the order (e.g. from biosdevname), given
     # no other objections.
     for nic in sorted(filter(util.needs_renaming, cur_state),

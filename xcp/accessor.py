@@ -350,11 +350,8 @@ class HTTPAccessor(Accessor):
             urllib2.install_opener(self.opener)
         # rebuild URL without auth components
         host = self.url_parts.hostname
-        try:
-            if self.url_parts.port:
-                host += ':' + str(self.url_parts.port)
-        except StandardError:
-            pass
+        if self.url_parts.port:
+            host += ':' + str(self.url_parts.port)
         self.baseAddress = urlparse.urlunsplit(
             (self.url_parts.scheme, host,
              self.url_parts.path, '', ''))

@@ -296,7 +296,7 @@ def rename_logic( static_rules,
 
             # Check that all nics are still pending a rename
             if False in (util.needs_renaming(n) for n in newnics):
-                LOG.info("Some of %s's nics have alrealdy been renamed.  "
+                LOG.info("Some of %s's nics have already been renamed.  "
                          "Defering the rest until later for renaming"
                          % (fn, ))
                 continue

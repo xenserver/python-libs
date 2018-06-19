@@ -311,16 +311,14 @@ class Bootloader(object):
         def create_label(title):
             global COUNTER
 
-            # FIXME use branding
-            if title == 'XenServer':
+            if title == branding.PRODUCT_BRAND:
                 return 'xe'
-            if title == 'XenServer (Trusted Boot)':
-                return 'xe-tboot'
-
-            if title.endswith('(Serial)'):
-                return 'xe-serial'
             if title.endswith('(Serial) (Trusted Boot)'):
                 return 'xe-serial-tboot'
+            if title.endswith('(Trusted Boot)'):
+                return 'xe-tboot'
+            if title.endswith('(Serial)'):
+                return 'xe-serial'
             if title.endswith('Safe Mode'):
                 return 'safe'
             if title.endswith('upgrade'):

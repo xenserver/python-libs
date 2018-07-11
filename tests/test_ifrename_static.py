@@ -106,6 +106,15 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(sr.formulae, {"eth0": ("pci", "0000:00:00.1")})
         self.assertEqual(sr.rules, [])
 
+    def test_single_pci_0index(self):
+
+        fd = StringIO.StringIO('eth0:pci="0000:00:00.1[0]"')
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("pci", "0000:00:00.1[0]")})
+        self.assertEqual(sr.rules, [])
+
     def test_single_invalid_ppn(self):
 
         fd = StringIO.StringIO('eth0:ppn="baz"')
@@ -196,6 +205,15 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
         self.assertTrue(sr.load_and_parse())
         self.assertEqual(sr.formulae, {"eth0": ("pci", "0000:00:00.0")})
+        self.assertEqual(sr.rules, [])
+
+    def test_single_pci_index(self):
+
+        fd = StringIO.StringIO("eth0=0000:00:00.0[1]")
+        sr = StaticRules(fd = fd)
+
+        self.assertTrue(sr.load_and_parse())
+        self.assertEqual(sr.formulae, {"eth0": ("pci", "0000:00:00.0[1]")})
         self.assertEqual(sr.rules, [])
 
     def test_single_ppn_embedded(self):
@@ -335,6 +353,70 @@ class TestGenerate(unittest.TestCase):
         # The quirks test should kick in and prevent any ppn rules from
         # being generated
         self.assertEqual(sr.rules, [])
+
+
+class TestMultiplePCI(unittest.TestCase):
+
+    def setUp(self):
+        self.logbuf = StringIO.StringIO()
+        openLog(self.logbuf, logging.NOTSET)
+        self.state = [
+            MACPCI("c8:cb:b8:d3:0c:ca", "0000:03:00.0", kname="eth0",
+                   ppn="em1", label=""),
+            MACPCI("c8:cb:b8:d3:0c:cb", "0000:03:00.1", kname="eth1",
+                   ppn="em2", label=""),
+            MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", kname="eth2",
+                   ppn="em3", label=""),
+            MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", kname="eth3",
+                   ppn="", label="")
+            ]
+
+    def tearDown(self):
+
+        closeLogs()
+        self.logbuf.close()
+
+    def test_pci_matching(self):
+
+        fd = StringIO.StringIO('eth0:pci="0000:04:00.0"\n'
+                               'eth1:pci="0000:04:00.0[1]"')
+        sr = StaticRules(fd = fd)
+        self.assertTrue(sr.load_and_parse())
+
+        sr.generate(self.state)
+
+        self.assertEqual(sr.rules,[
+                MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth1"),
+                MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth0")
+                ])
+
+    def test_pci_matching_invert(self):
+
+        fd = StringIO.StringIO('eth0:pci="0000:04:00.0[1]"\n'
+                               'eth1:pci="0000:04:00.0[0]"')
+        sr = StaticRules(fd = fd)
+        self.assertTrue(sr.load_and_parse())
+
+        sr.generate(self.state)
+
+        self.assertEqual(sr.rules,[
+                MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1"),
+                MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0")
+                ])
+
+    def test_pci_matching_mixed(self):
+
+        fd = StringIO.StringIO('eth0:ppn="em3"\n'
+                               'eth1:pci="0000:04:00.0[1]"')
+        sr = StaticRules(fd = fd)
+        self.assertTrue(sr.load_and_parse())
+
+        sr.generate(self.state)
+
+        self.assertEqual(sr.rules,[
+                MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0"),
+                MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1")
+                ])
 
 
 class TestSave(unittest.TestCase):

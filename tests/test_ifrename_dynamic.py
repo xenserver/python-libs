@@ -130,6 +130,22 @@ class TestGenerate(unittest.TestCase):
         # being generated
         self.assertEqual(dr.rules, [])
 
+    def test_pci_matching_invert(self):
+
+        dr = DynamicRules()
+        dr.formulae = { "eth0" : ("pci", "0000:04:00.0[1]"),
+                        "eth1" : ("pci", "0000:04:00.0")
+                        }
+
+        dr.generate([MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", kname="eth0",
+                            ppn="em1", label=""),
+                     MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", kname="eth1",
+                            ppn="", label="")])
+
+        self.assertEqual(dr.rules,[
+                MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1"),
+                MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0")
+                ])
 
 
 class TestSave(unittest.TestCase):

@@ -47,6 +47,7 @@ except ImportError:
 
 from xcp.logger import LOG
 from xcp.net.ifrename.macpci import MACPCI
+from xcp.pci import pci_sbdfi_to_nic
 from os.path import exists as pathexists
 
 SAVE_HEADER = (
@@ -210,18 +211,15 @@ class DynamicRules(object):
 
             elif method == "pci":
 
-                for nic in state:
-                    if nic.pci == value:
-                        try:
-                            rule = MACPCI(nic.mac, nic.pci, tname=target)
-                        except Exception, e:
-                            LOG.warning("Error creating rule: %s" % (e,))
-                            continue
-                        self.rules.append(rule)
-                        break
-                else:
-                    LOG.warning("No NIC found with a PCI ID of '%s' for the "
-                                "%s dynamic rule" % (value, target))
+                nic = pci_sbdfi_to_nic(value, state)
+
+                try:
+                    rule = MACPCI(nic.mac, nic.pci, tname=target)
+                except Exception, e:
+                    LOG.warning("Error creating rule: %s" % (e,))
+                    continue
+                self.rules.append(rule)
+
                 continue
 
             elif method == "label":

@@ -29,11 +29,19 @@ import os.path
 import subprocess
 import re
 
-VALID_SBDF = re.compile(
-    r"^(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
-    "     (?P<bus>     [\da-fA-F]{2}):"   # Bus
-    "     (?P<device>  [\da-fA-F]{2})\."  # Device
-    "     (?P<function>[\da-fA-F])$"      # Function"
+_SBDF = (r"(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
+         "     (?P<bus>     [\da-fA-F]{2}):"   # Bus
+         "     (?P<device>  [\da-fA-F]{2})\."  # Device
+         "     (?P<function>[\da-fA-F])"       # Function
+         )
+
+# Don't change the meaning of VALID_SBDF as some parties may be using it
+VALID_SBDF = re.compile(r"^%s$" % _SBDF, re.X)
+
+VALID_SBDFI = re.compile(
+    r"^(?P<sbdf>%s)"
+    "  (?:[[](?P<index>[\d]{1,2})[]])?$"   # Index (optional)
+    % _SBDF
     , re.X)
 
 
@@ -60,10 +68,11 @@ class PCI(object):
         self.bus = -1
         self.device = -1
         self.function = -1
+        self.index = -1
 
         if isinstance(addr, (str, unicode)):
 
-            res = VALID_SBDF.match(addr)
+            res = VALID_SBDFI.match(addr)
             if res:
                 groups = res.groupdict()
 
@@ -87,11 +96,16 @@ class PCI(object):
                     raise ValueError("Function '%d' out of range 0 <= device "
                                      "< 8" % (self.function,))
 
-                self.integer = int( self.segment      << 16 |
-                                     self.bus      << 8  |
-                                     self.device   << 3  |
-                                     self.function
-                                     )
+                if "index" in groups and groups["index"] is not None:
+                    self.index = int(groups["index"])
+                else:
+                    self.index = 0
+
+                self.integer = (int(self.segment   << 16 |
+                                    self.bus       << 8  |
+                                    self.device    << 3  |
+                                    self.function) << 8  |
+                                self.index)
                 return
 
             raise ValueError("Unrecognised PCI address '%s'" % addr)
@@ -101,8 +115,9 @@ class PCI(object):
 
 
     def __str__(self):
-        return "%04x:%02x:%02x.%1x" % (self.segment, self.bus,
-                                       self.device, self.function)
+        pci_sbdf = "%04x:%02x:%02x.%1x" % (self.segment, self.bus,
+                                           self.device, self.function)
+        return "%s[%d]" % (pci_sbdf, self.index)
 
     def __repr__(self):
         return "<PCI %s>" % (self,)
@@ -282,6 +297,25 @@ class PCIDevices(object):
 
         return filter(lambda x: x != dev and slot(x) == slot(dev),
                       self.devs.keys())
+
+
+def pci_sbdfi_to_nic(sbdfi, nics):
+    match = VALID_SBDFI.match(sbdfi)
+
+    index = 0
+    if 'index' in match.groupdict():
+        index_str = match.group("index")
+        if index_str is not None:
+            index = int(index_str)
+    value = match.group("sbdf")
+
+    matching_nics = [nic for nic in nics if nic.pci == value]
+    matching_nics.sort(key=lambda nic: nic.mac)
+
+    if index >= len(matching_nics):
+        raise Exception("Insufficient NICs with PCI SBDF %s (Found %d, wanted at least %d)" % (value, len(matching_nics), index))
+
+    return matching_nics[index]
 
 
 if __name__ == "__main__":

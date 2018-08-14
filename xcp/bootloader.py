@@ -31,6 +31,7 @@ import re
 import tempfile
 import copy
 import branding
+import xcp.cmd
 
 COUNTER = 0
 
@@ -69,7 +70,7 @@ class MenuEntry(object):
 class Bootloader(object):
     def __init__(self, src_fmt, src_file, menu = None, menu_order = None,
                  default = None, timeout = None, serial = None,
-                 location = None):
+                 location = None, env_block = None):
 
         if menu is None:
             menu = {}
@@ -85,6 +86,7 @@ class Bootloader(object):
         self.timeout = timeout
         self.serial = serial
         self.location = location and location or 'mbr'
+        self.env_block = env_block
 
     def append(self, label, entry):
         self.menu[label] = entry
@@ -358,6 +360,18 @@ class Bootloader(object):
                 elif menu_match:
                     title = menu_match.group(1)
                     menu_entry_extra = menu_match.group(2)
+                    if len(boilerplates) == 0:
+                        # Add boilerplate to read override entry from environment
+                        # block if not present
+                        override_bp = False
+                        for line in boilerplate:
+                            if 'load_env' in line:
+                                override_bp = True
+                                break
+                        if not override_bp:
+                            extra = ['if [ -s $prefix/grubenv ]; then', '\tload_env', 'fi', '',
+                                     'if [ -n "$override_entry" ]; then', '\tset default=$override_entry', 'fi', '']
+                            boilerplate += extra
                     boilerplates.append(boilerplate)
                     boilerplate = []
                 elif title:
@@ -424,8 +438,9 @@ class Bootloader(object):
         finally:
             fh.close()
 
+        env_block = os.path.join(os.path.dirname(src_file), 'grubenv')
         bootloader = cls('grub2', src_file, menu, menu_order, default,
-                         timeout, serial, None)
+                         timeout, serial, env_block = env_block)
         bootloader.boilerplate = boilerplates
         return bootloader
 
@@ -605,6 +620,22 @@ class Bootloader(object):
         # atomically replace destination file
         os.close(fd)
         os.rename(tmp_file, dst_file)
+
+    def setNextBoot(self, entry):
+        if entry not in self.menu:
+            return False
+        if self.env_block is None:
+            return False
+
+        clear_default = ['\tunset override_entry', '\tsave_env override_entry']
+        self.menu[entry].contents = clear_default
+
+        for i in range(len(self.menu_order)):
+            if self.menu_order[i] == entry:
+                cmd = ['grub-editenv', self.env_block, 'set', 'override_entry=%d' % i]
+                return xcp.cmd.runCmd(cmd) == 0
+
+        return False
 
     @classmethod
     def newDefault(cls, kernel_link_name, initrd_link_name, root = '/'):

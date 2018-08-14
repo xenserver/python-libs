@@ -541,14 +541,14 @@ class Bootloader(object):
         if self.timeout:
             print >> fh, "set timeout=%d" % (self.timeout / 10)
 
-        self.boilerplate = getattr(self, 'boilerplate', [])
-        self.boilerplate.reverse()
+        boilerplate = getattr(self, 'boilerplate', [])[:]
+        boilerplate.reverse()
 
         for label in self.menu_order:
             m = self.menu[label]
 
-            if self.boilerplate:
-                text = self.boilerplate.pop()
+            if boilerplate:
+                text = boilerplate.pop()
                 if text:
                     print >> fh, "\n".join(text)
 

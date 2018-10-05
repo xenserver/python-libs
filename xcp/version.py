@@ -46,21 +46,15 @@ class Version:
 
         where:
 
-        p.q. ... y.z are arcs
-        b is a build identifier
-
-        an arc is one of:
-
-        a positive integer
-        a sequence of subarcs, s-t-u"""
+        p.q. ... y.z are integer arcs
+        b is a build identifier"""
 
         build = None
 
-        ver = map(cls.intify, ver_str.split('.'))
+        if '-' in ver_str:
+            ver_str, build = ver_str.split('-', 1)
 
-        if type(ver[-1]) is str and '-' in ver[-1]:
-            ver_el, build = ver[-1].split('-', 1)
-            ver[-1] = cls.intify(ver_el)
+        ver = map(cls.intify, ver_str.split('.'))
 
         return cls(ver, build)
 

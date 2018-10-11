@@ -144,6 +144,11 @@ class MountingAccessor(FilesystemAccessor):
         ro = isinstance(mount_options, types.ListType) and 'ro' in mount_options
         super(MountingAccessor, self).__init__(None, ro)
 
+        if os.path.isfile(mount_source):
+            if mount_options is None:
+                mount_options = []
+            mount_options.append('loop')
+
         self.mount_types = mount_types
         self.mount_source = mount_source
         self.mount_options = mount_options

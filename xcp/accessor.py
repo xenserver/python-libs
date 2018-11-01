@@ -34,9 +34,26 @@ import types
 import urllib
 import urllib2
 import urlparse
+import errno
 
 import xcp.mount as mount
 import xcp.logger as logger
+
+# maps errno codes to HTTP error codes
+# needed for error code consistency
+def mapError(e):
+    if e.errno:
+        errorCode = e.errno
+    elif type(e) is type(0):
+        errorCode = e
+    if e == errno.EPERM:
+        raise Exception(401)
+    elif errorCode == errno.ENOENT:
+        raise Exception(404)
+    elif errorCode == errno.EACCES:
+        raise Exception(403)
+    else:
+        raise Exception(500)
 
 class SplitResult(object):
     def __init__(self, args):
@@ -96,6 +113,7 @@ class Accessor(object):
 
     def __init__(self, ro):
         self.read_only = ro
+        self.lastError = 0
 
     def access(self, name):
         """ Return boolean determining where 'name' is an accessible object
@@ -103,7 +121,8 @@ class Accessor(object):
         try:
             f = self.openAddress(name)
             f.close()
-        except Exception:
+        except Exception as e:
+            self.lastError = e
             return False
 
         return True
@@ -137,7 +156,11 @@ class FilesystemAccessor(Accessor):
         self.location = location
 
     def openAddress(self, addr):
-        return open(os.path.join(self.location, addr), 'r')
+        try:
+            file = open(os.path.join(self.location, addr), 'r')
+        except Exception as e:
+            mapError(e)
+        return file
 
 class MountingAccessor(FilesystemAccessor):
     def __init__(self, mount_types, mount_source, mount_options = None):
@@ -310,7 +333,8 @@ class FTPAccessor(Accessor):
             lst = self.ftp.nlst(os.path.dirname(url))
             return os.path.basename(url) in map(os.path.basename, lst)
         except Exception, e:
-            logger.info(str(e))
+            mapError(e)
+
             return False
 
     def openAddress(self, address):
@@ -357,7 +381,11 @@ class HTTPAccessor(Accessor):
              self.url_parts.path, '', ''))
 
     def openAddress(self, address):
-        return urllib2.urlopen(os.path.join(self.baseAddress, address))
+        try:
+            urlFile = urllib2.urlopen(os.path.join(self.baseAddress, address))
+        except urllib2.HTTPError as e:
+            raise Exception(e.code)
+        return urlFile
 
     def __repr__(self):
         return "<HTTPAccessor: %s>" % self.baseAddress

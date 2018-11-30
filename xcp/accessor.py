@@ -41,19 +41,15 @@ import xcp.logger as logger
 
 # maps errno codes to HTTP error codes
 # needed for error code consistency
-def mapError(e):
-    if e.errno:
-        errorCode = e.errno
-    elif type(e) is type(0):
-        errorCode = e
-    if e == errno.EPERM:
-        raise Exception(401)
+def mapError(errorCode):
+    if errorCode == errno.EPERM:
+        return 401
     elif errorCode == errno.ENOENT:
-        raise Exception(404)
+        return 404
     elif errorCode == errno.EACCES:
-        raise Exception(403)
+        return 403
     else:
-        raise Exception(500)
+        return 500
 
 class SplitResult(object):
     def __init__(self, args):
@@ -120,9 +116,10 @@ class Accessor(object):
         in the target. """
         try:
             f = self.openAddress(name)
+            if not f:
+                return False
             f.close()
         except Exception as e:
-            self.lastError = e
             return False
 
         return True
@@ -158,8 +155,15 @@ class FilesystemAccessor(Accessor):
     def openAddress(self, addr):
         try:
             file = open(os.path.join(self.location, addr), 'r')
+        except OSError as e:
+            self.lastError = mapError(e.errno)
+            return False
+        except IOError as e:
+            self.lastError = mapError(e.errno)
+            return False
         except Exception as e:
-            mapError(e)
+            self.lastError = 500
+            return false
         return file
 
 class MountingAccessor(FilesystemAccessor):
@@ -264,7 +268,18 @@ class FileAccessor(Accessor):
         self.baseAddress = baseAddress
 
     def openAddress(self, address):
-        return open(os.path.join(self.baseAddress, address))
+        try:
+            file = open(os.path.join(self.baseAddress, address))
+        except IOError as e:
+            self.lastError = mapError(e.errno)
+            return False
+        except OSError as e:
+            self.lastError = mapError(e.errno)
+            return False
+        except Exception as e:
+            self.lastError = 500
+            return False
+        return file
 
     def writeFile(self, in_fh, out_name):
         logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
@@ -332,9 +347,14 @@ class FTPAccessor(Accessor):
                 return True
             lst = self.ftp.nlst(os.path.dirname(url))
             return os.path.basename(url) in map(os.path.basename, lst)
-        except Exception, e:
-            mapError(e)
-
+        except IOError as e:
+            self.lastError = mapError(e.errno)
+            return False
+        except OSError as e:
+            self.lastError = mapError(e.errno)
+            return False
+        except Exception as e:
+            self.lastError = 500
             return False
 
     def openAddress(self, address):
@@ -384,7 +404,8 @@ class HTTPAccessor(Accessor):
         try:
             urlFile = urllib2.urlopen(os.path.join(self.baseAddress, address))
         except urllib2.HTTPError as e:
-            raise Exception(e.code)
+            self.lastError = e.code
+            return False
         return urlFile
 
     def __repr__(self):

@@ -27,9 +27,33 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re
 
+import version
+
+def default_memory_v2(host_mem_kib):
+    """Return the default for the amount of dom0 memory for the
+    specified amount of host memory for platform versions < 2.9.0."""
+
+    #
+    # The host memory reported by Xen is a bit less than the physical
+    # RAM installed in the machine since it doesn't include the memory
+    # used by Xen etc.
+    #
+    # Add a bit extra to account for this.
+    #
+    gb = (host_mem_kib + 256 * 1024) / 1024 / 1024
+
+    if gb < 24:
+        return 752 * 1024
+    elif gb < 48:
+        return 2 * 1024 * 1024
+    elif gb < 64:
+        return 3 * 1024 * 1024
+    else:
+        return 4 * 1024 * 1024
+
 def default_memory(host_mem_kib):
     """Return the default for the amount of dom0 memory for the
-    specified amount of host memory."""
+    specified amount of host memory for platform versions >= 2.9.0."""
 
     #
     # The host memory reported by Xen is a bit less than the physical
@@ -42,6 +66,14 @@ def default_memory(host_mem_kib):
 
     # Give dom0 1 GiB + 5% of host memory, rounded to 16 MiB, limited to 8 GiB
     return min(1024 + int(mb * 0.05) & ~0xF, 8192) * 1024
+
+def default_memory_for_version(host_mem_kib, platform_version):
+    """Return the default for the amount of dom0 memory for the
+    specified amount of host memory for the given platform version."""
+    if platform_version < version.Version([2, 9, 0]):
+        return default_memory_v2(host_mem_kib)
+    else:
+        return default_memory(host_mem_kib)
 
 _size_and_unit_re = re.compile("^(-?\d+)([bkmg]?)$", re.IGNORECASE)
 

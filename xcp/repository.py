@@ -139,6 +139,16 @@ class BaseRepository(object):
             return YumRepository.getRepoVer(access)
         return Repository.getRepoVer(access)
 
+    @classmethod
+    def getProductVersion(cls, access):
+        access.start()
+        is_yum = YumRepository.isRepo(access, "")
+        access.finish()
+
+        if is_yum:
+            return YumRepository.getProductVersion(access)
+        return None
+
 class YumRepository(BaseRepository):
     """ Represents a Yum repository containing packages and associated meta data. """
     REPOMD_FILENAME = "repodata/repomd.xml"
@@ -164,8 +174,8 @@ class YumRepository(BaseRepository):
                                 [cls.TREEINFO_FILENAME, cls.REPOMD_FILENAME])
 
     @classmethod
-    def getRepoVer(cls, access):
-        repo_ver = None
+    def _getVersion(cls, access, category):
+        ver = None
 
         access.start()
         try:
@@ -173,13 +183,25 @@ class YumRepository(BaseRepository):
             treeinfo = ConfigParser.SafeConfigParser()
             treeinfo.readfp(treeinfofp)
             treeinfofp.close()
-            ver_str = treeinfo.get('platform', 'version')
+            ver_str = treeinfo.get(category, 'version')
             repo_ver = version.Version.from_string(ver_str)
 
         except Exception, e:
             raise RepoFormatError, "Failed to open %s: %s" % (cls.TREEINFO_FILENAME, str(e))
         access.finish()
         return repo_ver
+
+    @classmethod
+    def getRepoVer(cls, access):
+        """Returns the platform version of the repository."""
+
+        return cls._getVersion(access, 'platform')
+
+    @classmethod
+    def getProductVersion(cls, access):
+        """Returns the product version of the repository."""
+
+        return cls._getVersion(access, 'branding')
 
 class Repository(BaseRepository):
     """ Represents a XenSource repository containing packages and associated

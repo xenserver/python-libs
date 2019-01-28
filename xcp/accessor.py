@@ -156,10 +156,16 @@ class FilesystemAccessor(Accessor):
         try:
             file = open(os.path.join(self.location, addr), 'r')
         except OSError as e:
-            self.lastError = mapError(e.errno)
+            if e.errno == errno.EIO:
+                self.lastError = 5
+            else:
+                self.lastError = mapError(e.errno)
             return False
         except IOError as e:
-            self.lastError = mapError(e.errno)
+            if e.errno == errno.EIO:
+                self.lastError = 5
+            else:
+                self.lastError = mapError(e.errno)
             return False
         except Exception as e:
             self.lastError = 500
@@ -271,10 +277,16 @@ class FileAccessor(Accessor):
         try:
             file = open(os.path.join(self.baseAddress, address))
         except IOError as e:
-            self.lastError = mapError(e.errno)
+            if e.errno == errno.EIO:
+                self.lastError = 5
+            else:
+                self.lastError = mapError(e.errno)
             return False
         except OSError as e:
-            self.lastError = mapError(e.errno)
+            if e.errno == errno.EIO:
+                self.lastError = 5
+            else:
+                self.lastError = mapError(e.errno)
             return False
         except Exception as e:
             self.lastError = 500
@@ -348,10 +360,16 @@ class FTPAccessor(Accessor):
             lst = self.ftp.nlst(os.path.dirname(url))
             return os.path.basename(url) in map(os.path.basename, lst)
         except IOError as e:
-            self.lastError = mapError(e.errno)
+            if e.errno == errno.EIO:
+                self.lastError = 5
+            else:
+                self.lastError = mapError(e.errno)
             return False
         except OSError as e:
-            self.lastError = mapError(e.errno)
+            if e.errno == errno.EIO:
+                self.lastError = 5
+            else:
+                self.lastError = mapError(e.errno)
             return False
         except Exception as e:
             self.lastError = 500

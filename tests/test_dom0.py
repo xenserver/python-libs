@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import unittest, sys
+import unittest, sys, os
 
 try:
     import xcp
@@ -9,28 +9,46 @@ except ImportError:
     sys.exit(1)
 
 from xcp.dom0 import default_memory, parse_mem, default_vcpus
+from mock import patch, mock_open
 
 class TestDom0(unittest.TestCase):
 
     def test_default_memory(self):
+
+        # There are two possible sets of memory value.
+        # test_values below is in layout: host_gib, scheme1, scheme2.
+        # Scheme 1 has thresholds, described next to table lines,
+        # while scheme 2 is continues from 1024 -> 8*1024.
+
         test_values = [
-            (0, 752),         # Special case: zero
-            (1, 752),         # Below min
-            (2, 752),         # Min
-            (23, 752),        # Below 2 GiB threshold
-            (24, 2*1024),     # 2 GiB Threshold
-            (47, 2*1024),     # Below 3 GiB threshold
-            (48, 3*1024),     # 3 GiB threshold
-            (63, 3*1024),     # Below 4 GiB threshold
-            (64, 4*1024),     # 4 GiB threshold
-            (1024, 4*1024),   # Max
-            (2*1024, 4*1024), # Above max
+            (0, 752, 1024),           # Special case: zero
+            (1, 752, 1088),           # Below min
+            (2, 752, 1136),           # Min
+            (23, 752, 2208),          # Below 2 GiB threshold
+            (24, 2*1024, 2256),       # 2 GiB Threshold
+            (47, 2*1024, 3440),       # Below 3 GiB threshold
+            (48, 3*1024, 3488),       # 3 GiB threshold
+            (63, 3*1024, 4256),       # Below 4 GiB threshold
+            (64, 4*1024, 4304),       # 4 GiB threshold
+            (1024, 4*1024, 8*1024),   # Max
+            (2*1024, 4*1024, 8*1024), # Above max
             ]
 
-        for host_gib, dom0_mib in test_values:
-            expected = dom0_mib * 1024;
-            calculated = default_memory(host_gib * 1024 * 1024)
-            self.assertEqual(calculated, expected)
+        with patch("__builtin__.open", mock_open(read_data="PLATFORM_VERSION='2.8.0'\n")) as mock_file:
+            for host_gib, dom0_mib, _ in test_values:
+                expected = dom0_mib * 1024;
+                calculated = default_memory(host_gib * 1024 * 1024)
+                self.assertEqual(calculated, expected)
+
+            mock_file.assert_called_with("/etc/xensource-inventory")
+
+        with patch("__builtin__.open", mock_open(read_data="PLATFORM_VERSION='2.9.0'\n")) as mock_file:
+            for host_gib, _, dom0_mib in test_values:
+                expected = dom0_mib * 1024;
+                calculated = default_memory(host_gib * 1024 * 1024)
+                self.assertEqual(calculated, expected)
+
+            mock_file.assert_called_with("/etc/xensource-inventory")
 
     def test_parse_mem_arg(self):
         k = 1024

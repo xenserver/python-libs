@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import re
 
 import version
+import sys
 
 def default_memory_v2(host_mem_kib):
     """Return the default for the amount of dom0 memory for the
@@ -51,7 +52,7 @@ def default_memory_v2(host_mem_kib):
     else:
         return 4 * 1024 * 1024
 
-def default_memory(host_mem_kib):
+def default_memory_v3(host_mem_kib):
     """Return the default for the amount of dom0 memory for the
     specified amount of host memory for platform versions >= 2.9.0."""
 
@@ -73,7 +74,27 @@ def default_memory_for_version(host_mem_kib, platform_version):
     if platform_version < version.Version([2, 9, 0]):
         return default_memory_v2(host_mem_kib)
     else:
-        return default_memory(host_mem_kib)
+        return default_memory_v3(host_mem_kib)
+
+def default_memory(host_mem_kib):
+    """Return the default for the amount of dom0 memory for the
+    specified amount of host memory for the current platform version"""
+
+    # read current host version
+    platform_version = None
+    with open("/etc/xensource-inventory") as f:
+        for l in f.read().splitlines():
+            line = l.strip()
+            if line.startswith('PLATFORM_VERSION='):
+                platform_version = version.Version.from_string(
+                                   line.split('=', 1)[1].strip("'"))
+                break
+
+    if not platform_version:
+        raise Exception('Could not find PLATFORM_VERSION from inventory.')
+
+    return default_memory_for_version(host_mem_kib, platform_version)
+
 
 _size_and_unit_re = re.compile("^(-?\d+)([bkmg]?)$", re.IGNORECASE)
 

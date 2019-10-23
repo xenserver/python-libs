@@ -51,60 +51,6 @@ def mapError(errorCode):
     else:
         return 500
 
-class SplitResult(object):
-    def __init__(self, args):
-        (
-            self.scheme,
-            self.netloc,
-            self.path,
-            _,
-            __
-        ) = args
-
-    @property
-    def username(self):
-        netloc = self.netloc
-        if "@" in netloc:
-            userinfo = netloc.rsplit("@", 1)[0]
-            if ":" in userinfo:
-                userinfo = userinfo.split(":", 1)[0]
-            return userinfo
-        return None
-
-    @property
-    def password(self):
-        netloc = self.netloc
-        if "@" in netloc:
-            userinfo = netloc.rsplit("@", 1)[0]
-            if ":" in userinfo:
-                return userinfo.split(":", 1)[1]
-        return None
-
-    @property
-    def hostname(self):
-        netloc = self.netloc
-        if "@" in netloc:
-            netloc = netloc.rsplit("@", 1)[1]
-        if ":" in netloc:
-            netloc = netloc.split(":", 1)[0]
-        return netloc.lower() or None
-
-    @property
-    def port(self):
-        netloc = self.netloc
-        if "@" in netloc:
-            netloc = netloc.rsplit("@", 1)[1]
-        if ":" in netloc:
-            port = netloc.split(":", 1)[1]
-            return int(port, 10)
-        return None
-
-def compat_urlsplit(url, allow_fragments = True):
-    ret = urlparse.urlsplit(url, allow_fragments = allow_fragments)
-    if 'SplitResult' in dir(urlparse):
-        return ret
-    return SplitResult(ret)
-
 class Accessor(object):
 
     def __init__(self, ro):
@@ -305,7 +251,7 @@ class FTPAccessor(Accessor):
     def __init__(self, baseAddress, ro):
         super(FTPAccessor, self).__init__(ro)
         assert baseAddress.endswith('/')
-        self.url_parts = compat_urlsplit(baseAddress, allow_fragments = False)
+        self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
         self.baseAddress = baseAddress
         self.start_count = 0
         self.cleanup = False
@@ -400,7 +346,7 @@ class HTTPAccessor(Accessor):
         assert baseAddress.endswith('/')
         assert ro
         super(HTTPAccessor, self).__init__(ro)
-        self.url_parts = compat_urlsplit(baseAddress, allow_fragments = False)
+        self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
 
         if self.url_parts.username:
             self.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -438,7 +384,7 @@ SUPPORTED_ACCESSORS = {'nfs': NFSAccessor,
                        }
 
 def createAccessor(baseAddress, *args):
-    url_parts = compat_urlsplit(baseAddress, allow_fragments = False)
+    url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
 
     assert url_parts.scheme in SUPPORTED_ACCESSORS.keys()
     return SUPPORTED_ACCESSORS[url_parts.scheme](baseAddress, *args)

@@ -247,15 +247,24 @@ class FileAccessor(Accessor):
     def __repr__(self):
         return "<FileAccessor: %s>" % self.baseAddress
 
+def rebuild_url(url_parts):
+    '''Rebuild URL without auth components'''
+
+    host = url_parts.hostname
+    if url_parts.port:
+        host += ':' + str(url_parts.port)
+    return urlparse.urlunsplit(
+        (url_parts.scheme, host,
+         url_parts.path, '', ''))
+
 class FTPAccessor(Accessor):
     def __init__(self, baseAddress, ro):
         super(FTPAccessor, self).__init__(ro)
-        assert baseAddress.endswith('/')
         self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
-        self.baseAddress = baseAddress
         self.start_count = 0
         self.cleanup = False
         self.ftp = None
+        self.baseAddress = rebuild_url(self.url_parts)
 
     def _cleanup(self):
         if self.cleanup:
@@ -343,7 +352,6 @@ class FTPAccessor(Accessor):
 
 class HTTPAccessor(Accessor):
     def __init__(self, baseAddress, ro):
-        assert baseAddress.endswith('/')
         assert ro
         super(HTTPAccessor, self).__init__(ro)
         self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
@@ -356,13 +364,8 @@ class HTTPAccessor(Accessor):
             self.authhandler = urllib2.HTTPBasicAuthHandler(self.passman)
             self.opener = urllib2.build_opener(self.authhandler)
             urllib2.install_opener(self.opener)
-        # rebuild URL without auth components
-        host = self.url_parts.hostname
-        if self.url_parts.port:
-            host += ':' + str(self.url_parts.port)
-        self.baseAddress = urlparse.urlunsplit(
-            (self.url_parts.scheme, host,
-             self.url_parts.path, '', ''))
+
+        self.baseAddress = rebuild_url(self.url_parts)
 
     def openAddress(self, address):
         try:

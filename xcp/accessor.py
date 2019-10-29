@@ -357,10 +357,15 @@ class HTTPAccessor(Accessor):
         self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
 
         if self.url_parts.username:
+            username = self.url_parts.username
+            if username is not None:
+                username = urllib.unquote(self.url_parts.username)
+            password = self.url_parts.password
+            if password is not None:
+                password = urllib.unquote(self.url_parts.password)
             self.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
             self.passman.add_password(None, self.url_parts.hostname,
-                                      urllib.unquote(self.url_parts.username),
-                                      urllib.unquote(self.url_parts.password))
+                                      username, password)
             self.authhandler = urllib2.HTTPBasicAuthHandler(self.passman)
             self.opener = urllib2.build_opener(self.authhandler)
             urllib2.install_opener(self.opener)

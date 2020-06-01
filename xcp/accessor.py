@@ -202,7 +202,7 @@ class NFSAccessor(MountingAccessor):
     def __init__(self, nfspath, ro):
         if nfspath.startswith('nfs://'):
             nfspath = nfspath[6:]
-        opts = ['tcp']
+        opts = ['tcp,timeo=100,retrans=1,retry=0']
         if ro:
             opts.append('ro')
         super(NFSAccessor, self).__init__(['nfs'], nfspath, opts)

@@ -9,11 +9,15 @@ except ImportError:
     sys.exit(1)
 
 from xcp.dom0 import default_memory, parse_mem, default_vcpus
-from mock import patch, mock_open
+from mock import patch, Mock
 
 class TestDom0(unittest.TestCase):
 
     def test_default_memory(self):
+        def mock_version(open_mock, version):
+            file_mock = Mock()
+            file_mock.readlines.return_value = iter(["PLATFORM_VERSION='%s'\n" % (version,)])
+            open_mock.return_value.__enter__.return_value = file_mock
 
         # There are two possible sets of memory value.
         # test_values below is in layout: host_gib, scheme1, scheme2.
@@ -34,21 +38,23 @@ class TestDom0(unittest.TestCase):
             (2*1024, 4*1024, 8*1024), # Above max
             ]
 
-        with patch("__builtin__.open", mock_open(read_data="PLATFORM_VERSION='2.8.0'\n")) as mock_file:
+        with patch("__builtin__.open") as open_mock:
             for host_gib, dom0_mib, _ in test_values:
+                mock_version(open_mock, '2.8.0')
                 expected = dom0_mib * 1024;
                 calculated = default_memory(host_gib * 1024 * 1024)
                 self.assertEqual(calculated, expected)
 
-            mock_file.assert_called_with("/etc/xensource-inventory")
+            open_mock.assert_called_with("/etc/xensource-inventory")
 
-        with patch("__builtin__.open", mock_open(read_data="PLATFORM_VERSION='2.9.0'\n")) as mock_file:
+        with patch("__builtin__.open") as open_mock:
             for host_gib, _, dom0_mib in test_values:
+                mock_version(open_mock, '2.9.0')
                 expected = dom0_mib * 1024;
                 calculated = default_memory(host_gib * 1024 * 1024)
                 self.assertEqual(calculated, expected)
 
-            mock_file.assert_called_with("/etc/xensource-inventory")
+            open_mock.assert_called_with("/etc/xensource-inventory")
 
     def test_parse_mem_arg(self):
         k = 1024

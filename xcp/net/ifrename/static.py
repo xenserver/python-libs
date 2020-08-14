@@ -262,9 +262,8 @@ class StaticRules(object):
                 continue
 
             elif method == "pci":
-                nic = pci_sbdfi_to_nic(value, state)
-
                 try:
+                    nic = pci_sbdfi_to_nic(value, state)
                     rule = MACPCI(nic.mac, nic.pci, tname=target)
                 except Exception, e:
                     LOG.warning("Error creating rule: %s" % (e,))

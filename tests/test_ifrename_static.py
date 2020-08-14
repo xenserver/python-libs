@@ -418,6 +418,19 @@ class TestMultiplePCI(unittest.TestCase):
                 MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1")
                 ])
 
+    def test_pci_missing(self):
+
+        fd = StringIO.StringIO('eth0:pci="0000:03:00.0"\n'
+                               'eth4:pci="0000:05:00.0"')
+        sr = StaticRules(fd = fd)
+        self.assertTrue(sr.load_and_parse())
+
+        sr.generate(self.state)
+
+        self.assertEqual(sr.rules,[
+                MACPCI("c8:cb:b8:d3:0c:ca", "0000:03:00.0", tname="eth0")
+                ])
+
 
 class TestSave(unittest.TestCase):
 

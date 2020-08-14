@@ -147,6 +147,19 @@ class TestGenerate(unittest.TestCase):
                 MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0")
                 ])
 
+    def test_pci_missing(self):
+
+        dr = DynamicRules()
+        dr.formulae = {"eth0" : ("pci", "0000:04:00.0"),
+                       "eth1" : ("pci", "0000:05:00.0")}
+
+        dr.generate([MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", kname="eth0",
+                            ppn="em1", label="")])
+
+        self.assertEqual(dr.rules, [
+                MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth0")
+                ])
+
 
 class TestSave(unittest.TestCase):
 

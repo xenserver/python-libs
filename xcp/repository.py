@@ -175,7 +175,7 @@ class YumRepository(BaseRepository):
 
     @classmethod
     def _getVersion(cls, access, category):
-        ver = None
+        category_map = {'platform': 'platform_version', 'branding': 'product_version'}
 
         access.start()
         try:
@@ -183,7 +183,10 @@ class YumRepository(BaseRepository):
             treeinfo = ConfigParser.SafeConfigParser()
             treeinfo.readfp(treeinfofp)
             treeinfofp.close()
-            ver_str = treeinfo.get(category, 'version')
+            if treeinfo.has_section('system-v1'):
+                ver_str = treeinfo.get('system-v1', category_map[category])
+            else:
+                ver_str = treeinfo.get(category, 'version')
             repo_ver = version.Version.from_string(ver_str)
 
         except Exception, e:

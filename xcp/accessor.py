@@ -115,7 +115,7 @@ class FilesystemAccessor(Accessor):
             return False
         except Exception as e:
             self.lastError = 500
-            return false
+            return False
         return file
 
 class MountingAccessor(FilesystemAccessor):

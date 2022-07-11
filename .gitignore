@@ -3,3 +3,7 @@
 
 # Emacs backup files
 *~
+
+# python coverage data
+.coverage
+htmlcov/

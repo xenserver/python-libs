@@ -519,6 +519,10 @@ class _CMPProxy(object):
             self.init()
         self.read(pos - self.pos)
 
+    def init(self):
+        # implemented by subclasses
+        raise NotImplementedError()
+
     def tell(self):
         return self.pos
 

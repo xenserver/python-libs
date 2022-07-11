@@ -1154,7 +1154,7 @@ class CpioFile(object):
         if fileobj is not None:
             fileobj = _XZProxy(fileobj, mode)
         else:
-            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, dict_size: 20 })
+            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, 'dict_size': 20 })
 
         try:
             t = cls.cpioopen(name, mode, fileobj)

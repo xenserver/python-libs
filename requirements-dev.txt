@@ -1,3 +1,4 @@
 # necessary dev/test tasks
 pylint
 diff_cover
+mock

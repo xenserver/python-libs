@@ -3,6 +3,3 @@
 
 # Emacs backup files
 *~
-
-# 'xcp' symlink for test harness
-/tests/xcp

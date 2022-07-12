@@ -40,7 +40,7 @@ def getElementsByTagName(el, tags, mandatory = False):
     for tag in tags:
         matching.extend(el.getElementsByTagName(tag))
     if mandatory and len(matching) == 0:
-        raise_(XmlUnwrapError, "Missing mandatory element %s" % tags[0])
+        raise XmlUnwrapError("Missing mandatory element %s" % tags[0])
     return matching
 
 def getStrAttribute(el, attrs, default = '', mandatory = False):
@@ -51,7 +51,7 @@ def getStrAttribute(el, attrs, default = '', mandatory = False):
             matching.append(val)
     if len(matching) == 0:
         if mandatory:
-            raise_(XmlUnwrapError, "Missing mandatory attribute %s" % attrs[0])
+            raise XmlUnwrapError("Missing mandatory attribute %s" % attrs[0])
         return default
     return matching[0]
 
@@ -79,7 +79,7 @@ def getMapAttribute(el, attrs, mapping, default = None):
     key = getStrAttribute(el, attrs, default, mandatory)
 
     if key not in k:
-        raise_(XmlUnwrapError, "Unexpected key %s for attribute" % key)
+        raise XmlUnwrapError("Unexpected key %s for attribute" % key)
 
     k_list = list(k)
     return v[k_list.index(key)]

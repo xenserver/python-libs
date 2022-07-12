@@ -28,7 +28,6 @@
 import ftplib
 import os
 import tempfile
-import types
 import urllib
 import urllib2
 import urlparse

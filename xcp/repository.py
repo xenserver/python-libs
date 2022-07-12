@@ -253,7 +253,7 @@ class Repository(BaseRepository):
             repofile = access.openAddress(os.path.join(base, self.REPOSITORY_FILENAME))
         except Exception as e:
             access.finish()
-raise_(NoRepository, e)
+            raise_(NoRepository, e)
         self._parse_repofile(repofile)
         repofile.close()
 
@@ -261,7 +261,7 @@ raise_(NoRepository, e)
             pkgfile = access.openAddress(os.path.join(base, self.PKGDATA_FILENAME))
         except Exception as e:
             access.finish()
-raise_(NoRepository, e)
+            raise_(NoRepository, e)
         self._parse_packages(pkgfile)
         pkgfile.close()
 

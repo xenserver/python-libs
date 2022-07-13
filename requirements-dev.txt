@@ -1,5 +1,7 @@
 # necessary dev/test tasks
 pylint
+coverage
 diff_cover
 mock
 pytest
+pytest-cov

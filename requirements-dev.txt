@@ -2,3 +2,4 @@
 pylint
 diff_cover
 mock
+pytest

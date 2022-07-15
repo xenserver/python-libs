@@ -1,13 +1,11 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 import logging
 import sys
 import unittest
 from copy import deepcopy
 
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
+from io import StringIO
 
 from xcp.net.ifrename.logic import *
 from xcp.logger import LOG, openLog, closeLogs
@@ -35,7 +33,7 @@ def apply_transactions(lst, trans):
 class TestSimpleLogic(unittest.TestCase):
 
     def setUp(self):
-        self.siobuff = StringIO.StringIO()
+        self.siobuff = StringIO()
         openLog(self.siobuff, logging.NOTSET)
 
     def tearDown(self):
@@ -260,7 +258,7 @@ class TestSimpleLogic(unittest.TestCase):
 class TestUseCases(unittest.TestCase):
 
     def setUp(self):
-        self.siobuff = StringIO.StringIO()
+        self.siobuff = StringIO()
         openLog(self.siobuff, logging.NOTSET)
 
     def tearDown(self):
@@ -534,7 +532,7 @@ class TestInputSanitisation(unittest.TestCase):
         set to None and a tname set to the 'eth'
         """
 
-        self.siobuff = StringIO.StringIO()
+        self.siobuff = StringIO()
         openLog(self.siobuff)
 
 

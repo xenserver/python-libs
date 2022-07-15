@@ -18,7 +18,7 @@ def writeRandomFile(fn, size, start=b'', add=b'a'):
         while size > 0:
             d = m.digest()
             if size < len(d):
-                d=d[:size]
+                d = d[:size]
             f.write(d)
             size -= len(d)
             m.update(add)

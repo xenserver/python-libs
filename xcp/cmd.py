@@ -28,11 +28,11 @@ import subprocess
 import xcp.logger as logger
 
 def runCmd(command, with_stdout = False, with_stderr = False, inputtext = None):
-    cmd = subprocess.Popen(command, bufsize = 1,
-                           stdin = (inputtext and subprocess.PIPE or None),
-                           stdout = subprocess.PIPE,
-                           stderr = subprocess.PIPE,
-                           shell = isinstance(command, str))
+    cmd = subprocess.Popen(command, bufsize=1,
+                           stdin=(inputtext and subprocess.PIPE or None),
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE,
+                           shell=isinstance(command, str))
 
     (out, err) = cmd.communicate(inputtext)
     rv = cmd.returncode

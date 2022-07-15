@@ -1,11 +1,9 @@
+from __future__ import unicode_literals
 import logging
 import unittest
 from copy import deepcopy
 
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
+from io import StringIO
 
 from xcp.net.ifrename.static import StaticRules
 from xcp.net.ifrename.macpci import MACPCI
@@ -15,7 +13,7 @@ from xcp.logger import LOG, openLog, closeLogs
 class TestLoadAndParse(unittest.TestCase):
 
     def setUp(self):
-        self.logbuf = StringIO.StringIO()
+        self.logbuf = StringIO()
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):
@@ -37,7 +35,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_empty(self):
 
-        fd = StringIO.StringIO("")
+        fd = StringIO("")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -46,7 +44,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_comment(self):
 
-        fd = StringIO.StringIO("#comment")
+        fd = StringIO("#comment")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -55,7 +53,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_comment_and_empty(self):
 
-        fd = StringIO.StringIO("\n # Another Comment\n ")
+        fd = StringIO("\n # Another Comment\n ")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -64,7 +62,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_incorrect_mac(self):
 
-        fd = StringIO.StringIO('eth0:mac="foo"')
+        fd = StringIO('eth0:mac="foo"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -73,7 +71,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_mac(self):
 
-        fd = StringIO.StringIO('eth0:mac="AB:CD:EF:AB:CD:EF"')
+        fd = StringIO('eth0:mac="AB:CD:EF:AB:CD:EF"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -82,7 +80,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_invalid_pci(self):
 
-        fd = StringIO.StringIO('eth0:pci="bar"')
+        fd = StringIO('eth0:pci="bar"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -91,7 +89,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_pci(self):
 
-        fd = StringIO.StringIO('eth0:pci="0000:00:00.1"')
+        fd = StringIO('eth0:pci="0000:00:00.1"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -100,7 +98,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_pci_0index(self):
 
-        fd = StringIO.StringIO('eth0:pci="0000:00:00.1[0]"')
+        fd = StringIO('eth0:pci="0000:00:00.1[0]"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -109,7 +107,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_invalid_ppn(self):
 
-        fd = StringIO.StringIO('eth0:ppn="baz"')
+        fd = StringIO('eth0:ppn="baz"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -118,7 +116,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_ppn_embedded(self):
 
-        fd = StringIO.StringIO('eth0:ppn="em2"')
+        fd = StringIO('eth0:ppn="em2"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -127,7 +125,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_ppn_slot(self):
 
-        fd = StringIO.StringIO('eth0:ppn="p2p3"')
+        fd = StringIO('eth0:ppn="p2p3"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -136,7 +134,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_oldsytle_ppn_slot(self):
         # CA-82901 - Accept old-style PPNs but translate them to new-style
-        fd = StringIO.StringIO('eth0:ppn="pci2p3"')
+        fd = StringIO('eth0:ppn="pci2p3"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -145,7 +143,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_single_label(self):
 
-        fd = StringIO.StringIO('eth0:label="somestring"')
+        fd = StringIO('eth0:label="somestring"')
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -155,7 +153,7 @@ class TestLoadAndParse(unittest.TestCase):
 class TestLoadAndParseGuess(unittest.TestCase):
 
     def setUp(self):
-        self.logbuf = StringIO.StringIO()
+        self.logbuf = StringIO()
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):
@@ -165,7 +163,7 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
     def test_single_explicit_label(self):
 
-        fd = StringIO.StringIO("eth0=\"foo\"")
+        fd = StringIO("eth0=\"foo\"")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -174,7 +172,7 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
     def test_single_implicit_label(self):
 
-        fd = StringIO.StringIO("eth0=foo")
+        fd = StringIO("eth0=foo")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -183,7 +181,7 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
     def test_single_mac(self):
 
-        fd = StringIO.StringIO("eth0=00:00:00:00:00:00")
+        fd = StringIO("eth0=00:00:00:00:00:00")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -192,7 +190,7 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
     def test_single_pci(self):
 
-        fd = StringIO.StringIO("eth0=0000:00:00.0")
+        fd = StringIO("eth0=0000:00:00.0")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -201,7 +199,7 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
     def test_single_pci_index(self):
 
-        fd = StringIO.StringIO("eth0=0000:00:00.0[1]")
+        fd = StringIO("eth0=0000:00:00.0[1]")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -210,7 +208,7 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
     def test_single_ppn_embedded(self):
 
-        fd = StringIO.StringIO("eth0=em4")
+        fd = StringIO("eth0=em4")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -219,7 +217,7 @@ class TestLoadAndParseGuess(unittest.TestCase):
 
     def test_single_ppn_slot(self):
 
-        fd = StringIO.StringIO("eth0=p1p2")
+        fd = StringIO("eth0=p1p2")
         sr = StaticRules(fd = fd)
 
         self.assertTrue(sr.load_and_parse())
@@ -230,7 +228,7 @@ class TestLoadAndParseGuess(unittest.TestCase):
 class TestGenerate(unittest.TestCase):
 
     def setUp(self):
-        self.logbuf = StringIO.StringIO()
+        self.logbuf = StringIO()
         openLog(self.logbuf, logging.NOTSET)
 
         self.state = [
@@ -251,7 +249,7 @@ class TestGenerate(unittest.TestCase):
 
     def test_null(self):
 
-        fd = StringIO.StringIO('eth0:label="somestring"')
+        fd = StringIO('eth0:label="somestring"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
         sr.generate([])
@@ -260,7 +258,7 @@ class TestGenerate(unittest.TestCase):
 
     def test_single_not_matching_state(self):
 
-        fd = StringIO.StringIO('eth0:label="somestring"')
+        fd = StringIO('eth0:label="somestring"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
         sr.generate(self.state)
@@ -269,7 +267,7 @@ class TestGenerate(unittest.TestCase):
 
     def test_single_mac_matching(self):
 
-        fd = StringIO.StringIO('eth0:mac="01:23:45:67:89:0a"')
+        fd = StringIO('eth0:mac="01:23:45:67:89:0a"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -281,7 +279,7 @@ class TestGenerate(unittest.TestCase):
 
     def test_single_pci_matching(self):
 
-        fd = StringIO.StringIO('eth0:pci="0000:00:10.0"')
+        fd = StringIO('eth0:pci="0000:00:10.0"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -293,7 +291,7 @@ class TestGenerate(unittest.TestCase):
 
     def test_single_ppn_embedded_matching(self):
 
-        fd = StringIO.StringIO('eth0:ppn="em1"')
+        fd = StringIO('eth0:ppn="em1"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -305,7 +303,7 @@ class TestGenerate(unittest.TestCase):
 
     def test_single_ppn_slot_matching(self):
 
-        fd = StringIO.StringIO('eth0:ppn="p2p2"')
+        fd = StringIO('eth0:ppn="p2p2"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -317,7 +315,7 @@ class TestGenerate(unittest.TestCase):
 
     def test_single_label_matching(self):
 
-        fd = StringIO.StringIO('eth0:label="Ethernet1"')
+        fd = StringIO('eth0:label="Ethernet1"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -330,8 +328,8 @@ class TestGenerate(unittest.TestCase):
     def test_ppn_quirks(self):
         # Test case taken from example on CA-75599
 
-        fd = StringIO.StringIO('eth0:ppn="em1"\n'
-                               'eth1:ppn="em2"')
+        fd = StringIO('eth0:ppn="em1"\n'
+                      'eth1:ppn="em2"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -350,7 +348,7 @@ class TestGenerate(unittest.TestCase):
 class TestMultiplePCI(unittest.TestCase):
 
     def setUp(self):
-        self.logbuf = StringIO.StringIO()
+        self.logbuf = StringIO()
         openLog(self.logbuf, logging.NOTSET)
         self.state = [
             MACPCI("c8:cb:b8:d3:0c:ca", "0000:03:00.0", kname="eth0",
@@ -370,8 +368,8 @@ class TestMultiplePCI(unittest.TestCase):
 
     def test_pci_matching(self):
 
-        fd = StringIO.StringIO('eth0:pci="0000:04:00.0"\n'
-                               'eth1:pci="0000:04:00.0[1]"')
+        fd = StringIO('eth0:pci="0000:04:00.0"\n'
+                      'eth1:pci="0000:04:00.0[1]"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -384,8 +382,8 @@ class TestMultiplePCI(unittest.TestCase):
 
     def test_pci_matching_invert(self):
 
-        fd = StringIO.StringIO('eth0:pci="0000:04:00.0[1]"\n'
-                               'eth1:pci="0000:04:00.0[0]"')
+        fd = StringIO('eth0:pci="0000:04:00.0[1]"\n'
+                      'eth1:pci="0000:04:00.0[0]"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -398,8 +396,8 @@ class TestMultiplePCI(unittest.TestCase):
 
     def test_pci_matching_mixed(self):
 
-        fd = StringIO.StringIO('eth0:ppn="em3"\n'
-                               'eth1:pci="0000:04:00.0[1]"')
+        fd = StringIO('eth0:ppn="em3"\n'
+                      'eth1:pci="0000:04:00.0[1]"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -412,8 +410,8 @@ class TestMultiplePCI(unittest.TestCase):
 
     def test_pci_missing(self):
 
-        fd = StringIO.StringIO('eth0:pci="0000:03:00.0"\n'
-                               'eth4:pci="0000:05:00.0"')
+        fd = StringIO('eth0:pci="0000:03:00.0"\n'
+                      'eth4:pci="0000:05:00.0"')
         sr = StaticRules(fd = fd)
         self.assertTrue(sr.load_and_parse())
 
@@ -427,7 +425,7 @@ class TestMultiplePCI(unittest.TestCase):
 class TestSave(unittest.TestCase):
 
     def setUp(self):
-        self.logbuf = StringIO.StringIO()
+        self.logbuf = StringIO()
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):

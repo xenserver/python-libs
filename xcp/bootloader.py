@@ -468,11 +468,11 @@ class Bootloader(object):
         if self.serial:
             if self.serial.get('flow', None) is None: 
                 print("serial %s %s" % (self.serial['port'],
-                                               self.serial['baud']), file=fh)
+                                        self.serial['baud']), file=fh)
             else:
                 print("serial %s %s %s" % (self.serial['port'],
-                                                  self.serial['baud'],
-                                                  self.serial['flow']), file=fh)
+                                           self.serial['baud'],
+                                           self.serial['flow']), file=fh)
         if self.default:
             print("default " + self.default, file=fh)
         print("prompt 1", file=fh)
@@ -486,13 +486,13 @@ class Bootloader(object):
                 print("  # " + m.title, file=fh)
             if m.tboot:
                 print("  kernel mboot.c32", file=fh)
-                print("  append %s %s --- %s %s --- %s %s --- %s" % \
-                    (m.tboot, m.tboot_args, m.hypervisor, m.hypervisor_args,
-                     m.kernel, m.kernel_args, m.initrd), file=fh)
+                print("  append %s %s --- %s %s --- %s %s --- %s" %
+                      (m.tboot, m.tboot_args, m.hypervisor, m.hypervisor_args,
+                       m.kernel, m.kernel_args, m.initrd), file=fh)
             elif m.hypervisor:
                 print("  kernel mboot.c32", file=fh)
-                print("  append %s %s --- %s %s --- %s" % \
-                    (m.hypervisor, m.hypervisor_args, m.kernel, m.kernel_args, m.initrd), file=fh)
+                print("  append %s %s --- %s %s --- %s" %
+                      (m.hypervisor, m.hypervisor_args, m.kernel, m.kernel_args, m.initrd), file=fh)
             else:
                 print("  kernel " + m.kernel, file=fh)
                 print("  append " + m.kernel_args, file=fh)
@@ -508,8 +508,8 @@ class Bootloader(object):
         print("# location " + self.location, file=fh)
 
         if self.serial:
-            print("serial --unit=%s --speed=%s" % (self.serial['port'],
-                                                          self.serial['baud']), file=fh)
+            print("serial --unit=%s --speed=%s" %
+                  (self.serial['port'], self.serial['baud']), file=fh)
             print("terminal --timeout=10 console serial", file=fh)
         else:
             print("terminal console", file=fh)
@@ -542,7 +542,7 @@ class Bootloader(object):
 
         if self.serial:
             print("serial --unit=%s --speed=%s" % (self.serial['port'],
-                                                          self.serial['baud']), file=fh)
+                                                   self.serial['baud']), file=fh)
             print("terminal_input serial console", file=fh)
             print("terminal_output serial console", file=fh)
         if self.default:

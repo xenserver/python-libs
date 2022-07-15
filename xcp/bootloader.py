@@ -24,6 +24,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
+from __future__ import division
 import os
 import os.path
 import re
@@ -519,7 +520,7 @@ class Bootloader(object):
                     print("default %d" % i, file=fh)
                     break
         if self.timeout:
-            print("timeout %d" % (self.timeout / 10), file=fh)
+            print("timeout %d" % (self.timeout // 10), file=fh)
 
         for label in self.menu_order:
             m = self.menu[label]
@@ -553,7 +554,7 @@ class Bootloader(object):
             else:
                 print("set default='%s'" % str(self.default), file=fh)
         if self.timeout:
-            print("set timeout=%d" % (self.timeout / 10), file=fh)
+            print("set timeout=%d" % (self.timeout // 10), file=fh)
 
         boilerplate = getattr(self, 'boilerplate', [])[:]
         boilerplate.reverse()

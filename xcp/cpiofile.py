@@ -1306,8 +1306,7 @@ class CpioFile(object):
                 print(filemode(cpioinfo.mode), end=' ')
                 print("%d/%d" % (cpioinfo.uid, cpioinfo.gid), end=' ')
                 if cpioinfo.ischr() or cpioinfo.isblk():
-                    print("%10s" % ("%d,%d" \
-                                    % (cpioinfo.devmajor, cpioinfo.devminor)), end=' ')
+                    print("%10s" % ("%d,%d" % (cpioinfo.devmajor, cpioinfo.devminor)), end=' ')
                 else:
                     print("%10d" % cpioinfo.size, end=' ')
                 print("%d-%02d-%02d %02d:%02d:%02d" \

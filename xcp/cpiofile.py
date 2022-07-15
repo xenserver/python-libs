@@ -519,6 +519,10 @@ class _CMPProxy(object):
             self.init()
         self.read(pos - self.pos)
 
+    def init(self):
+        # implemented by subclasses
+        raise NotImplementedError()
+
     def tell(self):
         return self.pos
 
@@ -1154,7 +1158,7 @@ class CpioFile(object):
         if fileobj is not None:
             fileobj = _XZProxy(fileobj, mode)
         else:
-            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, dict_size: 20 })
+            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, 'dict_size': 20 })
 
         try:
             t = cls.cpioopen(name, mode, fileobj)

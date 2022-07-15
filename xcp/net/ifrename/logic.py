@@ -350,8 +350,8 @@ def rename_logic( static_rules,
                       key=lambda x: x.order):
         LOG.info("Renaming brand new nic '%s'" % (nic,))
 
-        if ( VALID_ETH_NAME.match(nic.kname) is not None and
-             nic.kname not in (x.tname for x in cur_state) ):
+        if (VALID_ETH_NAME.match(nic.kname) is not None and
+                nic.kname not in (x.tname for x in cur_state)):
             # User has been messing around with state files but not the udev
             # rules.  If the eth name is still free, give it
 

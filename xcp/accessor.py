@@ -120,7 +120,7 @@ class FilesystemAccessor(Accessor):
         return filehandle
 
 class MountingAccessor(FilesystemAccessor):
-    def __init__(self, mount_types, mount_source, mount_options = None):
+    def __init__(self, mount_types, mount_source, mount_options=None):
         ro = isinstance(mount_options, list) and 'ro' in mount_options
         super(MountingAccessor, self).__init__(None, ro)
 

@@ -76,7 +76,7 @@ class DriverRPMPackage(RPMPackage):
             self.filename,
             self.kernel,
             self.options
-            ) = ( repository, label, size, md5sum, fname, kernel, options )
+        ) = (repository, label, size, md5sum, fname, kernel, options)
 
     def __repr__(self):
         return "<DriverRPMPackage '%s', kernel '%s'>" % (self.label, self.kernel)
@@ -90,7 +90,7 @@ class DriverPackage(Package):
             self.md5sum,
             self.filename,
             self.destination
-            ) = ( repository, label, size, md5sum, fname, root )
+        ) = (repository, label, size, md5sum, fname, root)
 
     def __repr__(self):
         return "<DriverPackage '%s'>" % self.label
@@ -103,7 +103,7 @@ class FirmwarePackage(Package):
             self.size,
             self.md5sum,
             self.filename
-            ) = ( repository, label, size, md5sum, fname )
+        ) = (repository, label, size, md5sum, fname)
 
     def __repr__(self):
         return "<FirmwarePackage '%s'>" % self.label

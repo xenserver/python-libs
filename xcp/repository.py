@@ -23,11 +23,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from future.utils import raise_
 import md5
 import os.path
 import xml.dom.minidom
 import ConfigParser
+
+import six
 
 import xcp.version as version
 import xcp.xmlunwrap as xmlunwrap
@@ -189,7 +190,8 @@ class YumRepository(BaseRepository):
             repo_ver = version.Version.from_string(ver_str)
 
         except Exception as e:
-            raise_(RepoFormatError, "Failed to open %s: %s" % (cls.TREEINFO_FILENAME, str(e)))
+            six.raise_from(RepoFormatError("Failed to open %s: %s" %
+                                           (cls.TREEINFO_FILENAME, str(e))), e)
         access.finish()
         return repo_ver
 
@@ -232,7 +234,8 @@ class Repository(BaseRepository):
                     package_list.append(line.strip())
                 extra.close()
         except Exception as e:
-            raise_(RepoFormatError, "Failed to open %s: %s" % (cls.REPOLIST_FILENAME, str(e)))
+            six.raise_from(RepoFormatError("Failed to open %s: %s" %
+                                           (cls.REPOLIST_FILENAME, str(e))), e)
 
         for loc in package_list:
             if cls.isRepo(access, loc):
@@ -253,7 +256,7 @@ class Repository(BaseRepository):
             repofile = access.openAddress(os.path.join(base, self.REPOSITORY_FILENAME))
         except Exception as e:
             access.finish()
-            raise_(NoRepository, e)
+            six.raise_from(NoRepository(), e)
         self._parse_repofile(repofile)
         repofile.close()
 
@@ -261,7 +264,7 @@ class Repository(BaseRepository):
             pkgfile = access.openAddress(os.path.join(base, self.PKGDATA_FILENAME))
         except Exception as e:
             access.finish()
-            raise_(NoRepository, e)
+            six.raise_from(NoRepository(), e)
         self._parse_packages(pkgfile)
         pkgfile.close()
 
@@ -290,8 +293,8 @@ class Repository(BaseRepository):
         # build xml doc object
         try:
             xmldoc = xml.dom.minidom.parseString(repofile_contents)
-        except:
-            raise_(RepoFormatError, "%s not in XML" % self.REPOSITORY_FILENAME)
+        except Exception as e:
+            six.raise_from(RepoFormatError("%s not in XML" % self.REPOSITORY_FILENAME), e)
 
         try:
             repo_node = xmlunwrap.getElementsByTagName(xmldoc, ['repository'], mandatory = True)
@@ -314,8 +317,8 @@ class Repository(BaseRepository):
                     del req['build']
                 assert req['test'] in self.OPER_MAP
                 self.requires.append(req)
-        except:
-            raise_(RepoFormatError, "%s format error" % self.REPOSITORY_FILENAME)
+        except Exception as e:
+            six.raise_from(RepoFormatError("%s format error" % self.REPOSITORY_FILENAME), e)
 
         self.identifier = "%s:%s" % (self.originator, self.name)
         ver_str = self.version
@@ -333,8 +336,8 @@ class Repository(BaseRepository):
         # build xml doc object
         try:
             xmldoc = xml.dom.minidom.parseString(pkgfile_contents)
-        except:
-            raise_(RepoFormatError, "%s not in XML" % self.PKGDATA_FILENAME)
+        except Exception as e:
+            six.raise_from(RepoFormatError("%s not in XML" % self.PKGDATA_FILENAME), e)
 
         for pkg_node in xmlunwrap.getElementsByTagName(xmldoc, ['package']):
             pkg = self._create_package(pkg_node)

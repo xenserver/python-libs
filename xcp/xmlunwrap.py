@@ -23,7 +23,8 @@
 
 """xmlunwrap - general methods to unwrap XML elements & attributes"""
 
-from future.utils import raise_
+import six
+
 class XmlUnwrapError(Exception):
     pass
 
@@ -69,8 +70,8 @@ def getIntAttribute(el, attrs, default = None):
         return default
     try:
         int_val = int(val, 0)
-    except:
-        raise_(XmlUnwrapError, "Invalid integer value for %s" % attrs[0])
+    except Exception as e:
+        six.raise_from(XmlUnwrapError("Invalid integer value for %s" % attrs[0]), e)
     return int_val
 
 def getMapAttribute(el, attrs, mapping, default = None):

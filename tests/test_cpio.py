@@ -47,7 +47,8 @@ class TestCpio(unittest.TestCase):
         check_call("bzip2 -c < archive.cpio > archive.cpio.bz2")
         try:
             import lzma         # pylint: disable=unused-variable
-            self.doXZ = subprocess.call("xz --check=crc32 --lzma2=dict=1MiB < archive.cpio > archive.cpio.xz", shell=True) == 0
+            self.doXZ = subprocess.call("xz --check=crc32 --lzma2=dict=1MiB"
+                                        " < archive.cpio > archive.cpio.xz", shell=True) == 0
         except Exception as ex:
             # FIXME will issue warning even if test_xz is not requested
             warnings.warn("will not test cpio.xz: %s" % ex)

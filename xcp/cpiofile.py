@@ -310,7 +310,7 @@ class _Stream(object):
         self.__write(b"\037\213\010\010%s\002\377" % timestamp)
         if self.name.endswith(".gz"):
             self.name = self.name[:-3]
-        self.__write(self.name + NUL)
+        self.__write(six.ensure_binary(self.name) + NUL)
 
     def write(self, s):
         """Write string s to the stream.
@@ -1433,7 +1433,7 @@ class CpioFile(six.Iterator):
 
         # Set correct owner, mtime and filemode on directories.
         for cpioinfo in directories:
-            path = os.path.join(path, cpioinfo.name)
+            path = os.path.join(path, six.ensure_text(cpioinfo.name))
             try:
                 self.chown(cpioinfo, path)
                 self.utime(cpioinfo, path)

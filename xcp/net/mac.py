@@ -37,6 +37,7 @@ VALID_COLON_MAC = re.compile(r"^([\da-fA-F]{1,2}:){5}[\da-fA-F]{1,2}$")
 VALID_DASH_MAC = re.compile(r"^([\da-fA-F]{1,2}-){5}[\da-fA-F]{1,2}$")
 VALID_DOTQUAD_MAC = re.compile(r"^([\da-fA-F]{1,4}\.){2}[\da-fA-F]{1,4}$")
 
+@six.python_2_unicode_compatible
 class MAC(object):
     """
     Mac address object for manipulation and comparison
@@ -123,9 +124,6 @@ class MAC(object):
 
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
         return ':'.join([ "%0.2x" % x for x in self.octets])
 
     def __repr__(self):

@@ -260,8 +260,7 @@ class PCIDevices(object):
                                stdout = subprocess.PIPE)
         for l in cmd.stdout:
             line = l.rstrip()
-            el = filter(lambda x: not x.startswith('-'),
-                        line.replace('"','').split())
+            el = [x for x in line.replace('"','').split() if not x.startswith('-')]
             self.devs[el[0]] = {'id': el[0],
                                 'class': el[1][:2],
                                 'subclass': el[1][2:],
@@ -279,11 +278,11 @@ class PCIDevices(object):
         	[class1, class2, ... classN]"""
         if subcls:
             assert isinstance(cls, str)
-            return filter(lambda x: x['class'] == cls and
-                          x['subclass'] == subcls, self.devs.values())
+            return [x for x in self.devs.values() if x['class'] == cls and
+                          x['subclass'] == subcls]
         else:
             assert isinstance(cls, list)
-            return filter(lambda x: x['class'] in cls, self.devs.values())
+            return [x for x in self.devs.values() if x['class'] in cls]
 
     def findRelatedFunctions(self, dev):
         """ return other devices that share the same bus & slot"""
@@ -291,8 +290,7 @@ class PCIDevices(object):
             left, _ = dev.rsplit('.', 1)
             return left
 
-        return filter(lambda x: x != dev and slot(x) == slot(dev),
-                      self.devs.keys())
+        return [x for x in self.devs.keys() if x != dev and slot(x) == slot(dev)]
 
 
 def pci_sbdfi_to_nic(sbdfi, nics):

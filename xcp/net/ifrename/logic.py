@@ -88,7 +88,7 @@ def __rename_nic(nic, name, transactions, cur_state):
     # Given the previous assert, only un-renamed nics in the current state can
     # possibly alias the new name
     aliased = util.get_nic_with_kname(
-        filter(lambda x: x.tname is None, cur_state), name)
+        [x for x in cur_state if x.tname is None], name)
 
     if aliased is None:
         # Using this rule will not alias another currently present NIC
@@ -325,7 +325,7 @@ def rename_logic( static_rules,
     if len(multinic_functions):
         LOG.debug("New multi-nic logic - attempting to re-order")
         for fn in multinic_functions:
-            newnics  = util.get_nics_with_pci(filter(util.needs_renaming, cur_state),
+            newnics  = util.get_nics_with_pci(list(filter(util.needs_renaming, cur_state)),
                                               fn)
             orders = sorted([x.order for x in newnics])
             newnics.sort(key = lambda n: n.mac.integer)
@@ -336,8 +336,7 @@ def rename_logic( static_rules,
     # For completely new network cards which we have never seen before, work out
     # a safe new number to assign it
     ethnumbers = sorted(
-        [int(x[3:]) for x in filter(lambda x: VALID_ETH_NAME.match(x) is not None,
-                   [x.tname or x.kname for x in static_rules + cur_state + last_state])])
+        [int(x[3:]) for x in [x for x in [x.tname or x.kname for x in static_rules + cur_state + last_state] if VALID_ETH_NAME.match(x) is not None]])
     if len(ethnumbers):
         nextethnum = ethnumbers[-1]+1
     else:
@@ -422,8 +421,7 @@ def rename( static_rules,
 
     if len(cur_state):
         # Filter out iBFT NICs
-        cur_state = filter(lambda x: VALID_IBFT_NAME.match(x.kname) is None,
-                           cur_state)
+        cur_state = [x for x in cur_state if VALID_IBFT_NAME.match(x.kname) is None]
 
         # Verify types and properties of the list
         for e in cur_state:

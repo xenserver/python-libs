@@ -27,9 +27,9 @@ import re
 import six
 
 _SBDF = (r"(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
-         "     (?P<bus>     [\da-fA-F]{2}):"   # Bus
-         "     (?P<device>  [\da-fA-F]{2})\."  # Device
-         "     (?P<function>[\da-fA-F])"       # Function
+         r"     (?P<bus>     [\da-fA-F]{2}):"   # Bus
+         r"     (?P<device>  [\da-fA-F]{2})\."  # Device
+         r"     (?P<function>[\da-fA-F])"       # Function
          )
 
 # Don't change the meaning of VALID_SBDF as some parties may be using it
@@ -37,7 +37,7 @@ VALID_SBDF = re.compile(r"^%s$" % _SBDF, re.X)
 
 VALID_SBDFI = re.compile(
     r"^(?P<sbdf>%s)"
-    "  (?:[[](?P<index>[\d]{1,2})[]])?$"   # Index (optional)
+    r"  (?:[[](?P<index>[\d]{1,2})[]])?$"   # Index (optional)
     % _SBDF
     , re.X)
 

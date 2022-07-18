@@ -1,4 +1,5 @@
 from __future__ import print_function
+from hashlib import md5
 import os
 import shutil
 import subprocess
@@ -6,11 +7,6 @@ import unittest
 import warnings
 
 from xcp.cpiofile import CpioFile, CpioInfo, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
-
-try:
-    from hashlib import md5
-except:
-    from md5 import md5
 
 def writeRandomFile(fn, size, start='', add='a'):
     f = open(fn, 'wb')

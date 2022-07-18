@@ -52,9 +52,9 @@ import re
 from xcp.logger import LOG
 from xcp.net.ifrename.macpci import MACPCI
 
-VALID_CUR_STATE_KNAME = re.compile("^(?:eth[\d]+|side-[\d]+-eth[\d]+)$")
-VALID_ETH_NAME = re.compile("^eth([\d])+$")
-VALID_IBFT_NAME = re.compile("^ibft([\d])+$")
+VALID_CUR_STATE_KNAME = re.compile(r"^(?:eth[\d]+|side-[\d]+-eth[\d]+)$")
+VALID_ETH_NAME = re.compile(r"^eth([\d])+$")
+VALID_IBFT_NAME = re.compile(r"^ibft([\d])+$")
 
 # util needs to import VALID_ETH_NAME
 from xcp.net.ifrename import util

@@ -25,11 +25,13 @@
 
 """accessor - provide common interface to access methods"""
 
+from future import standard_library
+standard_library.install_aliases()
 import ftplib
 import os
 import tempfile
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import urlparse
 import errno
 
@@ -280,12 +282,12 @@ class FTPAccessor(Accessor):
             username = self.url_parts.username
             password = self.url_parts.password
             if username:
-                username = urllib.unquote(username)
+                username = urllib.parse.unquote(username)
             if password:
-                password = urllib.unquote(password)
+                password = urllib.parse.unquote(password)
             self.ftp.login(username, password)
 
-            directory = urllib.unquote(self.url_parts.path[1:])
+            directory = urllib.parse.unquote(self.url_parts.path[1:])
             if directory != '':
                 logger.debug("Changing to " + directory)
                 self.ftp.cwd(directory)
@@ -305,7 +307,7 @@ class FTPAccessor(Accessor):
         try:
             logger.debug("Testing "+path)
             self._cleanup()
-            url = urllib.unquote(path)
+            url = urllib.parse.unquote(path)
 
             if self.ftp.size(url) is not None:
                 return True
@@ -330,7 +332,7 @@ class FTPAccessor(Accessor):
     def openAddress(self, address):
         logger.debug("Opening "+address)
         self._cleanup()
-        url = urllib.unquote(address)
+        url = urllib.parse.unquote(address)
 
         self.ftp.voidcmd('TYPE I')
         s = self.ftp.transfercmd('RETR ' + url).makefile('rb')
@@ -339,7 +341,7 @@ class FTPAccessor(Accessor):
 
     def writeFile(self, in_fh, out_name):
         self._cleanup()
-        fname = urllib.unquote(out_name)
+        fname = urllib.parse.unquote(out_name)
 
         logger.debug("Storing as " + fname)
         self.ftp.storbinary('STOR ' + fname, in_fh)
@@ -356,23 +358,23 @@ class HTTPAccessor(Accessor):
         if self.url_parts.username:
             username = self.url_parts.username
             if username is not None:
-                username = urllib.unquote(self.url_parts.username)
+                username = urllib.parse.unquote(self.url_parts.username)
             password = self.url_parts.password
             if password is not None:
-                password = urllib.unquote(self.url_parts.password)
-            self.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+                password = urllib.parse.unquote(self.url_parts.password)
+            self.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             self.passman.add_password(None, self.url_parts.hostname,
                                       username, password)
-            self.authhandler = urllib2.HTTPBasicAuthHandler(self.passman)
-            self.opener = urllib2.build_opener(self.authhandler)
-            urllib2.install_opener(self.opener)
+            self.authhandler = urllib.request.HTTPBasicAuthHandler(self.passman)
+            self.opener = urllib.request.build_opener(self.authhandler)
+            urllib.request.install_opener(self.opener)
 
         self.baseAddress = rebuild_url(self.url_parts)
 
     def openAddress(self, address):
         try:
-            urlFile = urllib2.urlopen(os.path.join(self.baseAddress, address))
-        except urllib2.HTTPError as e:
+            urlFile = urllib.request.urlopen(os.path.join(self.baseAddress, address))
+        except urllib.error.HTTPError as e:
             self.lastError = e.code
             return False
         return urlFile

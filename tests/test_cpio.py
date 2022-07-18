@@ -8,7 +8,7 @@ import warnings
 
 from xcp.cpiofile import CpioFile, CpioInfo, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
 
-def writeRandomFile(fn, size, start='', add='a'):
+def writeRandomFile(fn, size, start=b'', add=b'a'):
     with open(fn, 'wb') as f:
         m = md5()
         m.update(start)
@@ -36,7 +36,7 @@ class TestCpio(unittest.TestCase):
         shutil.rmtree('archive', True)
         os.mkdir('archive')
         writeRandomFile('archive/data', 10491)
-        with open('archive/data') as fd:
+        with open('archive/data', 'rb') as fd:
             self.md5data = md5(fd.read()).hexdigest()
         check_call("find archive | cpio -o -H newc > archive.cpio")
         check_call("gzip -c < archive.cpio > archive.cpio.gz")
@@ -78,7 +78,7 @@ class TestCpio(unittest.TestCase):
         os.unlink(fn)
         arc = CpioFile.open(fn, fmt)
         f = arc.getcpioinfo('archive/data')
-        with open('archive/data') as fd:
+        with open('archive/data', 'rb') as fd:
             arc.addfile(f, fd)
         # test recursively add "."
         os.chdir('archive')
@@ -90,7 +90,7 @@ class TestCpio(unittest.TestCase):
         if fmt.endswith('xz'):
             with open(fn, 'rb') as f:
                 f.seek(6)
-                self.assertEqual(f.read(2), '\x00\x01')
+                self.assertEqual(f.read(2), b'\x00\x01')
         self.archiveExtract(fn)
 
     def doArchive(self, fn, fmt=None):

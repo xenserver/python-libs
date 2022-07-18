@@ -72,9 +72,9 @@ __all__ = ["CpioFile", "CpioInfo", "is_cpiofile", "CpioError"]
 # cpio constants
 #---------------------------------------------------------
 MAGIC_NEWC      = 0x070701           # magic for SVR4 portable format (no CRC)
-TRAILER_NAME    = "TRAILER!!!"       # filename in final member
+TRAILER_NAME    = b"TRAILER!!!"      # filename in final member
 WORDSIZE        = 4                  # pad size
-NUL             = "\0"               # the null character
+NUL             = b"\0"              # the null character
 BLOCKSIZE       = 512                # length of processing blocks
 HEADERSIZE_SVR4 = 110                # length of fixed header
 
@@ -255,7 +255,7 @@ class _Stream(object):
         self.comptype = comptype
         self.fileobj  = fileobj
         self.bufsize  = bufsize
-        self.buf      = ""
+        self.buf      = b""
         self.pos      = 0
         self.closed   = False
 
@@ -265,7 +265,7 @@ class _Stream(object):
             except ImportError:
                 raise CompressionError("zlib module is not available")
             self.zlib = zlib
-            self.crc = zlib.crc32("")
+            self.crc = zlib.crc32(b"")
             if mode == "r":
                 self._init_read_gz()
             else:
@@ -277,7 +277,7 @@ class _Stream(object):
             except ImportError:
                 raise CompressionError("bz2 module is not available")
             if mode == "r":
-                self.dbuf = ""
+                self.dbuf = b""
                 self.cmp = bz2.BZ2Decompressor()
             else:
                 self.cmp = bz2.BZ2Compressor()
@@ -288,7 +288,7 @@ class _Stream(object):
             except ImportError:
                 raise CompressionError("lzma module is not available")
             if mode == "r":
-                self.dbuf = ""
+                self.dbuf = b""
                 self.cmp = lzma.LZMADecompressor()
             else:
                 self.cmp = lzma.LZMACompressor()
@@ -306,7 +306,7 @@ class _Stream(object):
                                             self.zlib.DEF_MEM_LEVEL,
                                             0)
         timestamp = struct.pack("<L", int(time.time()))
-        self.__write("\037\213\010\010%s\002\377" % timestamp)
+        self.__write(b"\037\213\010\010%s\002\377" % timestamp)
         if self.name.endswith(".gz"):
             self.name = self.name[:-3]
         self.__write(self.name + NUL)
@@ -342,7 +342,7 @@ class _Stream(object):
 
         if self.mode == "w" and self.buf:
             self.fileobj.write(self.buf)
-            self.buf = ""
+            self.buf = b""
             if self.comptype == "gz":
                 # The native zlib crc is an unsigned 32-bit integer, but
                 # the Python wrapper implicitly casts that to a signed C
@@ -362,12 +362,12 @@ class _Stream(object):
         """Initialize for reading a gzip compressed fileobj.
         """
         self.cmp = self.zlib.decompressobj(-self.zlib.MAX_WBITS)
-        self.dbuf = ""
+        self.dbuf = b""
 
         # taken from gzip.GzipFile with some alterations
-        if self.__read(2) != "\037\213":
+        if self.__read(2) != b"\037\213":
             raise ReadError("not a gzip file")
-        if self.__read(1) != "\010":
+        if self.__read(1) != b"\010":
             raise CompressionError("unsupported compression method")
 
         flag = ord(self.__read(1))
@@ -419,7 +419,7 @@ class _Stream(object):
                 if not buf:
                     break
                 t.append(buf)
-            buf = "".join(t)
+            buf = b"".join(t)
         else:
             buf = self._read(size)
         self.pos += len(buf)
@@ -440,7 +440,7 @@ class _Stream(object):
             buf = self.cmp.decompress(buf)
             t.append(buf)
             c += len(buf)
-        t = "".join(t)
+        t = b"".join(t)
         self.dbuf = t[size:]
         return t[:size]
 
@@ -456,7 +456,7 @@ class _Stream(object):
                 break
             t.append(buf)
             c += len(buf)
-        t = "".join(t)
+        t = b"".join(t)
         self.buf = t[size:]
         return t[:size]
 # class _Stream
@@ -476,11 +476,11 @@ class _StreamProxy(object):
         return self.buf
 
     def getcomptype(self):
-        if self.buf.startswith("\037\213\010"):
+        if self.buf.startswith(b"\037\213\010"):
             return "gz"
-        if self.buf.startswith("BZh91"):
+        if self.buf.startswith(b"BZh91"):
             return "bz2"
-        if self.buf.startswith("\xfd7zXZ"):
+        if self.buf.startswith(b"\xfd7zXZ"):
             return "xz"
         return "cpio"
 
@@ -510,7 +510,7 @@ class _CMPProxy(object):
             except EOFError:
                 break
             x += len(data)
-        self.buf = "".join(b)
+        self.buf = b"".join(b)
 
         buf = self.buf[:size]
         self.buf = self.buf[size:]
@@ -560,7 +560,7 @@ class _BZ2Proxy(_CMPProxy):
         if self.mode == "r":
             self.cmpobj = bz2.BZ2Decompressor()
             self.fileobj.seek(0)
-            self.buf = ""
+            self.buf = b""
         else:
             self.cmpobj = bz2.BZ2Compressor()
 
@@ -581,7 +581,7 @@ class _XZProxy(_CMPProxy):
         if self.mode == "r":
             self.cmpobj = lzma.BZ2Decompressor()
             self.fileobj.seek(0)
-            self.buf = ""
+            self.buf = b""
         else:
             self.cmpobj = lzma.BZ2Compressor()
 
@@ -644,7 +644,7 @@ class _FileInFile(object):
                 break
             size -= len(buf)
             data.append(buf)
-        return "".join(data)
+        return b"".join(data)
 
     def readsparsesection(self, size):
         """Read a single section of a sparse file.
@@ -652,7 +652,7 @@ class _FileInFile(object):
         section = self.sparse.find(self.position)
 
         if section is None:
-            return ""
+            return b""
 
         size = min(size, section.offset + section.size - self.position)
 
@@ -687,7 +687,7 @@ class ExFileObject(object):
         self.size = cpioinfo.size
 
         self.position = 0
-        self.buffer = ""
+        self.buffer = b""
 
     def read(self, size=None):
         """Read at most size bytes from the file. If size is not
@@ -696,11 +696,11 @@ class ExFileObject(object):
         if self.closed:
             raise ValueError("I/O operation on closed file")
 
-        buf = ""
+        buf = b""
         if self.buffer:
             if size is None:
                 buf = self.buffer
-                self.buffer = ""
+                self.buffer = b""
             else:
                 buf = self.buffer[:size]
                 self.buffer = self.buffer[size:]
@@ -781,7 +781,7 @@ class ExFileObject(object):
         else:
             raise ValueError("Invalid argument")
 
-        self.buffer = ""
+        self.buffer = b""
         self.fileobj.seek(self.position)
 
     def close(self):
@@ -865,23 +865,23 @@ class CpioInfo(object):
     def tobuf(self):
         """Return a cpio header as a string.
         """
-        buf = "%06X" % MAGIC_NEWC
-        buf += "%08X" % self.ino
-        buf += "%08X" % self.mode
-        buf += "%08X" % self.uid
-        buf += "%08X" % self.gid
-        buf += "%08X" % self.nlink
-        buf += "%08X" % self.mtime
-        buf += "%08X" % (self.linkname == '' and self.size or
+        buf = b"%06X" % MAGIC_NEWC
+        buf += b"%08X" % self.ino
+        buf += b"%08X" % self.mode
+        buf += b"%08X" % self.uid
+        buf += b"%08X" % self.gid
+        buf += b"%08X" % self.nlink
+        buf += b"%08X" % int(self.mtime)
+        buf += b"%08X" % (self.linkname == '' and self.size or
                          len(self.linkname))
-        buf += "%08X" % self.devmajor
-        buf += "%08X" % self.devminor
-        buf += "%08X" % self.rdevmajor
-        buf += "%08X" % self.rdevminor
-        buf += "%08X" % (len(self.name)+1)
-        buf += "%08X" % self.check
+        buf += b"%08X" % self.devmajor
+        buf += b"%08X" % self.devminor
+        buf += b"%08X" % self.rdevmajor
+        buf += b"%08X" % self.rdevminor
+        buf += b"%08X" % (len(self.name)+1)
+        buf += b"%08X" % self.check
 
-        buf += self.name + NUL
+        buf += six.ensure_binary(self.name) + NUL
         _, remainder = divmod(len(buf), WORDSIZE)
         if remainder != 0:
             # pad to next word
@@ -1581,8 +1581,7 @@ class CpioFile(six.Iterator):
             if cpioinfo.ino in self.inodes:
                 # actual file exists, create link
                 # FIXME handle platforms that don't support hardlinks
-                os.link(os.path.join(cpioinfo._link_path,
-                                     self.inodes[cpioinfo.ino][0]), cpiogetpath)
+                os.link(os.path.join(cpioinfo._link_path, six.ensure_text(self.inodes[cpioinfo.ino][0])), cpiogetpath)
             else:
                 extractinfo = self._datamember(cpioinfo)
 

@@ -24,6 +24,7 @@
 import os.path
 import subprocess
 import re
+import six
 
 _SBDF = (r"(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
          "     (?P<bus>     [\da-fA-F]{2}):"   # Bus
@@ -66,7 +67,7 @@ class PCI(object):
         self.function = -1
         self.index = -1
 
-        if isinstance(addr, (str, unicode)):
+        if isinstance(addr, six.string_types):
 
             res = VALID_SBDFI.match(addr)
             if res:
@@ -277,7 +278,7 @@ class PCIDevices(object):
         	class, subclass
         	[class1, class2, ... classN]"""
         if subcls:
-            assert isinstance(cls, str)
+            assert isinstance(cls, six.string_types)
             return [x for x in self.devs.values() if x['class'] == cls and x['subclass'] == subcls]
         else:
             assert isinstance(cls, list)

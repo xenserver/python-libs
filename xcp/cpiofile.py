@@ -51,6 +51,8 @@ import time
 import struct
 import copy
 
+import six
+
 if sys.platform == 'mac':
     # This module needs work for MacOS9, especially in the area of pathname
     # handling. In many places it is assumed a simple substitution of / by the
@@ -917,7 +919,7 @@ class CpioInfo(object):
         return (stat.S_ISCHR(self.mode) or stat.S_ISBLK(self.mode))
 # class CpioInfo
 
-class CpioFile(object):
+class CpioFile(six.Iterator):
     """The CpioFile Class provides an interface to cpio archives.
     """
 
@@ -1697,7 +1699,7 @@ class CpioFile(object):
             raise ExtractError("could not change modification time")
 
     #--------------------------------------------------------------------------
-    def next(self):
+    def __next__(self):
         """Return the next member of the archive as a CpioInfo object, when
            CpioFile is opened for reading. Return None if there is no more
            available.
@@ -1832,7 +1834,7 @@ class CpioFile(object):
             print(msg, file=sys.stderr)
 # class CpioFile
 
-class CpioIter(object):
+class CpioIter(six.Iterator):
     """Iterator Class.
 
        for cpioinfo in CpioFile(...):
@@ -1848,7 +1850,7 @@ class CpioIter(object):
         """Return iterator object.
         """
         return self
-    def next(self):
+    def __next__(self):
         """Return the next item using CpioFile's next() method.
            When all members have been read, set CpioFile as _loaded.
         """

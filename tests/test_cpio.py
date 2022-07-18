@@ -9,18 +9,17 @@ import warnings
 from xcp.cpiofile import CpioFile, CpioInfo, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
 
 def writeRandomFile(fn, size, start='', add='a'):
-    f = open(fn, 'wb')
-    m = md5()
-    m.update(start)
-    assert(len(add) != 0)
-    while size > 0:
-        d = m.digest()
-        if size < len(d):
-            d=d[:size]
-        f.write(d)
-        size -= len(d)
-        m.update(add)
-    f.close()
+    with open(fn, 'wb') as f:
+        m = md5()
+        m.update(start)
+        assert(len(add) != 0)
+        while size > 0:
+            d = m.digest()
+            if size < len(d):
+                d=d[:size]
+            f.write(d)
+            size -= len(d)
+            m.update(add)
 
 
 def check_call(cmd):
@@ -89,10 +88,9 @@ class TestCpio(unittest.TestCase):
         arc.close()
         # special case for XZ, test check type (crc32)
         if fmt.endswith('xz'):
-            f = open(fn, 'rb')
-            f.seek(6)
-            self.assertEqual(f.read(2), '\x00\x01')
-            f.close()
+            with open(fn, 'rb') as f:
+                f.seek(6)
+                self.assertEqual(f.read(2), '\x00\x01')
         self.archiveExtract(fn)
 
     def doArchive(self, fn, fmt=None):

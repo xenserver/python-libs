@@ -83,7 +83,7 @@ def __rename_nic(nic, name, transactions, cur_state):
     # Assert that name is valid
     assert VALID_ETH_NAME.match(name) is not None
     # Assert that name is not already taken in the current state
-    assert name not in map(lambda x: x.tname, cur_state)
+    assert name not in [x.tname for x in cur_state]
 
     # Given the previous assert, only un-renamed nics in the current state can
     # possibly alias the new name
@@ -327,7 +327,7 @@ def rename_logic( static_rules,
         for fn in multinic_functions:
             newnics  = util.get_nics_with_pci(filter(util.needs_renaming, cur_state),
                                               fn)
-            orders = sorted(map(lambda x: x.order, newnics))
+            orders = sorted([x.order for x in newnics])
             newnics.sort(key = lambda n: n.mac.integer)
             for nic, neworder in zip(newnics, orders):
                 LOG.debug("NIC '%s' getting new order '%s'" % (nic, neworder))
@@ -336,10 +336,8 @@ def rename_logic( static_rules,
     # For completely new network cards which we have never seen before, work out
     # a safe new number to assign it
     ethnumbers = sorted(
-        map(lambda x: int(x[3:]),
-            filter(lambda x: VALID_ETH_NAME.match(x) is not None,
-                   map(lambda x: x.tname or x.kname,
-                       static_rules + cur_state + last_state))))
+        [int(x[3:]) for x in filter(lambda x: VALID_ETH_NAME.match(x) is not None,
+                   [x.tname or x.kname for x in static_rules + cur_state + last_state])])
     if len(ethnumbers):
         nextethnum = ethnumbers[-1]+1
     else:
@@ -353,7 +351,7 @@ def rename_logic( static_rules,
         LOG.info("Renaming brand new nic '%s'" % (nic,))
 
         if ( VALID_ETH_NAME.match(nic.kname) is not None and
-             nic.kname not in map(lambda x: x.tname, cur_state) ):
+             nic.kname not in [x.tname for x in cur_state] ):
             # User has been messing around with state files but not the udev
             # rules.  If the eth name is still free, give it
 
@@ -411,13 +409,13 @@ def rename( static_rules,
                                       "'eth<num>'" % (e, ))
 
         # Verify no two static rules refer to the same eth name
-        _ = frozenset( map(lambda x: x.tname, static_rules) )
+        _ = frozenset( [x.tname for x in static_rules] )
         if len(_) != len(static_rules):
             raise StaticRuleError("Some static rules alias the same "
                                   "eth name")
 
         # Verify no two static rules refer to the same mac address
-        _ = frozenset( map(lambda x: x.mac, static_rules) )
+        _ = frozenset( [x.mac for x in static_rules] )
         if len(_) != len(static_rules):
             raise StaticRuleError("Some static rules alias the same MAC "
                                   "address")
@@ -445,13 +443,13 @@ def rename( static_rules,
 
 
         # Verify no two entries of current state refer to the same eth name
-        _ = frozenset( map(lambda x: x.kname, cur_state) )
+        _ = frozenset( [x.kname for x in cur_state] )
         if len(_) != len(cur_state):
             raise CurrentStateError("Some entries of current state alias the "
                                     "same eth name")
 
         # Verify no two entries of current state refer to the same mac address
-        _ = frozenset( map(lambda x: x.mac, cur_state) )
+        _ = frozenset( [x.mac for x in cur_state] )
         if len(_) != len(cur_state):
             raise CurrentStateError("Some entries of current state alias the "
                                     "same MAC address")
@@ -474,13 +472,13 @@ def rename( static_rules,
 
 
         # Verify no two entries of last state refer to the same eth name
-        _ = frozenset( map(lambda x: x.tname, last_state) )
+        _ = frozenset( [x.tname for x in last_state] )
         if len(_) != len(last_state):
             raise LastStateError("Some entries of last state alias the "
                                  "same eth name")
 
         # Verify no two entries of last state refer to the same mac address
-        _ = frozenset( map(lambda x: x.mac, last_state) )
+        _ = frozenset( [x.mac for x in last_state] )
         if len(_) != len(last_state):
             raise LastStateError("Some entries of last state alias the "
                                  "same MAC address")

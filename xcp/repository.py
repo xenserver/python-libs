@@ -170,8 +170,7 @@ class YumRepository(BaseRepository):
     def isRepo(cls, access, base):
         """ Return whether there is a repository at base address
         'base' accessible using accessor."""
-        return False not in map(lambda x: access.access(os.path.join(base, x)),
-                                [cls.TREEINFO_FILENAME, cls.REPOMD_FILENAME])
+        return False not in [access.access(os.path.join(base, x)) for x in [cls.TREEINFO_FILENAME, cls.REPOMD_FILENAME]]
 
     @classmethod
     def _getVersion(cls, access, category):
@@ -368,8 +367,7 @@ class Repository(BaseRepository):
     def isRepo(cls, access, base):
         """ Return whether there is a repository at base address
         'base' accessible using accessor."""
-        return False not in map(lambda x: access.access(os.path.join(base, x)),
-                                [cls.REPOSITORY_FILENAME, cls.PKGDATA_FILENAME])
+        return False not in [access.access(os.path.join(base, x)) for x in [cls.REPOSITORY_FILENAME, cls.PKGDATA_FILENAME]]
 
     @classmethod
     def getRepoVer(cls, access):

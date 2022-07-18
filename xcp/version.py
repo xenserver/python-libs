@@ -52,7 +52,7 @@ class Version(object):
         if '-' in ver_str:
             ver_str, build = ver_str.split('-', 1)
 
-        ver = map(cls.intify, ver_str.split('.'))
+        ver = list(map(cls.intify, ver_str.split('.')))
 
         return cls(ver, build)
 

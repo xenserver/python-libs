@@ -50,7 +50,7 @@ def get_nic_with_kname(nics, kname):
 
 def tname_free(nics, name):
     """Check that name is not taken by any nics"""
-    return name not in [x.tname for x in nics]
+    return name not in (x.tname for x in nics)
 
 def get_nic_with_mac(nics, mac):
     """Search for nic with mac"""

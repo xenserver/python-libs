@@ -152,7 +152,7 @@ class Bootloader(object):
                             # els[2] contains tboot args, hypervisor,
                             # hypervisor args, kernel,
                             # kernel args & initrd
-                            args = map(lambda x: x.strip(), els[2].split('---'))
+                            args = [x.strip() for x in els[2].split('---')]
                             if len(args) == 4:
                                 hypervisor = args[1].split(None, 1)
                                 kernel = args[2].split(None, 1)
@@ -168,7 +168,7 @@ class Bootloader(object):
                         elif 'xen' in els[1]:
                             # els[2] contains hypervisor args, kernel,
                             # kernel args & initrd
-                            args = map(lambda x: x.strip(), els[2].split('---'))
+                            args = [x.strip() for x in els[2].split('---')]
                             if len(args) == 3:
                                 kernel = args[1].split(None, 1)
                                 if len(kernel) == 2:

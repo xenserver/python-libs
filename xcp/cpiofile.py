@@ -1893,7 +1893,7 @@ class CpioFileCompat(object):
                 m.file_size = m.size
                 m.date_time = time.gmtime(m.mtime)[:6]
     def namelist(self):
-        return map(lambda m: m.name, self.infolist())
+        return [m.name for m in self.infolist()]
     def infolist(self):
         return filter(lambda m: m.isreg(),
                       self.cpiofile.getmembers())

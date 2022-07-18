@@ -89,7 +89,7 @@ class MAC(object):
 
         self.octets = [ int(i, 16) for i in octets ]
         self.integer = long(sum(t[0] << t[1] for t in
-                                zip(self.octets, xrange(40, -1, -8))))
+                                zip(self.octets, range(40, -1, -8))))
 
     def _set_from_str_quads(self, quads):
         """Private helper"""
@@ -101,7 +101,7 @@ class MAC(object):
             self.octets.extend([(quad >> 8) & 0xff, quad & 0xff])
 
         self.integer = long(sum(t[0] << t[1] for t in
-                                zip(self.octets, xrange(40, -1, -8))))
+                                zip(self.octets, range(40, -1, -8))))
 
     def is_unicast(self):
         """is this a unicast address?"""

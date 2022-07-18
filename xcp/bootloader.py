@@ -336,19 +336,19 @@ class Bootloader(object):
         try:
             for line in fh:
                 l = line.strip()
-                menu_match = re.match("menuentry ['\"]([^']*)['\"](.*){", l)
+                menu_match = re.match(r"menuentry ['\"]([^']*)['\"](.*){", l)
 
                 # Only parse unindented default and timeout lines to prevent
                 # changing these lines in if statements.
                 if l.startswith('set default=') and l == line.rstrip():
                     default = l.split('=')[1]
-                    match = re.match("['\"](.*)['\"]$", default)
+                    match = re.match(r"['\"](.*)['\"]$", default)
                     if match:
                         default = match.group(1)
                 elif l.startswith('set timeout=') and l == line.rstrip():
                     timeout = int(l.split('=')[1]) * 10
                 elif l.startswith('serial'):
-                    match = re.match("serial --unit=(\d+) --speed=(\d+)", l)
+                    match = re.match(r"serial --unit=(\d+) --speed=(\d+)", l)
                     if match:
                         serial = {
                             'port': int(match.group(1)),

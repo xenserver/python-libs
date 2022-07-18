@@ -262,8 +262,8 @@ class DynamicRules(object):
                             % (entry, e))
                 return False
 
-        lastboot = list(filter(validate, self.lastboot))
-        old = list(filter(validate, self.old))
+        lastboot = [x for x in self.lastboot if validate(x)]
+        old = [x for x in self.old if validate(x)]
 
         try:
             res += json.dumps({"lastboot": lastboot, "old": old},

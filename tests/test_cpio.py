@@ -37,7 +37,8 @@ class TestCpio(unittest.TestCase):
         shutil.rmtree('archive', True)
         os.mkdir('archive')
         writeRandomFile('archive/data', 10491)
-        self.md5data = md5(open('archive/data').read()).hexdigest()
+        with open('archive/data') as fd:
+            self.md5data = md5(fd.read()).hexdigest()
         check_call("find archive | cpio -o -H newc > archive.cpio")
         check_call("gzip -c < archive.cpio > archive.cpio.gz")
         check_call("bzip2 -c < archive.cpio > archive.cpio.bz2")
@@ -78,7 +79,8 @@ class TestCpio(unittest.TestCase):
         os.unlink(fn)
         arc = CpioFile.open(fn, fmt)
         f = arc.getcpioinfo('archive/data')
-        arc.addfile(f, open('archive/data'))
+        with open('archive/data') as fd:
+            arc.addfile(f, fd)
         # test recursively add "."
         os.chdir('archive')
         arc.add(".")

@@ -24,6 +24,7 @@
 """Command processing"""
 
 import subprocess
+import six
 
 import xcp.logger as logger
 
@@ -32,7 +33,7 @@ def runCmd(command, with_stdout = False, with_stderr = False, inputtext = None):
                            stdin = (inputtext and subprocess.PIPE or None),
                            stdout = subprocess.PIPE,
                            stderr = subprocess.PIPE,
-                           shell = isinstance(command, str))
+                           shell = isinstance(command, six.string_types))
 
     (out, err) = cmd.communicate(inputtext)
     rv = cmd.returncode

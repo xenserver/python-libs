@@ -33,6 +33,7 @@ import traceback
 import logging
 import logging.handlers
 
+import six
 
 LOG = logging.getLogger()
 LOG.setLevel(logging.NOTSET)
@@ -47,7 +48,7 @@ def openLog(lfile, level=logging.INFO):
 
     try:
         # if lfile is a string, assume we need to open() it
-        if isinstance(lfile, str):
+        if isinstance(lfile, six.string_types):
             h = open(lfile, 'a')
             if h.isatty():
                 handler = logging.StreamHandler(h)

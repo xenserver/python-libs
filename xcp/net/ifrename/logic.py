@@ -336,9 +336,8 @@ def rename_logic( static_rules,
     # a safe new number to assign it
     ethnumbers = sorted(
         int(x[3:])
-        for x in (x for x in (x.tname or x.kname
-                              for x in static_rules + cur_state + last_state)
-                  if VALID_ETH_NAME.match(x) is not None))
+        for x in (x.tname or x.kname for x in static_rules + cur_state + last_state)
+        if VALID_ETH_NAME.match(x) is not None)
     if len(ethnumbers):
         nextethnum = ethnumbers[-1]+1
     else:

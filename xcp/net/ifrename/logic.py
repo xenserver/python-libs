@@ -289,9 +289,10 @@ def rename_logic( static_rules,
 
             # Check that the function still has the same number of nics
             if len(lastnics) != len(newnics):
-                LOG.warn("multi-nic function %s had %d nics but now has %d.  "
-                         "Defering all until later for renaming"
-                         % (fn, len(lastnics), len(newnics)))
+                LOG.warning(
+                    "multi-nic function %s had %d nics but now has %d.  "
+                    "Defering all until later for renaming",
+                    fn, len(lastnics), len(newnics))
                 continue
 
             # Check that all nics are still pending a rename

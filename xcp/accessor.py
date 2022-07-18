@@ -32,7 +32,7 @@ import os
 import tempfile
 import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
-import urlparse
+import urllib.parse
 import errno
 
 import xcp.mount as mount
@@ -252,14 +252,14 @@ def rebuild_url(url_parts):
     host = url_parts.hostname
     if url_parts.port:
         host += ':' + str(url_parts.port)
-    return urlparse.urlunsplit(
+    return urllib.parse.urlunsplit(
         (url_parts.scheme, host,
          url_parts.path, '', ''))
 
 class FTPAccessor(Accessor):
     def __init__(self, baseAddress, ro):
         super(FTPAccessor, self).__init__(ro)
-        self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
+        self.url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
         self.start_count = 0
         self.cleanup = False
         self.ftp = None
@@ -312,7 +312,7 @@ class FTPAccessor(Accessor):
             if self.ftp.size(url) is not None:
                 return True
             lst = self.ftp.nlst(os.path.dirname(url))
-            return os.path.basename(url) in map(os.path.basename, lst)
+            return os.path.basename(url) in list(map(os.path.basename, lst))
         except IOError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -353,7 +353,7 @@ class HTTPAccessor(Accessor):
     def __init__(self, baseAddress, ro):
         assert ro
         super(HTTPAccessor, self).__init__(ro)
-        self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
+        self.url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
 
         if self.url_parts.username:
             username = self.url_parts.username
@@ -391,7 +391,7 @@ SUPPORTED_ACCESSORS = {'nfs': NFSAccessor,
                        }
 
 def createAccessor(baseAddress, *args):
-    url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
+    url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
 
     assert url_parts.scheme in SUPPORTED_ACCESSORS.keys()
     return SUPPORTED_ACCESSORS[url_parts.scheme](baseAddress, *args)

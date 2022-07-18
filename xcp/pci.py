@@ -278,8 +278,7 @@ class PCIDevices(object):
         	[class1, class2, ... classN]"""
         if subcls:
             assert isinstance(cls, str)
-            return [x for x in self.devs.values() if x['class'] == cls and
-                          x['subclass'] == subcls]
+            return [x for x in self.devs.values() if x['class'] == cls and x['subclass'] == subcls]
         else:
             assert isinstance(cls, list)
             return [x for x in self.devs.values() if x['class'] in cls]

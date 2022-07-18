@@ -175,7 +175,7 @@ class StaticRules(object):
 
             # If we need to guess the method from the value
             if method == "guess":
-                for k, v in StaticRules.validators.iteritems():
+                for k, v in StaticRules.validators.items():
                     if v.match(value) is not None:
                         method = k
                         break
@@ -222,7 +222,7 @@ class StaticRules(object):
             LOG.warning("Discovered physical policy naming quirks in provided "
                         "state.  Disabling 'method=ppn' generation")
 
-        for target, (method, value) in self.formulae.iteritems():
+        for target, (method, value) in self.formulae.items():
 
             if method == "mac":
 

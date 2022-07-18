@@ -170,7 +170,7 @@ class DynamicRules(object):
             LOG.warning("Discovered physical policy naming quirks in provided "
                         "state.  Disabling 'method=ppn' generation")
 
-        for target, (method, value) in self.formulae.iteritems():
+        for target, (method, value) in self.formulae.items():
 
             if method == "mac":
 

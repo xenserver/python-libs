@@ -33,7 +33,7 @@ import six
 import xcp.version as version
 import xcp.xmlunwrap as xmlunwrap
 
-class Package:
+class Package(object):
     pass
 
 class BzippedPackage(Package):

@@ -25,7 +25,7 @@
 
 """version - version comparison methods"""
 
-class Version:
+class Version(object):
     def __init__(self, ver, build = None):
         self.ver = ver
         self.build = build

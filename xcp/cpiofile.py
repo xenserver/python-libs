@@ -480,7 +480,7 @@ class _StreamProxy(object):
             return "gz"
         if self.buf.startswith(b"BZh91"):
             return "bz2"
-        if self.buf.startswith(b"\xfd7zXZ"):
+        if self.buf.startswith(b"\xfd7zXZ\0"):
             return "xz"
         return "cpio"
 

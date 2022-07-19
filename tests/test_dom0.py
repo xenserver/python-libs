@@ -30,7 +30,7 @@ class TestDom0(unittest.TestCase):
             (2*1024, 4*1024, 8*1024), # Above max
             ]
 
-        with patch("__builtin__.open") as open_mock:
+        with patch("xcp.dom0.open") as open_mock:
             for host_gib, dom0_mib, _ in test_values:
                 mock_version(open_mock, '2.8.0')
                 expected = dom0_mib * 1024;
@@ -39,7 +39,7 @@ class TestDom0(unittest.TestCase):
 
             open_mock.assert_called_with("/etc/xensource-inventory")
 
-        with patch("__builtin__.open") as open_mock:
+        with patch("xcp.dom0.open") as open_mock:
             for host_gib, _, dom0_mib in test_values:
                 mock_version(open_mock, '2.9.0')
                 expected = dom0_mib * 1024;

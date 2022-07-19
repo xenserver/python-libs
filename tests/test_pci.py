@@ -37,7 +37,7 @@ class TestValid(unittest.TestCase):
         self.assertEqual(c.integer, 0)
 
 
-    def test_null_with_segment(self):
+    def test_null_without_segment(self):
 
         c = PCI("00:00.0")
 

@@ -1,6 +1,7 @@
 from __future__ import print_function
 from hashlib import md5
 import os
+import sys
 import shutil
 import subprocess
 import unittest
@@ -97,7 +98,12 @@ class TestCpio(unittest.TestCase):
         if fmt.endswith('xz'):
             with open(fn, 'rb') as f:
                 f.seek(6)
-                self.assertEqual(f.read(2), b'\x00\x01')
+                # check stream flags
+                if sys.version_info < (3, 0):
+                    expected_flags = b'\x00\x01' # pylzma defaults to CRC32
+                else:
+                    expected_flags = b'\x00\x04' # python3 defaults to CRC64
+                self.assertEqual(f.read(2), expected_flags)
         self.archiveExtract(fn)
 
     def doArchive(self, fn, fmt=None):

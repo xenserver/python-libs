@@ -105,7 +105,7 @@ class TestCpio(unittest.TestCase):
         fn2 = "archive2" + fn[len("archive"):]
         print("creating %s" % fn2)
         self.archiveCreate(fn2, fmt is None and 'w' or 'w|%s' % fmt)
-        if not fmt is None:
+        if fmt is not None:
             self.archiveExtract(fn2, 'r|%s' % fmt)
 
     def test_plain(self):

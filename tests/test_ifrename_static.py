@@ -375,10 +375,10 @@ class TestMultiplePCI(unittest.TestCase):
 
         sr.generate(self.state)
 
-        self.assertEqual(sr.rules,[
-                MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth1"),
-                MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth0")
-                ])
+        self.assertEqual(set(sr.rules), set([
+            MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth1"),
+            MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth0")
+        ]))
 
     def test_pci_matching_invert(self):
 
@@ -389,10 +389,10 @@ class TestMultiplePCI(unittest.TestCase):
 
         sr.generate(self.state)
 
-        self.assertEqual(sr.rules,[
-                MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1"),
-                MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0")
-                ])
+        self.assertEqual(set(sr.rules), set([
+            MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1"),
+            MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0")
+        ]))
 
     def test_pci_matching_mixed(self):
 
@@ -403,10 +403,10 @@ class TestMultiplePCI(unittest.TestCase):
 
         sr.generate(self.state)
 
-        self.assertEqual(sr.rules,[
-                MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0"),
-                MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1")
-                ])
+        self.assertEqual(set(sr.rules), set([
+            MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0"),
+            MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1")
+        ]))
 
     def test_pci_missing(self):
 

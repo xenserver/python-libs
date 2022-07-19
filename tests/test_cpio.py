@@ -39,7 +39,12 @@ class TestCpio(unittest.TestCase):
         writeRandomFile('archive/data', 10491)
         with open('archive/data', 'rb') as fd:
             self.md5data = md5(fd.read()).hexdigest()
-        check_call("find archive | cpio -o -H newc > archive.cpio")
+        # fixed timestamps for cpio reproducibility
+        os.utime('archive/data', (0, 0))
+        os.utime('archive', (0, 0))
+
+        check_call(
+            "find archive | cpio --reproducible -o -H newc > archive.cpio")
         check_call("gzip -c < archive.cpio > archive.cpio.gz")
         check_call("bzip2 -c < archive.cpio > archive.cpio.bz2")
         try:

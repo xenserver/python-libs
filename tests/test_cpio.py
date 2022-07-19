@@ -97,7 +97,8 @@ class TestCpio(unittest.TestCase):
         # special case for XZ, test check type (crc32)
         if fmt.endswith('xz'):
             with open(fn, 'rb') as f:
-                f.seek(6)
+                # check xz magic
+                self.assertEqual(f.read(6), b"\xfd7zXZ\0")
                 # check stream flags
                 if sys.version_info < (3, 0):
                     expected_flags = b'\x00\x01' # pylzma defaults to CRC32

@@ -125,10 +125,10 @@ class TestGenerate(unittest.TestCase):
                      MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", kname="eth1",
                             ppn="", label="")])
 
-        self.assertEqual(dr.rules,[
+        self.assertEqual(set(dr.rules), set([
                 MACPCI("c8:cb:b8:d3:0c:ce", "0000:04:00.0", tname="eth1"),
                 MACPCI("c8:cb:b8:d3:0c:cf", "0000:04:00.0", tname="eth0")
-                ])
+        ]))
 
     def test_pci_missing(self):
 

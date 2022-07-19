@@ -57,7 +57,7 @@ class TestCpio(unittest.TestCase):
             self.doXZ = False
 
     def tearDown(self):
-        check_call("rm -rf archive archive.cpio* archive2")
+        check_call("rm -rf archive archive.cpio* archive2 archive2.cpio*")
 
     # TODO check with file (like 'r:*')
     # TODO use cat to check properly for pipes
@@ -81,7 +81,8 @@ class TestCpio(unittest.TestCase):
         arc.close()
 
     def archiveCreate(self, fn, fmt='w'):
-        os.unlink(fn)
+        if os.path.exists(fn):
+            os.unlink(fn)
         arc = CpioFile.open(fn, fmt)
         f = arc.getcpioinfo('archive/data')
         with open('archive/data', 'rb') as fd:
@@ -101,9 +102,11 @@ class TestCpio(unittest.TestCase):
 
     def doArchive(self, fn, fmt=None):
         self.archiveExtract(fn)
-        self.archiveCreate(fn, fmt is None and 'w' or 'w|%s' % fmt )
+        fn2 = "archive2" + fn[len("archive"):]
+        print("creating %s" % fn2)
+        self.archiveCreate(fn2, fmt is None and 'w' or 'w|%s' % fmt)
         if not fmt is None:
-            self.archiveExtract(fn, 'r|%s' % fmt)
+            self.archiveExtract(fn2, 'r|%s' % fmt)
 
     def test_plain(self):
         self.doArchive('archive.cpio')

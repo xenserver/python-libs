@@ -97,7 +97,7 @@ class TestCpio(unittest.TestCase):
 
     def test_xz(self):
         if not self.doXZ:
-            return
+            raise unittest.SkipTest("lzma package or xz tool not available")
         print 'Running test for XZ'
         self.doArchive('archive.cpio.xz', 'xz')
 

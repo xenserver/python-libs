@@ -1420,7 +1420,7 @@ class CpioFile(six.Iterator):
                 # Extract directory with a safe mode, so that
                 # all files below can be extracted as well.
                 try:
-                    os.makedirs(os.path.join(path, cpioinfo.name), 0o777)
+                    os.makedirs(os.path.join(path, six.ensure_text(cpioinfo.name)), 0o777)
                 except EnvironmentError:
                     pass
                 directories.append(cpioinfo)
@@ -1462,7 +1462,7 @@ class CpioFile(six.Iterator):
             cpioinfo._link_path = path
 
         try:
-            self._extract_member(cpioinfo, os.path.join(path, cpioinfo.name))
+            self._extract_member(cpioinfo, os.path.join(path, six.ensure_text(cpioinfo.name)))
         except EnvironmentError as e:
             if self.errorlevel > 0:
                 raise

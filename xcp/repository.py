@@ -46,7 +46,7 @@ class BzippedPackage(Package):
             self.optional,
             self.filename,
             self.destination
-            ) = ( repository, label, size, md5sum, (optional==True), fname, root )
+        ) = (repository, label, size, md5sum, optional is True, fname, root)
 
     def __repr__(self):
         return "<BzippedPackage '%s'>" % self.label
@@ -61,7 +61,7 @@ class RPMPackage(Package):
             self.optional,
             self.filename,
             self.options
-            ) = ( repository, label, size, md5sum, (optional==True), fname, options )
+        ) = (repository, label, size, md5sum, optional is True, fname, options)
 
     def __repr__(self):
         return "<RPMPackage '%s'>" % self.label

@@ -298,8 +298,7 @@ class StaticRules(object):
         if header:
             res += SAVE_HEADER
 
-        keys = list(set(( x for x in self.formulae.keys()
-                          if x.startswith("eth") )))
+        keys = list(set((x for x in self.formulae if x.startswith("eth"))))
         keys.sort(key=lambda x: int(x[3:]))
 
         for target in keys:

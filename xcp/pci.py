@@ -289,7 +289,7 @@ class PCIDevices(object):
             left, _ = dev.rsplit('.', 1)
             return left
 
-        return [x for x in self.devs.keys() if x != dev and slot(x) == slot(dev)]
+        return [x for x in self.devs if x != dev and slot(x) == slot(dev)]
 
 
 def pci_sbdfi_to_nic(sbdfi, nics):

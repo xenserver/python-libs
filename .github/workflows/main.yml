@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pylint diff_cover
+          pip install -r requirements-dev.txt
 
       - name: Pylint
         run: |

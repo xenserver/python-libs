@@ -5,7 +5,7 @@ import unittest, sys, os
 try:
     import xcp
 except ImportError:
-    print >>sys.stderr, "Must run with run-test.sh"
+    print >>sys.stderr, "Must run with run-tests.sh"
     sys.exit(1)
 
 from xcp.dom0 import default_memory, parse_mem, default_vcpus

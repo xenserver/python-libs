@@ -33,4 +33,7 @@ setup(name='python-libs',
                 'xcp.net',
                 'xcp.net.ifrename'
                 ],
+      requires=[
+          'branding',
+      ],
      )

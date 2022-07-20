@@ -5,7 +5,7 @@ import unittest, sys, os, os.path as path
 try:
     import xcp
 except ImportError:
-    print >>sys.stderr, "Must run with run-test.sh"
+    print >>sys.stderr, "Must run with run-tests.sh"
     sys.exit(1)
 
 from xcp.pci import PCI
@@ -37,7 +37,7 @@ class TestValid(unittest.TestCase):
         self.assertEqual(c.integer, 0)
 
 
-    def test_null_with_segment(self):
+    def test_null_without_segment(self):
 
         c = PCI("00:00.0")
 

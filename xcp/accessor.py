@@ -69,7 +69,7 @@ class Accessor(object):
 
         return True
 
-    def openAddress(self, name):
+    def openAddress(self, address):
         """should be overloaded"""
         pass
 
@@ -97,9 +97,9 @@ class FilesystemAccessor(Accessor):
         super(FilesystemAccessor, self).__init__(ro)
         self.location = location
 
-    def openAddress(self, addr):
+    def openAddress(self, address):
         try:
-            file = open(os.path.join(self.location, addr), 'r')
+            file = open(os.path.join(self.location, address), 'r')
         except OSError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5

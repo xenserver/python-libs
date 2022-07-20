@@ -14,7 +14,7 @@ def writeRandomFile(fn, size, start=b'', add=b'a'):
     with open(fn, 'wb') as f:
         m = md5()
         m.update(start)
-        assert(len(add) != 0)
+        assert add
         while size > 0:
             d = m.digest()
             if size < len(d):

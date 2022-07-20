@@ -53,7 +53,7 @@ class TestCpio(unittest.TestCase):
             self.doXZ = False
 
     def tearDown(self):
-        check_call("rm -rf archive archive.cpio*")
+        check_call("rm -rf archive archive.cpio* archive2")
 
     # TODO check with file (like 'r:*')
     # TODO use cat to check properly for pipes
@@ -66,7 +66,15 @@ class TestCpio(unittest.TestCase):
                 self.assertEqual(len(data), f.size)
                 self.assertEqual(self.md5data, md5(data).hexdigest())
                 found = True
+        arc.close()
         self.assertTrue(found)
+        # extract with extractall and compare
+        arc = CpioFile.open(fn, fmt)
+        check_call("rm -rf archive2")
+        os.rename('archive', 'archive2')
+        arc.extractall()
+        check_call("diff -rq archive2 archive")
+        arc.close()
 
     def archiveCreate(self, fn, fmt='w'):
         os.unlink(fn)

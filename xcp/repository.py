@@ -33,7 +33,7 @@ import six
 import xcp.version as version
 import xcp.xmlunwrap as xmlunwrap
 
-class Package(object):
+class Package(object):          # pylint: disable=too-few-public-methods
     pass
 
 class BzippedPackage(Package):

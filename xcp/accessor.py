@@ -395,5 +395,5 @@ SUPPORTED_ACCESSORS = {'nfs': NFSAccessor,
 def createAccessor(baseAddress, *args):
     url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
 
-    assert url_parts.scheme in SUPPORTED_ACCESSORS.keys()
+    assert url_parts.scheme in SUPPORTED_ACCESSORS
     return SUPPORTED_ACCESSORS[url_parts.scheme](baseAddress, *args)

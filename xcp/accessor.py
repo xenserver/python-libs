@@ -101,7 +101,7 @@ class FilesystemAccessor(Accessor):
 
     def openAddress(self, address):
         try:
-            file = open(os.path.join(self.location, address), 'r')
+            filehandle = open(os.path.join(self.location, address), 'r')
         except OSError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -117,7 +117,7 @@ class FilesystemAccessor(Accessor):
         except Exception as e:
             self.lastError = 500
             return False
-        return file
+        return filehandle
 
 class MountingAccessor(FilesystemAccessor):
     def __init__(self, mount_types, mount_source, mount_options = None):

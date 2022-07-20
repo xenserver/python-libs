@@ -25,14 +25,16 @@
 
 """accessor - provide common interface to access methods"""
 
+# pylint: disable=wrong-import-position,wrong-import-order
 from future import standard_library
 standard_library.install_aliases()
+
 import ftplib
 import os
 import tempfile
-import urllib.request
-import urllib.error
-import urllib.parse
+import urllib.request           # pylint: disable=import-error
+import urllib.error             # pylint: disable=import-error
+import urllib.parse             # pylint: disable=import-error
 import errno
 
 import xcp.mount as mount

@@ -1,14 +1,7 @@
 #!/usr/bin/env python
 
 import unittest, sys, os, os.path as path, logging
-try:
-    import json
-except:
-    try:
-        import simplejson as json
-    except:
-        print >>sys.stderr, "No json module, skipping"
-        sys.exit(0)
+import json
 from copy import deepcopy
 
 try:

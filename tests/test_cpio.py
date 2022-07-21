@@ -2,12 +2,6 @@
 
 import unittest, sys, os, os.path as path
 
-try:
-    import xcp
-except ImportError:
-    print >>sys.stderr, "Must run with run-tests.sh"
-    sys.exit(1)
-
 from xcp.cpiofile import CpioFile, CpioInfo
 import subprocess, shutil
 

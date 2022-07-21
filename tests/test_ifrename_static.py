@@ -8,13 +8,6 @@ try:
 except ImportError:
     import StringIO
 
-try:
-    import xcp
-except ImportError:
-    print >>sys.stderr, "Must run with run-tests.sh"
-    sys.exit(1)
-
-
 from xcp.net.ifrename.static import StaticRules
 from xcp.net.ifrename.macpci import MACPCI
 from xcp.logger import LOG, openLog, closeLogs

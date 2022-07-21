@@ -73,7 +73,7 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(dr.old, [])
 
 
-    def test_one_valid_lastboot(self):
+    def test_one_valid_lastboot2(self):
 
         fd = StringIO.StringIO(
             '{"lastboot":[],"old":[["01:23:45:67:89:0a","00:10.2","eth2"]]}'

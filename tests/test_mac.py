@@ -67,7 +67,7 @@ class TestInvalidMAC(unittest.TestCase):
             self.assertRaises(ValueError, MAC, val)
             self.assertFalse(MAC.is_valid(val))
 
-    def test_dotquad_too_few_quads(self):
+    def test_dotquad_too_many_quads(self):
         val = "0000.0000.0000.0000"
         self.assertRaises(ValueError, MAC, val)
         self.assertFalse(MAC.is_valid(val))

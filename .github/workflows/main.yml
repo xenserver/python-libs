@@ -27,7 +27,7 @@ jobs:
 
       - name: Test
         run: |
-          pytest --cov
+          pytest --cov -rP
           coverage xml
           coverage html
           coverage html -d htmlcov-tests --include="tests/*"

@@ -47,16 +47,6 @@ class TestInvalidMAC(unittest.TestCase):
         self.assertRaises(ValueError, MAC, val)
         self.assertFalse(MAC.is_valid(val))
 
-    def test_colon_invalid_octets(self):
-
-        for val in [ "12-34-56-78-90-abc",
-                     "-12-34-56-78-90-AB",
-                     "12-34-56g-78-90-ab"
-                     "12-34--78-90-ab"
-                     ]:
-            self.assertRaises(ValueError, MAC, val)
-            self.assertFalse(MAC.is_valid(val))
-
     def test_dash_too_many_octets(self):
         val = "00-00-00-00-00-00-00"
         self.assertRaises(ValueError, MAC, val)

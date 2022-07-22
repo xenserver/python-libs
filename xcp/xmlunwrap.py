@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2013, Citrix Inc.
 # All rights reserved.
 #
@@ -24,9 +22,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """xmlunwrap - general methods to unwrap XML elements & attributes"""
-
-import xml.dom.minidom
-
 
 class XmlUnwrapError(Exception):
     pass
@@ -87,25 +82,3 @@ def getMapAttribute(el, attrs, mapping, default = None):
 
     k_list = list(k)
     return v[k_list.index(key)]
-
-if __name__ == '__main__':
-
-    a_text = """<installation mode='test'>
-    <fred>text1</fred>
-    <fred>text2</fred>
-    </installation>"""
-    xmldoc = xml.dom.minidom.parseString(a_text)
-    top_el = xmldoc.documentElement
-
-    print top_el.tagName
-
-    for el in getElementsByTagName(top_el, ["fred"]):
-        print getText(el)
-
-    print getMapAttribute(top_el, ["mode"], [('test', 42), ('stuff', 77)])
-    print getMapAttribute(top_el, ["made"], [('test', 42), ('stuff', 77)], default = 'stuff')
-
-    print getStrAttribute(top_el, ["mode"])
-    print getStrAttribute(top_el, ["made"])
-    print getStrAttribute(top_el, ["made"], None)
-    print getStrAttribute(top_el, ["made"], mandatory = True)

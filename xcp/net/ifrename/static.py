@@ -40,6 +40,8 @@ Any line starting with '#' is considered to be a comment
 
 """
 
+from __future__ import unicode_literals
+
 __version__ = "1.1.1"
 __author__  = "Andrew Cooper"
 

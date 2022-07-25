@@ -44,11 +44,11 @@ def getElementsByTagName(el, tags, mandatory = False):
         raise XmlUnwrapError("Missing mandatory element %s" % tags[0])
     return matching
 
-def getStrAttribute(el, attrs, default = '', mandatory = False):
+def getStrAttribute(el, attrs, default=b'', mandatory=False):
     matching = []
     for attr in attrs:
         val = el.getAttribute(attr).encode()
-        if val != '':
+        if val != b'':
             matching.append(val)
     if len(matching) == 0:
         if mandatory:

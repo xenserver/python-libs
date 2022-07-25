@@ -32,9 +32,7 @@ class TestBootloaderAdHoc(unittest.TestCase):
         bl2 = Bootloader.readGrub(temp.name)
         os.unlink(temp.name)
 
-    @unittest.expectedFailure
     def test_extlinux(self):
-        # FIXME that one triggers a format error, real inconsistency bug ?
         with NamedTemporaryFile("w", delete=False) as temp:
             self.bl.writeExtLinux(temp)
         bl2 = Bootloader.readExtLinux(temp.name)

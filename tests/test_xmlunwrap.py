@@ -18,18 +18,18 @@ class TestXmlUnwrap(unittest.TestCase):
 
         self.assertEqual([getText(el)
                           for el in getElementsByTagName(self.top_el, ["fred"])],
-                         ["text1", "text2"])
+                         [b"text1", b"text2"])
 
-        x = getMapAttribute(self.top_el, ["mode"], [('test', 42), ('stuff', 77)])
+        x = getMapAttribute(self.top_el, ["mode"], [(b'test', 42), (b'stuff', 77)])
         self.assertEqual(x, 42)
-        x = getMapAttribute(self.top_el, ["made"], [('test', 42), ('stuff', 77)],
-                            default='stuff')
+        x = getMapAttribute(self.top_el, ["made"], [(b'test', 42), (b'stuff', 77)],
+                            default=b'stuff')
         self.assertEqual(x, 77)
 
         x = getStrAttribute(self.top_el, ["mode"])
-        self.assertEqual(x, "test")
+        self.assertEqual(x, b"test")
         x = getStrAttribute(self.top_el, ["made"])
-        self.assertEqual(x, "")
+        self.assertEqual(x, b"")
         x = getStrAttribute(self.top_el, ["made"], None)
         self.assertEqual(x, None)
 

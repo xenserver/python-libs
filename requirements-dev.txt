@@ -12,3 +12,4 @@ future
 
 # python-2.7 only
 configparser ; python_version < "3.0"
+pyliblzma ; python_version < "3.0"

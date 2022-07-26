@@ -3,17 +3,24 @@ name: Unit tests
 on: [push, pull_request]
 
 jobs:
-  test_py2:
-    runs-on: ubuntu-20.04
+  test:
+    strategy:
+      matrix:
+        include:
+        - pyversion: '2.7'
+          os: ubuntu-20.04
+        - pyversion: '3'
+          os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Set up Python 2.7
+      - name: Set up Python ${{ matrix.pyversion }}
         uses: actions/setup-python@v2
         with:
-          python-version: '2.7'
+          python-version: ${{ matrix.pyversion }}
 
       - name: Install dependencies
         run: |
@@ -21,7 +28,6 @@ jobs:
           pip install -r requirements-dev.txt
           # FIXME: branding.py still has no permanent home
           curl https://gist.github.com/ydirson/3c36a7e19d762cc529a6c82340894ccc/raw/5ca39f621b1feab813e171f535c1aad1bd483f1d/branding.py -O -L
-          pip install pyliblzma
           pip install -e .
           command -v xz
 
@@ -29,22 +35,22 @@ jobs:
         run: |
           pytest --cov -rP
           coverage xml
-          coverage html
-          coverage html -d htmlcov-tests --include="tests/*"
-          diff-cover --html-report coverage-diff.html coverage.xml
+          coverage html -d htmlcov-${{ matrix.pyversion }}
+          coverage html -d htmlcov-tests-${{ matrix.pyversion }} --include="tests/*"
+          diff-cover --compare-branch=origin/master --html-report coverage-diff-${{ matrix.pyversion }}.html coverage.xml
 
       - name: Pylint
         run: |
           pylint --version
           pylint --exit-zero xcp/ tests/ setup.py
           pylint --exit-zero --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" xcp/ tests/ setup.py > pylint.txt
-          diff-quality --violations=pylint --html-report pylint-diff.html pylint.txt
+          diff-quality --compare-branch=origin/master --violations=pylint --html-report pylint-diff-${{ matrix.pyversion }}.html pylint.txt
 
       - uses: actions/upload-artifact@v3
         with:
           name: Coverage and pylint reports
           path: |
-            coverage-diff.html
-            pylint-diff.html
-            htmlcov
-            htmlcov-tests
+            coverage-diff-${{ matrix.pyversion }}.html
+            pylint-diff-${{ matrix.pyversion }}.html
+            htmlcov-${{ matrix.pyversion }}
+            htmlcov-tests-${{ matrix.pyversion }}

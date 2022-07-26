@@ -24,9 +24,11 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from hashlib import md5
+import io
 import os.path
 import xml.dom.minidom
-import ConfigParser
+import configparser
+import sys
 
 import six
 
@@ -179,10 +181,17 @@ class YumRepository(BaseRepository):
 
         access.start()
         try:
-            treeinfofp = access.openAddress(cls.TREEINFO_FILENAME)
-            treeinfo = ConfigParser.SafeConfigParser()
-            treeinfo.readfp(treeinfofp)
-            treeinfofp.close()
+            rawtreeinfofp = access.openAddress(cls.TREEINFO_FILENAME)
+            if sys.version_info < (3, 0) or isinstance(rawtreeinfofp, io.TextIOBase):
+                # e.g. with FileAccessor
+                treeinfofp = rawtreeinfofp
+            else:
+                # e.g. with HTTPAccessor
+                treeinfofp = io.TextIOWrapper(rawtreeinfofp, encoding='utf-8')
+            treeinfo = configparser.ConfigParser()
+            treeinfo.read_file(treeinfofp)
+            treeinfofp = None
+            rawtreeinfofp.close()
             if treeinfo.has_section('system-v1'):
                 ver_str = treeinfo.get('system-v1', category_map[category])
             else:

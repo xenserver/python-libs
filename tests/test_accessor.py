@@ -4,7 +4,7 @@ import xcp.accessor
 
 class TestAccessor(unittest.TestCase):
     def test_http(self):
-        raise unittest.SkipTest("comment out if you really mean it")
+        #raise unittest.SkipTest("comment out if you really mean it")
         a = xcp.accessor.createAccessor("https://updates.xcp-ng.org/netinstall/8.2.1", True)
         a.start()
         self.assertTrue(a.access('.treeinfo'))

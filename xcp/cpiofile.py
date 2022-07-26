@@ -1428,7 +1428,7 @@ class CpioFile(six.Iterator):
                 self.extract(cpioinfo, path)
 
         # Reverse sort directories.
-        directories.sort(lambda a, b: cmp(a.name, b.name))
+        directories.sort(key=lambda x: x.name)
         directories.reverse()
 
         # Set correct owner, mtime and filemode on directories.

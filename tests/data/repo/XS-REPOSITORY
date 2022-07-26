@@ -1,0 +1,14 @@
+<repository
+    originator="o"
+    name="n"
+    product="p"
+    version="12.3"
+    build="42"
+    >
+
+  <description>
+    Description
+  </description>
+
+  <requires name="dep" test="ge" version="1" />
+</repository>

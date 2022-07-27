@@ -160,10 +160,7 @@ class TestSave(unittest.TestCase):
         dr = DynamicRules()
         dr.lastboot = [["foo", "bar", "baz"]]
 
-        try:
-            json.loads(dr.write(False))
-        except Exception:
-            self.fail()
+        json.loads(dr.write(False))
 
     def test_one_ibft_lastboot(self):
 

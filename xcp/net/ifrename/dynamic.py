@@ -30,6 +30,8 @@ The dynamic rules file on disk is a JSON file with optional line comments
 beginning with a # character.
 """
 
+from __future__ import unicode_literals
+
 __version__ = "1.0.0"
 __author__  = "Andrew Cooper"
 

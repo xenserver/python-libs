@@ -554,22 +554,8 @@ class TestInputSanitisation(unittest.TestCase):
         self.siobuff.close()
 
 
-    def assertNotRaises(self, excp, fn, *argl, **kwargs):
-        """Because unittest.TestCase seems to be missing this functionality"""
-        try:
-            fn(*argl, **kwargs)
-        except excp as e:
-            self.fail("function raised %s unexpectedly: %s"
-                      % (excp, e))
-
     def test_srule_eth_unaliased(self):
-
-        self.assertNotRaises(StaticRuleError,
-                             rename,
-                             [self.s111],
-                             [],
-                             [],
-                             [])
+        rename([self.s111], [], [], [])
 
     def test_srule_eth_alias(self):
         """
@@ -636,8 +622,7 @@ class TestInputSanitisation(unittest.TestCase):
         self.assertRaises(LastStateError, rename,
                           [], [], [self.c123], [])
 
-        self.assertNotRaises(LastStateError, rename,
-                          [], [], [self.s123], [])
+        rename([], [], [self.s123], [])
 
     def test_oldstate_input(self):
         """
@@ -648,5 +633,4 @@ class TestInputSanitisation(unittest.TestCase):
         self.assertRaises(OldStateError, rename,
                           [], [], [], [self.c123])
 
-        self.assertNotRaises(OldStateError, rename,
-                          [], [], [], [self.s123])
+        rename([], [], [], [self.s123])

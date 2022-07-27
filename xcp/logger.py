@@ -40,6 +40,8 @@ FORMAT = logging.Formatter(
         "%(levelname)- 9.9s[%(asctime)s] %(message)s",
         "%F %T")
 
+our_handlers = []
+
 def openLog(lfile, level=logging.INFO):
     """Add a new file target to be logged to"""
 
@@ -71,11 +73,13 @@ def openLog(lfile, level=logging.INFO):
     handler.setFormatter(FORMAT)
     handler.setLevel(level)
     LOG.addHandler(handler)
+    our_handlers.append(handler)
     return True
 
 def closeLogs():
     """Close all logs"""
-    for h in LOG.handlers:
+    for h in our_handlers:
+        our_handlers.remove(h)
         LOG.removeHandler(h)
         h.close()
 

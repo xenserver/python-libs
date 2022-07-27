@@ -568,8 +568,8 @@ class TestInputSanitisation(unittest.TestCase):
                          [self.s112, self.s222, self.s331] ]
 
         for i in srule_inputs:
-            self.assertRaises(StaticRuleError, rename,
-                              i, [], [], [])
+            with self.assertRaises(StaticRuleError):
+                rename(i, [], [], [])
 
     def test_srule_mac_alias(self):
         """
@@ -582,8 +582,8 @@ class TestInputSanitisation(unittest.TestCase):
                          [self.s211, self.s222, self.s133] ]
 
         for i in srule_inputs:
-            self.assertRaises(StaticRuleError, rename,
-                              i, [], [], [])
+            with self.assertRaises(StaticRuleError):
+                rename(i, [], [], [])
 
     def test_curstate_eth_alias(self):
         """
@@ -596,8 +596,8 @@ class TestInputSanitisation(unittest.TestCase):
                             [self.c112, self.c222, self.c331] ]
 
         for i in curstate_inputs:
-            self.assertRaises(CurrentStateError, rename,
-                              [], i, [], [])
+            with self.assertRaises(CurrentStateError):
+                rename([], i, [], [])
 
     def test_curstate_mac_alias(self):
         """
@@ -610,8 +610,8 @@ class TestInputSanitisation(unittest.TestCase):
                             [self.c211, self.c222, self.c133] ]
 
         for i in curstate_inputs:
-            self.assertRaises(CurrentStateError, rename,
-                              [], i, [], [])
+            with self.assertRaises(CurrentStateError):
+                rename([], i, [], [])
 
     def test_laststate_input(self):
         """
@@ -619,8 +619,8 @@ class TestInputSanitisation(unittest.TestCase):
           (xx:xx.x,xx:xx:xx:xx:xx:xx)->eth##
         """
 
-        self.assertRaises(LastStateError, rename,
-                          [], [], [self.c123], [])
+        with self.assertRaises(LastStateError):
+            rename([], [], [self.c123], [])
 
         rename([], [], [self.s123], [])
 
@@ -630,7 +630,7 @@ class TestInputSanitisation(unittest.TestCase):
           (xx:xx.x,xx:xx:xx:xx:xx:xx)->eth##
         """
 
-        self.assertRaises(OldStateError, rename,
-                          [], [], [], [self.c123])
+        with self.assertRaises(OldStateError):
+            rename([], [], [], [self.c123])
 
         rename([], [], [], [self.s123])

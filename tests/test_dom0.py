@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-
-import unittest, sys, os
+import unittest
+from mock import patch, Mock
 
 from xcp.dom0 import default_memory, parse_mem, default_vcpus
-from mock import patch, Mock
 
 class TestDom0(unittest.TestCase):
 
@@ -112,6 +110,3 @@ class TestDom0(unittest.TestCase):
         for host_pcpus, mem, expected in test_values:
             calculated = default_vcpus(host_pcpus, mem)
             self.assertEqual(calculated, expected)
-
-if __name__ == "__main__":
-    sys.exit(unittest.main())

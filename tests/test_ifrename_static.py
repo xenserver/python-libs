@@ -1,6 +1,5 @@
-#!/usr/bin/env python
-
-import unittest, sys, os, os.path as path, logging
+import logging
+import unittest
 from copy import deepcopy
 
 try:
@@ -473,7 +472,3 @@ class TestSave(unittest.TestCase):
             )
 
         self.assertEqual(sr.write(False), desired_result)
-
-
-if __name__ == "__main__":
-    sys.exit(unittest.main())

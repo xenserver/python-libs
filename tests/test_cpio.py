@@ -1,10 +1,10 @@
-#!/usr/bin/env python
-
-import unittest, sys, os, os.path as path
+import os
+import shutil
+import subprocess
+import unittest
 import warnings
 
 from xcp.cpiofile import CpioFile, CpioInfo
-import subprocess, shutil
 
 try:
     from hashlib import md5
@@ -115,6 +115,3 @@ class TestCpio(unittest.TestCase):
             raise unittest.SkipTest("lzma package or xz tool not available")
         print 'Running test for XZ'
         self.doArchive('archive.cpio.xz', 'xz')
-
-if __name__ == "__main__":
-    unittest.main()

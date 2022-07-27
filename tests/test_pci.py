@@ -1,7 +1,5 @@
-#!/usr/bin/env python
-
-import unittest, sys, os, os.path as path
 import subprocess
+import unittest
 from mock import patch, Mock
 
 from xcp.pci import PCI, PCIIds, PCIDevices
@@ -104,7 +102,3 @@ class TestPCIIds(unittest.TestCase):
             self.assertEqual(ids.findDevice(video_dev['vendor'], video_dev['device']), device)
 
         self.assertEqual(len(devs.findRelatedFunctions('00:18.1')), 7)
-
-
-if __name__ == "__main__":
-    sys.exit(unittest.main())

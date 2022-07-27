@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+import unittest
 
-import unittest, sys, os, os.path as path
 from xcp.net.biosdevname import has_ppn_quirks
 
 class TestQuirks(unittest.TestCase):
@@ -24,6 +23,3 @@ class TestQuirks(unittest.TestCase):
                  {"SMBIOS Instance": 1}
                  ]))
 
-
-if __name__ == "__main__":
-    sys.exit(unittest.main())

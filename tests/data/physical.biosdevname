@@ -1,0 +1,68 @@
+BIOS device: em1
+Kernel name: eth0
+Permanent MAC: EC:F4:BB:C3:AF:A8
+Assigned MAC : EC:F4:BB:C3:AF:A8
+Driver: ixgbe
+Driver version: 5.9.4
+Firmware version: 0x8000095c, 19.5.12
+Bus Info: 0000:01:00.0
+PCI name      : 0000:01:00.0
+PCI Slot      : embedded
+SMBIOS Device Type: Ethernet
+SMBIOS Instance: 1
+SMBIOS Label: Integrated NIC 1
+sysfs Label: NIC1
+Embedded Index: 1
+
+BIOS device: em2
+Kernel name: eth1
+Permanent MAC: EC:F4:BB:C3:AF:AA
+Assigned MAC : EC:F4:BB:C3:AF:AA
+Driver: ixgbe
+Driver version: 5.9.4
+Firmware version: 0x8000095c, 19.5.12
+Bus Info: 0000:01:00.1
+PCI name      : 0000:01:00.1
+PCI Slot      : embedded
+SMBIOS Device Type: Ethernet
+SMBIOS Instance: 2
+SMBIOS Label: Integrated NIC 2
+sysfs Label: NIC2
+Embedded Index: 2
+
+BIOS device: em3_1
+Kernel name: eth2
+Permanent MAC: EC:F4:BB:C3:AF:AC
+Assigned MAC : EC:F4:BB:C3:AF:AC
+Driver: igb
+Driver version: 5.3.5.20
+Firmware version: 1.67, 0x80000fab, 19.5.12
+Bus Info: 0000:07:00.0
+PCI name      : 0000:07:00.0
+PCI Slot      : embedded
+SMBIOS Device Type: Ethernet
+SMBIOS Instance: 3
+SMBIOS Label: Integrated NIC 3
+sysfs Label: NIC3
+VPD Port: 3
+VPD Index: 1
+VPD PCI master: 0000:07:00.0
+
+BIOS device: em4_1
+Kernel name: eth3
+Permanent MAC: EC:F4:BB:C3:AF:AD
+Assigned MAC : EC:F4:BB:C3:AF:AD
+Driver: igb
+Driver version: 5.3.5.20
+Firmware version: 1.67, 0x80000fab, 19.5.12
+Bus Info: 0000:07:00.1
+PCI name      : 0000:07:00.1
+PCI Slot      : embedded
+SMBIOS Device Type: Ethernet
+SMBIOS Instance: 4
+SMBIOS Label: Integrated NIC 4
+sysfs Label: NIC4
+VPD Port: 4
+VPD Index: 1
+VPD PCI master: 0000:07:00.1
+

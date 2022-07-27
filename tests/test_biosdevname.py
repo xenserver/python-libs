@@ -1,6 +1,7 @@
 import unittest
+from mock import patch, Mock
 
-from xcp.net.biosdevname import has_ppn_quirks
+from xcp.net.biosdevname import has_ppn_quirks, all_devices_all_names
 
 class TestQuirks(unittest.TestCase):
 
@@ -23,3 +24,25 @@ class TestQuirks(unittest.TestCase):
                  {"SMBIOS Instance": 1}
                  ]))
 
+class TestDeviceNames(unittest.TestCase):
+    def test(self):
+        with patch("xcp.net.biosdevname.Popen") as popen_mock:
+            with open("tests/data/physical.biosdevname") as f:
+                fake_output_1 = f.read()
+            with open("tests/data/all_ethN.biosdevname") as f:
+                fake_output_2 = f.read()
+            communicate_mock = Mock(side_effect=iter([(fake_output_1, ""),
+                                                      (fake_output_2, "")]))
+            popen_mock.return_value.communicate = communicate_mock
+            popen_mock.return_value.returncode = 0
+
+            devices = all_devices_all_names()
+
+        # check after the fact that we mocked the proper calls
+        self.assertEqual(popen_mock.call_count, 2)
+        calls = popen_mock.call_args_list
+        self.assertEqual(calls[0].args[0], ['/sbin/biosdevname', '--policy', 'physical', '-d'])
+        self.assertEqual(calls[1].args[0], ['/sbin/biosdevname', '--policy', 'all_ethN', '-d'])
+
+        self.assertEqual(devices['eth0']['BIOS device'],
+                         {'all_ethN': 'eth0', 'physical': 'em1'})

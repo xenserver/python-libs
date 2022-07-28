@@ -1,16 +1,7 @@
 #!/usr/bin/env python
 
 import unittest, sys, os, os.path as path
-
-try:
-    import xcp
-except ImportError:
-    print >>sys.stderr, "Must run with run-tests.sh"
-    sys.exit(1)
-
-
 from xcp.net.biosdevname import has_ppn_quirks
-
 
 class TestQuirks(unittest.TestCase):
 

@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 
 import unittest, sys, os, os.path as path
-
-try:
-    import xcp
-except ImportError:
-    print >>sys.stderr, "Must run with run-tests.sh"
-    sys.exit(1)
+import warnings
 
 from xcp.cpiofile import CpioFile, CpioInfo
 import subprocess, shutil
@@ -52,7 +47,9 @@ class TestCpio(unittest.TestCase):
         try:
             import lzma
             self.doXZ = subprocess.call("xz --check=crc32 --lzma2=dict=1MiB < archive.cpio > archive.cpio.xz", shell=True) == 0
-        except:
+        except Exception as ex:
+            # FIXME will issue warning even if test_xz is not requested
+            warnings.warn("will not test cpio.xz: %s" % ex)
             self.doXZ = False
 
     def tearDown(self):
@@ -103,7 +100,7 @@ class TestCpio(unittest.TestCase):
 
     def test_xz(self):
         if not self.doXZ:
-            return
+            raise unittest.SkipTest("lzma package or xz tool not available")
         print 'Running test for XZ'
         self.doArchive('archive.cpio.xz', 'xz')
 

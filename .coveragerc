@@ -1,6 +1,7 @@
 [run]
 source =
-       ../xcp/
+       xcp/
+       tests/
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -19,4 +20,4 @@ exclude_lines =
 
 precision = 1
 include =
-        ../xcp/*
+        xcp/*

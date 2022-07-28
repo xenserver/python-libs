@@ -1,27 +1,13 @@
 #!/usr/bin/env python
 
 import unittest, sys, os, os.path as path, logging
-try:
-    import json
-except:
-    try:
-        import simplejson as json
-    except:
-        print >>sys.stderr, "No json module, skipping"
-        sys.exit(0)
+import json
 from copy import deepcopy
 
 try:
     import cStringIO as StringIO
 except ImportError:
     import StringIO
-
-try:
-    import xcp
-except ImportError:
-    print >>sys.stderr, "Must run with run-tests.sh"
-    sys.exit(1)
-
 
 from xcp.net.ifrename.dynamic import DynamicRules
 from xcp.net.ifrename.macpci import MACPCI
@@ -87,7 +73,7 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(dr.old, [])
 
 
-    def test_one_valid_lastboot(self):
+    def test_one_valid_lastboot2(self):
 
         fd = StringIO.StringIO(
             '{"lastboot":[],"old":[["01:23:45:67:89:0a","00:10.2","eth2"]]}'

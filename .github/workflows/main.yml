@@ -19,6 +19,19 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
+          # FIXME: branding.py still has no permanent home
+          curl https://gist.github.com/ydirson/3c36a7e19d762cc529a6c82340894ccc/raw/5ca39f621b1feab813e171f535c1aad1bd483f1d/branding.py -O -L
+          pip install pyliblzma
+          pip install -e .
+          command -v xz
+
+      - name: Test
+        run: |
+          pytest --cov -rP
+          coverage xml
+          coverage html
+          coverage html -d htmlcov-tests --include="tests/*"
+          diff-cover --html-report coverage-diff.html coverage.xml
 
       - name: Pylint
         run: |
@@ -29,5 +42,9 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: Pylint diff
-          path: pylint-diff.html
+          name: Coverage and pylint reports
+          path: |
+            coverage-diff.html
+            pylint-diff.html
+            htmlcov
+            htmlcov-tests

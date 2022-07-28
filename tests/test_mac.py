@@ -2,13 +2,6 @@
 
 import unittest, sys, os, os.path as path
 
-try:
-    import xcp
-except ImportError:
-    print >>sys.stderr, "Must run with run-tests.sh"
-    sys.exit(1)
-
-
 from xcp.net.mac import MAC
 
 
@@ -54,16 +47,6 @@ class TestInvalidMAC(unittest.TestCase):
         self.assertRaises(ValueError, MAC, val)
         self.assertFalse(MAC.is_valid(val))
 
-    def test_colon_invalid_octets(self):
-
-        for val in [ "12-34-56-78-90-abc",
-                     "-12-34-56-78-90-AB",
-                     "12-34-56g-78-90-ab"
-                     "12-34--78-90-ab"
-                     ]:
-            self.assertRaises(ValueError, MAC, val)
-            self.assertFalse(MAC.is_valid(val))
-
     def test_dash_too_many_octets(self):
         val = "00-00-00-00-00-00-00"
         self.assertRaises(ValueError, MAC, val)
@@ -84,7 +67,7 @@ class TestInvalidMAC(unittest.TestCase):
             self.assertRaises(ValueError, MAC, val)
             self.assertFalse(MAC.is_valid(val))
 
-    def test_dotquad_too_few_quads(self):
+    def test_dotquad_too_many_quads(self):
         val = "0000.0000.0000.0000"
         self.assertRaises(ValueError, MAC, val)
         self.assertFalse(MAC.is_valid(val))

@@ -431,7 +431,7 @@ class Bootloader(object):
             # If this fails, it is probably a string, so leave it unchanged.
             try:
                 default = menu_order[int(default)]
-            except ValueError, KeyError:
+            except (ValueError, KeyError):
                 pass
         finally:
             fh.close()

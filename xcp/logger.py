@@ -78,7 +78,8 @@ def openLog(lfile, level=logging.INFO):
 
 def closeLogs():
     """Close all logs"""
-    for h in our_handlers:
+    handlers_to_remove = list(our_handlers)
+    for h in handlers_to_remove:
         our_handlers.remove(h)
         LOG.removeHandler(h)
         h.close()

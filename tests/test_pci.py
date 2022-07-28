@@ -9,7 +9,6 @@ class TestInvalid(unittest.TestCase):
     def test_invalid_types(self):
 
         self.assertRaises(TypeError, PCI, 0)
-        self.assertRaises(TypeError, PCI, 0)
         self.assertRaises(TypeError, PCI, (0,))
         self.assertRaises(TypeError, PCI, [])
         self.assertRaises(TypeError, PCI, {})

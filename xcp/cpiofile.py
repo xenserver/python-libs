@@ -1905,16 +1905,7 @@ class CpioFileCompat(object):
         return self.cpiofile.extractfile(self.cpiofile.getmember(name)).read()
     def write(self, filename, arcname=None, compress_type=None):
         self.cpiofile.add(filename, arcname)
-    def writestr(self, zinfo, bts):
-        try:
-            from cStringIO import StringIO
-        except ImportError:
-            from StringIO import StringIO
-        import calendar
-        zinfo.name = zinfo.filename
-        zinfo.size = zinfo.file_size
-        zinfo.mtime = calendar.timegm(zinfo.date_time)
-        self.cpiofile.addfile(zinfo, StringIO(bts))
+    # deleted writestr method
     def close(self):
         self.cpiofile.close()
 #class CpioFileCompat

@@ -1,0 +1,29 @@
+## Excerpt from /usr/share/hwdata/pci.ids
+
+# Vendors, devices and subsystems. Please keep sorted.
+
+# Syntax:
+# vendor  vendor_name
+#	device  device_name				<-- single tab
+#		subvendor subdevice  subsystem_name	<-- two tabs
+
+1002  Advanced Micro Devices, Inc. [AMD/ATI]
+	1314  Wrestler HDMI Audio
+		174b 1001  PURE Fusion Mini
+	1636  Renoir
+	7340  Navi 14 [Radeon RX 5500/5500M / Pro 5500M]
+
+# List of known device classes, subclasses and programming interfaces
+
+# Syntax:
+# C class       class_name
+#       subclass        subclass_name           <-- single tab
+#               prog-if  prog-if_name   <-- two tabs
+
+C 03  Display controller
+	00  VGA compatible controller
+		00  VGA controller
+		01  8514 controller
+	01  XGA compatible controller
+	02  3D controller
+	80  Display controller

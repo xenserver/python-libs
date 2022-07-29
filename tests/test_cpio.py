@@ -73,6 +73,10 @@ class TestCpio(unittest.TestCase):
         arc = CpioFile.open(fn, fmt)
         f = arc.getcpioinfo('archive/data')
         arc.addfile(f, open('archive/data'))
+        # test recursively add "."
+        os.chdir('archive')
+        arc.add(".")
+        os.chdir("..")
         # TODO add self crafted file
         arc.close()
         # special case for XZ, test check type (crc32)

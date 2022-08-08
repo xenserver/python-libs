@@ -67,48 +67,46 @@ class PCI(object):
         self.function = -1
         self.index = -1
 
-        if isinstance(addr, six.string_types):
-
-            res = VALID_SBDFI.match(addr)
-            if res:
-                groups = res.groupdict()
-
-                if "segment" in groups and groups["segment"] is not None:
-                    self.segment = int(groups["segment"], 16)
-                else:
-                    self.segment = 0
-
-                self.bus = int(groups["bus"], 16)
-                if not ( 0 <= self.bus < 2**8 ):
-                    raise ValueError("Bus '%d' out of range 0 <= bus < 256"
-                                     % (self.bus,))
-
-                self.device = int(groups["device"], 16)
-                if not ( 0 <= self.device < 2**5):
-                    raise ValueError("Device '%d' out of range 0 <= device < 32"
-                                     % (self.device,))
-
-                self.function = int(groups["function"], 16)
-                if not ( 0 <= self.function < 2**3):
-                    raise ValueError("Function '%d' out of range 0 <= device "
-                                     "< 8" % (self.function,))
-
-                if "index" in groups and groups["index"] is not None:
-                    self.index = int(groups["index"])
-                else:
-                    self.index = 0
-
-                self.integer = (int(self.segment   << 16 |
-                                    self.bus       << 8  |
-                                    self.device    << 3  |
-                                    self.function) << 8  |
-                                self.index)
-                return
-
-            raise ValueError("Unrecognised PCI address '%s'" % addr)
-
-        else:
+        if not isinstance(addr, six.string_types):
             raise TypeError("String expected")
+
+        res = VALID_SBDFI.match(addr)
+        if res:
+            groups = res.groupdict()
+
+            if "segment" in groups and groups["segment"] is not None:
+                self.segment = int(groups["segment"], 16)
+            else:
+                self.segment = 0
+
+            self.bus = int(groups["bus"], 16)
+            if not ( 0 <= self.bus < 2**8 ):
+                raise ValueError("Bus '%d' out of range 0 <= bus < 256"
+                                 % (self.bus,))
+
+            self.device = int(groups["device"], 16)
+            if not ( 0 <= self.device < 2**5):
+                raise ValueError("Device '%d' out of range 0 <= device < 32"
+                                 % (self.device,))
+
+            self.function = int(groups["function"], 16)
+            if not ( 0 <= self.function < 2**3):
+                raise ValueError("Function '%d' out of range 0 <= device "
+                                 "< 8" % (self.function,))
+
+            if "index" in groups and groups["index"] is not None:
+                self.index = int(groups["index"])
+            else:
+                self.index = 0
+
+            self.integer = (int(self.segment   << 16 |
+                                self.bus       << 8  |
+                                self.device    << 3  |
+                                self.function) << 8  |
+                            self.index)
+            return
+
+        raise ValueError("Unrecognised PCI address '%s'" % addr)
 
 
     def __str__(self):

@@ -4,6 +4,7 @@
 # cpiofile.py
 #-------------------------------------------------------------------
 
+# Copyright (C) 2002 Lars Gustäbel <lars@gustaebel.de>
 # Copyright (c) 2013, Citrix Inc.
 # All rights reserved.
 #

@@ -146,8 +146,7 @@ class Bootloader(object):
                         title = l[1:].lstrip()
                     elif keywrd == 'kernel' and len(els) > 1:
                         kernel = els[1]
-                    elif keywrd == 'append' and len(els) > 1 and \
-                            kernel == 'mboot.c32':
+                    elif keywrd == 'append' and len(els) > 1 and kernel == 'mboot.c32':
                         if 'tboot' in els[1]:
                             # els[2] contains tboot args, hypervisor,
                             # hypervisor args, kernel,

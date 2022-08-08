@@ -1310,8 +1310,7 @@ class CpioFile(six.Iterator):
                     print("%10s" % ("%d,%d" % (cpioinfo.devmajor, cpioinfo.devminor)), end=' ')
                 else:
                     print("%10d" % cpioinfo.size, end=' ')
-                print("%d-%02d-%02d %02d:%02d:%02d" \
-                      % time.localtime(cpioinfo.mtime)[:6], end=' ')
+                print("%d-%02d-%02d %02d:%02d:%02d" % time.localtime(cpioinfo.mtime)[:6], end=' ')
 
             print(cpioinfo.name)
 

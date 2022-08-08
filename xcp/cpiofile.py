@@ -1112,8 +1112,7 @@ class CpioFile(six.Iterator):
             fileobj = file(name, mode + "b")
 
         try:
-            t = cls.cpioopen(name, mode,
-                gzip.GzipFile(name, mode, compresslevel, fileobj))
+            t = cls.cpioopen(name, mode, gzip.GzipFile(name, mode, compresslevel, fileobj))
         except IOError:
             raise ReadError("not a gzip file")
         t._extfileobj = False

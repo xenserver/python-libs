@@ -7,7 +7,7 @@ import subprocess
 import unittest
 import warnings
 
-from xcp.cpiofile import CpioFile, CpioInfo, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
+from xcp.cpiofile import CpioFile, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
 
 def writeRandomFile(fn, size, start=b'', add=b'a'):
     "Create a pseudo-random reproducible file from seeds `start` amd `add`"

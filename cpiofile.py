@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 #-------------------------------------------------------------------
-# tarfile.py
+# cpiofile.py
 #-------------------------------------------------------------------
 # Copyright (C) 2002 Lars Gustäbel <lars@gustaebel.de>
 # All rights reserved.
@@ -27,7 +27,7 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 # OTHER DEALINGS IN THE SOFTWARE.
 #
-"""Read from and write to tar format archives.
+"""Read from and write to cpio format archives.
 """
 
 __version__ = "$Revision$"
@@ -56,15 +56,15 @@ if sys.platform == 'mac':
     # handling. In many places it is assumed a simple substitution of / by the
     # local os.path.sep is good enough to convert pathnames, but this does not
     # work with the mac rooted:path:name versus :nonrooted:path:name syntax
-    raise ImportError, "tarfile does not work for platform==mac"
+    raise ImportError, "cpiofile does not work for platform==mac"
 
 try:
     import grp, pwd
 except ImportError:
     grp = pwd = None
 
-# from tarfile import *
-__all__ = ["TarFile", "TarInfo", "is_tarfile", "TarError"]
+# from cpiofile import *
+__all__ = ["CpioFile", "CpioInfo", "is_cpiofile", "CpioError"]
 
 #---------------------------------------------------------
 # tar constants
@@ -251,7 +251,7 @@ filemode_table = (
 def filemode(mode):
     """Convert a file's mode to a string of the form
        -rwxrwxrwx.
-       Used by TarFile.list()
+       Used by CpioFile.list()
     """
     perm = []
     for table in filemode_table:
@@ -268,22 +268,22 @@ if os.sep != "/":
 else:
     normpath = os.path.normpath
 
-class TarError(Exception):
+class CpioError(Exception):
     """Base exception."""
     pass
-class ExtractError(TarError):
+class ExtractError(CpioError):
     """General exception for extract errors."""
     pass
-class ReadError(TarError):
-    """Exception for unreadble tar archives."""
+class ReadError(CpioError):
+    """Exception for unreadble cpio archives."""
     pass
-class CompressionError(TarError):
+class CompressionError(CpioError):
     """Exception for unavailable compression methods."""
     pass
-class StreamError(TarError):
-    """Exception for unsupported operations on stream-like TarFiles."""
+class StreamError(CpioError):
+    """Exception for unsupported operations on stream-like CpioFiles."""
     pass
-class HeaderError(TarError):
+class HeaderError(CpioError):
     """Exception for invalid headers."""
     pass
 
@@ -315,7 +315,7 @@ class _LowLevelFile:
         os.write(self.fd, s)
 
 class _Stream:
-    """Class that serves as an adapter between TarFile and
+    """Class that serves as an adapter between CpioFile and
        a stream-like object.  The stream-like object only
        needs to have a read() or write() method and is accessed
        blockwise.  Use of gzip or bzip2 compression is possible.
@@ -394,7 +394,7 @@ class _Stream:
         if self.comptype == "gz":
             self.crc = self.zlib.crc32(s, self.crc)
         self.pos += len(s)
-        if self.comptype != "tar":
+        if self.comptype != "cpio":
             s = self.cmp.compress(s)
         self.__write(s)
 
@@ -414,7 +414,7 @@ class _Stream:
         if self.closed:
             return
 
-        if self.mode == "w" and self.comptype != "tar":
+        if self.mode == "w" and self.comptype != "cpio":
             self.buf += self.cmp.flush()
 
         if self.mode == "w" and self.buf:
@@ -505,7 +505,7 @@ class _Stream:
     def _read(self, size):
         """Return size bytes from the stream.
         """
-        if self.comptype == "tar":
+        if self.comptype == "cpio":
             return self.__read(size)
 
         c = len(self.dbuf)
@@ -556,7 +556,7 @@ class _StreamProxy(object):
             return "gz"
         if self.buf.startswith("BZh91"):
             return "bz2"
-        return "tar"
+        return "cpio"
 
     def close(self):
         self.fileobj.close()
@@ -706,19 +706,19 @@ class _FileInFile(object):
 
 class ExFileObject(object):
     """File-like object for reading an archive member.
-       Is returned by TarFile.extractfile().
+       Is returned by CpioFile.extractfile().
     """
     blocksize = 1024
 
-    def __init__(self, tarfile, tarinfo):
-        self.fileobj = _FileInFile(tarfile.fileobj,
-                                   tarinfo.offset_data,
-                                   tarinfo.size,
-                                   getattr(tarinfo, "sparse", None))
-        self.name = tarinfo.name
+    def __init__(self, cpiofile, cpioinfo):
+        self.fileobj = _FileInFile(cpiofile.fileobj,
+                                   cpioinfo.offset_data,
+                                   cpioinfo.size,
+                                   getattr(cpioinfo, "sparse", None))
+        self.name = cpioinfo.name
         self.mode = "r"
         self.closed = False
-        self.size = tarinfo.size
+        self.size = cpioinfo.size
 
         self.position = 0
         self.buffer = ""
@@ -835,16 +835,16 @@ class ExFileObject(object):
 #------------------
 # Exported Classes
 #------------------
-class TarInfo(object):
+class CpioInfo(object):
     """Informational class which holds the details about an
-       archive member given by a tar header block.
-       TarInfo objects are returned by TarFile.getmember(),
-       TarFile.getmembers() and TarFile.gettarinfo() and are
+       archive member given by a cpio header block.
+       CpioInfo objects are returned by CpioFile.getmember(),
+       CpioFile.getmembers() and CpioFile.getcpioinfo() and are
        usually created internally.
     """
 
     def __init__(self, name=""):
-        """Construct a TarInfo object. name is the optional name
+        """Construct a CpioInfo object. name is the optional name
            of the member.
         """
         self.name = name        # member name (dirnames must end with '/')
@@ -861,7 +861,7 @@ class TarInfo(object):
         self.devmajor = 0       # device major number
         self.devminor = 0       # device minor number
 
-        self.offset = 0         # the tar header starts here
+        self.offset = 0         # the cpio header starts here
         self.offset_data = 0    # the file's data starts here
 
     def __repr__(self):
@@ -869,7 +869,7 @@ class TarInfo(object):
 
     @classmethod
     def frombuf(cls, buf):
-        """Construct a TarInfo object from a 512 byte string buffer.
+        """Construct a CpioInfo object from a 512 byte string buffer.
         """
         if len(buf) != BLOCKSIZE:
             raise HeaderError("truncated header")
@@ -880,30 +880,30 @@ class TarInfo(object):
         if chksum not in calc_chksums(buf):
             raise HeaderError("bad checksum")
 
-        tarinfo = cls()
-        tarinfo.buf = buf
-        tarinfo.name = buf[0:100].rstrip(NUL)
-        tarinfo.mode = nti(buf[100:108])
-        tarinfo.uid = nti(buf[108:116])
-        tarinfo.gid = nti(buf[116:124])
-        tarinfo.size = nti(buf[124:136])
-        tarinfo.mtime = nti(buf[136:148])
-        tarinfo.chksum = chksum
-        tarinfo.type = buf[156:157]
-        tarinfo.linkname = buf[157:257].rstrip(NUL)
-        tarinfo.uname = buf[265:297].rstrip(NUL)
-        tarinfo.gname = buf[297:329].rstrip(NUL)
-        tarinfo.devmajor = nti(buf[329:337])
-        tarinfo.devminor = nti(buf[337:345])
+        cpioinfo = cls()
+        cpioinfo.buf = buf
+        cpioinfo.name = buf[0:100].rstrip(NUL)
+        cpioinfo.mode = nti(buf[100:108])
+        cpioinfo.uid = nti(buf[108:116])
+        cpioinfo.gid = nti(buf[116:124])
+        cpioinfo.size = nti(buf[124:136])
+        cpioinfo.mtime = nti(buf[136:148])
+        cpioinfo.chksum = chksum
+        cpioinfo.type = buf[156:157]
+        cpioinfo.linkname = buf[157:257].rstrip(NUL)
+        cpioinfo.uname = buf[265:297].rstrip(NUL)
+        cpioinfo.gname = buf[297:329].rstrip(NUL)
+        cpioinfo.devmajor = nti(buf[329:337])
+        cpioinfo.devminor = nti(buf[337:345])
         prefix = buf[345:500].rstrip(NUL)
 
-        if prefix and not tarinfo.issparse():
-            tarinfo.name = prefix + "/" + tarinfo.name
+        if prefix and not cpioinfo.issparse():
+            cpioinfo.name = prefix + "/" + cpioinfo.name
 
-        return tarinfo
+        return cpioinfo
 
     def tobuf(self, posix=False):
-        """Return a tar header as a string of 512 byte blocks.
+        """Return a cpio header as a string of 512 byte blocks.
         """
         buf = ""
         type = self.type
@@ -979,20 +979,20 @@ class TarInfo(object):
 
     def _create_gnulong(self, name, type):
         """Create a GNU longname/longlink header from name.
-           It consists of an extended tar header, with the length
+           It consists of an extended cpio header, with the length
            of the longname as size, followed by data blocks,
            which contain the longname as a null terminated string.
         """
         name += NUL
 
-        tarinfo = self.__class__()
-        tarinfo.name = "././@LongLink"
-        tarinfo.type = type
-        tarinfo.mode = 0
-        tarinfo.size = len(name)
+        cpioinfo = self.__class__()
+        cpioinfo.name = "././@LongLink"
+        cpioinfo.type = type
+        cpioinfo.mode = 0
+        cpioinfo.size = len(name)
 
         # create extended header
-        buf = tarinfo.tobuf()
+        buf = cpioinfo.tobuf()
         # create name blocks
         buf += name
         blocks, remainder = divmod(len(name), BLOCKSIZE)
@@ -1020,16 +1020,16 @@ class TarInfo(object):
         return self.type == GNUTYPE_SPARSE
     def isdev(self):
         return self.type in (CHRTYPE, BLKTYPE, FIFOTYPE)
-# class TarInfo
+# class CpioInfo
 
-class TarFile(object):
-    """The TarFile Class provides an interface to tar archives.
+class CpioFile(object):
+    """The CpioFile Class provides an interface to cpio archives.
     """
 
     debug = 0                   # May be set from 0 (no msgs) to 3 (all msgs)
 
     dereference = False         # If true, add content of linked file to the
-                                # tar file, else the link.
+                                # cpio file, else the link.
 
     ignore_zeros = False        # If true, skips empty or invalid blocks and
                                 # continues processing.
@@ -1044,13 +1044,13 @@ class TarFile(object):
     fileobject = ExFileObject
 
     def __init__(self, name=None, mode="r", fileobj=None):
-        """Open an (uncompressed) tar archive `name'. `mode' is either 'r' to
+        """Open an (uncompressed) cpio archive `name'. `mode' is either 'r' to
            read from an existing archive, 'a' to append data to an existing
            file or 'w' to create a new file overwriting an existing one. `mode'
            defaults to 'r'.
            If `fileobj' is given, it is used for reading or writing data. If it
            can be determined, `mode' is overridden by `fileobj's mode.
-           `fileobj' is not closed, when TarFile is closed.
+           `fileobj' is not closed, when CpioFile is closed.
         """
         self.name = os.path.abspath(name)
 
@@ -1072,7 +1072,7 @@ class TarFile(object):
 
         # Init datastructures
         self.closed = False
-        self.members = []       # list of members as TarInfo objects
+        self.members = []       # list of members as CpioInfo objects
         self._loaded = False    # flag if all members have been read
         self.offset = 0L        # current position in the archive file
         self.inodes = {}        # dictionary caching the inodes of
@@ -1088,11 +1088,11 @@ class TarFile(object):
             self.firstmember = None
             while True:
                 try:
-                    tarinfo = self.next()
+                    cpioinfo = self.next()
                 except ReadError:
                     self.fileobj.seek(0)
                     break
-                if tarinfo is None:
+                if cpioinfo is None:
                     self.fileobj.seek(- BLOCKSIZE, 1)
                     break
 
@@ -1101,19 +1101,19 @@ class TarFile(object):
 
     #--------------------------------------------------------------------------
     # Below are the classmethods which act as alternate constructors to the
-    # TarFile class. The open() method is the only one that is needed for
+    # CpioFile class. The open() method is the only one that is needed for
     # public use; it is the "super"-constructor and is able to select an
     # adequate "sub"-constructor for a particular compression using the mapping
     # from OPEN_METH.
     #
-    # This concept allows one to subclass TarFile without losing the comfort of
+    # This concept allows one to subclass CpioFile without losing the comfort of
     # the super-constructor. A sub-constructor is registered and made available
     # by adding it to the mapping in OPEN_METH.
 
     @classmethod
     def open(cls, name=None, mode="r", fileobj=None, bufsize=20*512):
-        """Open a tar archive for reading, writing or appending. Return
-           an appropriate TarFile class.
+        """Open a cpio archive for reading, writing or appending. Return
+           an appropriate CpioFile class.
 
            mode:
            'r' or 'r:*' open for reading with transparent compression
@@ -1125,10 +1125,10 @@ class TarFile(object):
            'w:gz'       open for writing with gzip compression
            'w:bz2'      open for writing with bzip2 compression
 
-           'r|*'        open a stream of tar blocks with transparent compression
-           'r|'         open an uncompressed stream of tar blocks for reading
-           'r|gz'       open a gzip compressed stream of tar blocks
-           'r|bz2'      open a bzip2 compressed stream of tar blocks
+           'r|*'        open a stream of cpio blocks with transparent compression
+           'r|'         open an uncompressed stream of cpio blocks for reading
+           'r|gz'       open a gzip compressed stream of cpio blocks
+           'r|bz2'      open a bzip2 compressed stream of cpio blocks
            'w|'         open an uncompressed stream for writing
            'w|gz'       open a gzip compressed stream for writing
            'w|bz2'      open a bzip2 compressed stream for writing
@@ -1154,7 +1154,7 @@ class TarFile(object):
         elif ":" in mode:
             filemode, comptype = mode.split(":", 1)
             filemode = filemode or "r"
-            comptype = comptype or "tar"
+            comptype = comptype or "cpio"
 
             # Select the *open() function according to
             # given compression.
@@ -1167,7 +1167,7 @@ class TarFile(object):
         elif "|" in mode:
             filemode, comptype = mode.split("|", 1)
             filemode = filemode or "r"
-            comptype = comptype or "tar"
+            comptype = comptype or "cpio"
 
             if filemode not in "rw":
                 raise ValueError("mode must be 'r' or 'w'")
@@ -1178,13 +1178,13 @@ class TarFile(object):
             return t
 
         elif mode in "aw":
-            return cls.taropen(name, mode, fileobj)
+            return cls.cpioopen(name, mode, fileobj)
 
         raise ValueError("undiscernible mode")
 
     @classmethod
-    def taropen(cls, name, mode="r", fileobj=None):
-        """Open uncompressed tar archive name for reading or writing.
+    def cpioopen(cls, name, mode="r", fileobj=None):
+        """Open uncompressed cpio archive name for reading or writing.
         """
         if len(mode) > 1 or mode not in "raw":
             raise ValueError("mode must be 'r', 'a' or 'w'")
@@ -1192,7 +1192,7 @@ class TarFile(object):
 
     @classmethod
     def gzopen(cls, name, mode="r", fileobj=None, compresslevel=9):
-        """Open gzip compressed tar archive name for reading or writing.
+        """Open gzip compressed cpio archive name for reading or writing.
            Appending is not allowed.
         """
         if len(mode) > 1 or mode not in "rw":
@@ -1208,7 +1208,7 @@ class TarFile(object):
             fileobj = file(name, mode + "b")
 
         try:
-            t = cls.taropen(name, mode,
+            t = cls.cpioopen(name, mode,
                 gzip.GzipFile(name, mode, compresslevel, fileobj))
         except IOError:
             raise ReadError("not a gzip file")
@@ -1217,7 +1217,7 @@ class TarFile(object):
 
     @classmethod
     def bz2open(cls, name, mode="r", fileobj=None, compresslevel=9):
-        """Open bzip2 compressed tar archive name for reading or writing.
+        """Open bzip2 compressed cpio archive name for reading or writing.
            Appending is not allowed.
         """
         if len(mode) > 1 or mode not in "rw":
@@ -1234,7 +1234,7 @@ class TarFile(object):
             fileobj = bz2.BZ2File(name, mode, compresslevel=compresslevel)
 
         try:
-            t = cls.taropen(name, mode, fileobj)
+            t = cls.cpioopen(name, mode, fileobj)
         except IOError:
             raise ReadError("not a bzip2 file")
         t._extfileobj = False
@@ -1242,16 +1242,16 @@ class TarFile(object):
 
     # All *open() methods are registered here.
     OPEN_METH = {
-        "tar": "taropen",   # uncompressed tar
-        "gz":  "gzopen",    # gzip compressed tar
-        "bz2": "bz2open"    # bzip2 compressed tar
+        "cpio": "cpioopen",   # uncompressed cpio
+        "gz":  "gzopen",    # gzip compressed cpio
+        "bz2": "bz2open"    # bzip2 compressed cpio
     }
 
     #--------------------------------------------------------------------------
-    # The public methods which TarFile provides:
+    # The public methods which CpioFile provides:
 
     def close(self):
-        """Close the TarFile. In write-mode, two finishing zero blocks are
+        """Close the CpioFile. In write-mode, two finishing zero blocks are
            appended to the archive.
         """
         if self.closed:
@@ -1261,7 +1261,7 @@ class TarFile(object):
             self.fileobj.write(NUL * (BLOCKSIZE * 2))
             self.offset += (BLOCKSIZE * 2)
             # fill up the end with zero-blocks
-            # (like option -b20 for tar does)
+            # (like option -b20 for cpio does)
             blocks, remainder = divmod(self.offset, RECORDSIZE)
             if remainder > 0:
                 self.fileobj.write(NUL * (RECORDSIZE - remainder))
@@ -1271,18 +1271,18 @@ class TarFile(object):
         self.closed = True
 
     def getmember(self, name):
-        """Return a TarInfo object for member `name'. If `name' can not be
+        """Return a CpioInfo object for member `name'. If `name' can not be
            found in the archive, KeyError is raised. If a member occurs more
            than once in the archive, its last occurence is assumed to be the
            most up-to-date version.
         """
-        tarinfo = self._getmember(name)
-        if tarinfo is None:
+        cpioinfo = self._getmember(name)
+        if cpioinfo is None:
             raise KeyError("filename %r not found" % name)
-        return tarinfo
+        return cpioinfo
 
     def getmembers(self):
-        """Return the members of the archive as a list of TarInfo objects. The
+        """Return the members of the archive as a list of CpioInfo objects. The
            list has the same order as the members in the archive.
         """
         self._check()
@@ -1295,12 +1295,12 @@ class TarFile(object):
         """Return the members of the archive as a list of their names. It has
            the same order as the list returned by getmembers().
         """
-        return [tarinfo.name for tarinfo in self.getmembers()]
+        return [cpioinfo.name for cpioinfo in self.getmembers()]
 
-    def gettarinfo(self, name=None, arcname=None, fileobj=None):
-        """Create a TarInfo object for either the file `name' or the file
+    def getcpioinfo(self, name=None, arcname=None, fileobj=None):
+        """Create a CpioInfo object for either the file `name' or the file
            object `fileobj' (using os.fstat on its file descriptor). You can
-           modify some of the TarInfo's attributes before you add it using
+           modify some of the CpioInfo's attributes before you add it using
            addfile(). If given, `arcname' specifies an alternative name for the
            file in the archive.
         """
@@ -1321,9 +1321,9 @@ class TarFile(object):
         while arcname[0:1] == "/":
             arcname = arcname[1:]
 
-        # Now, fill the TarInfo object with
+        # Now, fill the CpioInfo object with
         # information specific for the file.
-        tarinfo = TarInfo()
+        cpioinfo = CpioInfo()
 
         # Use os.stat or os.lstat, depending on platform
         # and if symlinks shall be resolved.
@@ -1367,35 +1367,35 @@ class TarFile(object):
         else:
             return None
 
-        # Fill the TarInfo object with all
+        # Fill the CpioInfo object with all
         # information we can get.
-        tarinfo.name = arcname
-        tarinfo.mode = stmd
-        tarinfo.uid = statres.st_uid
-        tarinfo.gid = statres.st_gid
+        cpioinfo.name = arcname
+        cpioinfo.mode = stmd
+        cpioinfo.uid = statres.st_uid
+        cpioinfo.gid = statres.st_gid
         if stat.S_ISREG(stmd):
-            tarinfo.size = statres.st_size
+            cpioinfo.size = statres.st_size
         else:
-            tarinfo.size = 0L
-        tarinfo.mtime = statres.st_mtime
-        tarinfo.type = type
-        tarinfo.linkname = linkname
+            cpioinfo.size = 0L
+        cpioinfo.mtime = statres.st_mtime
+        cpioinfo.type = type
+        cpioinfo.linkname = linkname
         if pwd:
             try:
-                tarinfo.uname = pwd.getpwuid(tarinfo.uid)[0]
+                cpioinfo.uname = pwd.getpwuid(cpioinfo.uid)[0]
             except KeyError:
                 pass
         if grp:
             try:
-                tarinfo.gname = grp.getgrgid(tarinfo.gid)[0]
+                cpioinfo.gname = grp.getgrgid(cpioinfo.gid)[0]
             except KeyError:
                 pass
 
         if type in (CHRTYPE, BLKTYPE):
             if hasattr(os, "major") and hasattr(os, "minor"):
-                tarinfo.devmajor = os.major(statres.st_rdev)
-                tarinfo.devminor = os.minor(statres.st_rdev)
-        return tarinfo
+                cpioinfo.devmajor = os.major(statres.st_rdev)
+                cpioinfo.devminor = os.minor(statres.st_rdev)
+        return cpioinfo
 
     def list(self, verbose=True):
         """Print a table of contents to sys.stdout. If `verbose' is False, only
@@ -1404,26 +1404,26 @@ class TarFile(object):
         """
         self._check()
 
-        for tarinfo in self:
+        for cpioinfo in self:
             if verbose:
-                print filemode(tarinfo.mode),
-                print "%s/%s" % (tarinfo.uname or tarinfo.uid,
-                                 tarinfo.gname or tarinfo.gid),
-                if tarinfo.ischr() or tarinfo.isblk():
+                print filemode(cpioinfo.mode),
+                print "%s/%s" % (cpioinfo.uname or cpioinfo.uid,
+                                 cpioinfo.gname or cpioinfo.gid),
+                if cpioinfo.ischr() or cpioinfo.isblk():
                     print "%10s" % ("%d,%d" \
-                                    % (tarinfo.devmajor, tarinfo.devminor)),
+                                    % (cpioinfo.devmajor, cpioinfo.devminor)),
                 else:
-                    print "%10d" % tarinfo.size,
+                    print "%10d" % cpioinfo.size,
                 print "%d-%02d-%02d %02d:%02d:%02d" \
-                      % time.localtime(tarinfo.mtime)[:6],
+                      % time.localtime(cpioinfo.mtime)[:6],
 
-            print tarinfo.name,
+            print cpioinfo.name,
 
             if verbose:
-                if tarinfo.issym():
-                    print "->", tarinfo.linkname,
-                if tarinfo.islnk():
-                    print "link to", tarinfo.linkname,
+                if cpioinfo.issym():
+                    print "->", cpioinfo.linkname,
+                if cpioinfo.islnk():
+                    print "link to", cpioinfo.linkname,
             print
 
     def add(self, name, arcname=None, recursive=True):
@@ -1440,7 +1440,7 @@ class TarFile(object):
 
         # Skip if somebody tries to archive the archive...
         if self.name is not None and os.path.abspath(name) == self.name:
-            self._dbg(2, "tarfile: Skipped %r" % name)
+            self._dbg(2, "cpiofile: Skipped %r" % name)
             return
 
         # Special case: The user wants to add the current
@@ -1455,53 +1455,53 @@ class TarFile(object):
 
         self._dbg(1, name)
 
-        # Create a TarInfo object from the file.
-        tarinfo = self.gettarinfo(name, arcname)
+        # Create a CpioInfo object from the file.
+        cpioinfo = self.getcpioinfo(name, arcname)
 
-        if tarinfo is None:
-            self._dbg(1, "tarfile: Unsupported type %r" % name)
+        if cpioinfo is None:
+            self._dbg(1, "cpiofile: Unsupported type %r" % name)
             return
 
-        # Append the tar header and data to the archive.
-        if tarinfo.isreg():
+        # Append the cpio header and data to the archive.
+        if cpioinfo.isreg():
             f = file(name, "rb")
-            self.addfile(tarinfo, f)
+            self.addfile(cpioinfo, f)
             f.close()
 
-        elif tarinfo.isdir():
-            self.addfile(tarinfo)
+        elif cpioinfo.isdir():
+            self.addfile(cpioinfo)
             if recursive:
                 for f in os.listdir(name):
                     self.add(os.path.join(name, f), os.path.join(arcname, f))
 
         else:
-            self.addfile(tarinfo)
+            self.addfile(cpioinfo)
 
-    def addfile(self, tarinfo, fileobj=None):
-        """Add the TarInfo object `tarinfo' to the archive. If `fileobj' is
-           given, tarinfo.size bytes are read from it and added to the archive.
-           You can create TarInfo objects using gettarinfo().
+    def addfile(self, cpioinfo, fileobj=None):
+        """Add the CpioInfo object `cpioinfo' to the archive. If `fileobj' is
+           given, cpioinfo.size bytes are read from it and added to the archive.
+           You can create CpioInfo objects using getcpioinfo().
            On Windows platforms, `fileobj' should always be opened with mode
            'rb' to avoid irritation about the file size.
         """
         self._check("aw")
 
-        tarinfo = copy.copy(tarinfo)
+        cpioinfo = copy.copy(cpioinfo)
 
-        buf = tarinfo.tobuf(self.posix)
+        buf = cpioinfo.tobuf(self.posix)
         self.fileobj.write(buf)
         self.offset += len(buf)
 
         # If there's data to follow, append it.
         if fileobj is not None:
-            copyfileobj(fileobj, self.fileobj, tarinfo.size)
-            blocks, remainder = divmod(tarinfo.size, BLOCKSIZE)
+            copyfileobj(fileobj, self.fileobj, cpioinfo.size)
+            blocks, remainder = divmod(cpioinfo.size, BLOCKSIZE)
             if remainder > 0:
                 self.fileobj.write(NUL * (BLOCKSIZE - remainder))
                 blocks += 1
             self.offset += blocks * BLOCKSIZE
 
-        self.members.append(tarinfo)
+        self.members.append(cpioinfo)
 
     def extractall(self, path=".", members=None):
         """Extract all members from the archive to the current working
@@ -1515,71 +1515,71 @@ class TarFile(object):
         if members is None:
             members = self
 
-        for tarinfo in members:
-            if tarinfo.isdir():
+        for cpioinfo in members:
+            if cpioinfo.isdir():
                 # Extract directory with a safe mode, so that
                 # all files below can be extracted as well.
                 try:
-                    os.makedirs(os.path.join(path, tarinfo.name), 0777)
+                    os.makedirs(os.path.join(path, cpioinfo.name), 0777)
                 except EnvironmentError:
                     pass
-                directories.append(tarinfo)
+                directories.append(cpioinfo)
             else:
-                self.extract(tarinfo, path)
+                self.extract(cpioinfo, path)
 
         # Reverse sort directories.
         directories.sort(lambda a, b: cmp(a.name, b.name))
         directories.reverse()
 
         # Set correct owner, mtime and filemode on directories.
-        for tarinfo in directories:
-            path = os.path.join(path, tarinfo.name)
+        for cpioinfo in directories:
+            path = os.path.join(path, cpioinfo.name)
             try:
-                self.chown(tarinfo, path)
-                self.utime(tarinfo, path)
-                self.chmod(tarinfo, path)
+                self.chown(cpioinfo, path)
+                self.utime(cpioinfo, path)
+                self.chmod(cpioinfo, path)
             except ExtractError, e:
                 if self.errorlevel > 1:
                     raise
                 else:
-                    self._dbg(1, "tarfile: %s" % e)
+                    self._dbg(1, "cpiofile: %s" % e)
 
     def extract(self, member, path=""):
         """Extract a member from the archive to the current working directory,
            using its full name. Its file information is extracted as accurately
-           as possible. `member' may be a filename or a TarInfo object. You can
+           as possible. `member' may be a filename or a CpioInfo object. You can
            specify a different directory using `path'.
         """
         self._check("r")
 
-        if isinstance(member, TarInfo):
-            tarinfo = member
+        if isinstance(member, CpioInfo):
+            cpioinfo = member
         else:
-            tarinfo = self.getmember(member)
+            cpioinfo = self.getmember(member)
 
         # Prepare the link target for makelink().
-        if tarinfo.islnk():
-            tarinfo._link_target = os.path.join(path, tarinfo.linkname)
+        if cpioinfo.islnk():
+            cpioinfo._link_target = os.path.join(path, cpioinfo.linkname)
 
         try:
-            self._extract_member(tarinfo, os.path.join(path, tarinfo.name))
+            self._extract_member(cpioinfo, os.path.join(path, cpioinfo.name))
         except EnvironmentError, e:
             if self.errorlevel > 0:
                 raise
             else:
                 if e.filename is None:
-                    self._dbg(1, "tarfile: %s" % e.strerror)
+                    self._dbg(1, "cpiofile: %s" % e.strerror)
                 else:
-                    self._dbg(1, "tarfile: %s %r" % (e.strerror, e.filename))
+                    self._dbg(1, "cpiofile: %s %r" % (e.strerror, e.filename))
         except ExtractError, e:
             if self.errorlevel > 1:
                 raise
             else:
-                self._dbg(1, "tarfile: %s" % e)
+                self._dbg(1, "cpiofile: %s" % e)
 
     def extractfile(self, member):
         """Extract a member from the archive as a file object. `member' may be
-           a filename or a TarInfo object. If `member' is a regular file, a
+           a filename or a CpioInfo object. If `member' is a regular file, a
            file-like object is returned. If `member' is a link, a file-like
            object is constructed from the link's target. If `member' is none of
            the above, None is returned.
@@ -1588,39 +1588,39 @@ class TarFile(object):
         """
         self._check("r")
 
-        if isinstance(member, TarInfo):
-            tarinfo = member
+        if isinstance(member, CpioInfo):
+            cpioinfo = member
         else:
-            tarinfo = self.getmember(member)
+            cpioinfo = self.getmember(member)
 
-        if tarinfo.isreg():
-            return self.fileobject(self, tarinfo)
+        if cpioinfo.isreg():
+            return self.fileobject(self, cpioinfo)
 
-        elif tarinfo.type not in SUPPORTED_TYPES:
+        elif cpioinfo.type not in SUPPORTED_TYPES:
             # If a member's type is unknown, it is treated as a
             # regular file.
-            return self.fileobject(self, tarinfo)
+            return self.fileobject(self, cpioinfo)
 
-        elif tarinfo.islnk() or tarinfo.issym():
+        elif cpioinfo.islnk() or cpioinfo.issym():
             if isinstance(self.fileobj, _Stream):
                 # A small but ugly workaround for the case that someone tries
                 # to extract a (sym)link as a file-object from a non-seekable
-                # stream of tar blocks.
+                # stream of cpio blocks.
                 raise StreamError("cannot extract (sym)link as file object")
             else:
                 # A (sym)link's file object is its target's file object.
-                return self.extractfile(self._getmember(tarinfo.linkname,
-                                                        tarinfo))
+                return self.extractfile(self._getmember(cpioinfo.linkname,
+                                                        cpioinfo))
         else:
             # If there's no data associated with the member (directory, chrdev,
             # blkdev, etc.), return None instead of a file object.
             return None
 
-    def _extract_member(self, tarinfo, targetpath):
-        """Extract the TarInfo object tarinfo to a physical
+    def _extract_member(self, cpioinfo, targetpath):
+        """Extract the CpioInfo object cpioinfo to a physical
            file called targetpath.
         """
-        # Fetch the TarInfo object for the given name
+        # Fetch the CpioInfo object for the given name
         # and build the destination pathname, replacing
         # forward slashes to platform specific separators.
         if targetpath[-1:] == "/":
@@ -1630,51 +1630,51 @@ class TarFile(object):
         # Create all upper directories.
         upperdirs = os.path.dirname(targetpath)
         if upperdirs and not os.path.exists(upperdirs):
-            ti = TarInfo()
+            ti = CpioInfo()
             ti.name  = upperdirs
             ti.type  = DIRTYPE
             ti.mode  = 0777
-            ti.mtime = tarinfo.mtime
-            ti.uid   = tarinfo.uid
-            ti.gid   = tarinfo.gid
-            ti.uname = tarinfo.uname
-            ti.gname = tarinfo.gname
+            ti.mtime = cpioinfo.mtime
+            ti.uid   = cpioinfo.uid
+            ti.gid   = cpioinfo.gid
+            ti.uname = cpioinfo.uname
+            ti.gname = cpioinfo.gname
             try:
                 self._extract_member(ti, ti.name)
             except:
                 pass
 
-        if tarinfo.islnk() or tarinfo.issym():
-            self._dbg(1, "%s -> %s" % (tarinfo.name, tarinfo.linkname))
+        if cpioinfo.islnk() or cpioinfo.issym():
+            self._dbg(1, "%s -> %s" % (cpioinfo.name, cpioinfo.linkname))
         else:
-            self._dbg(1, tarinfo.name)
+            self._dbg(1, cpioinfo.name)
 
-        if tarinfo.isreg():
-            self.makefile(tarinfo, targetpath)
-        elif tarinfo.isdir():
-            self.makedir(tarinfo, targetpath)
-        elif tarinfo.isfifo():
-            self.makefifo(tarinfo, targetpath)
-        elif tarinfo.ischr() or tarinfo.isblk():
-            self.makedev(tarinfo, targetpath)
-        elif tarinfo.islnk() or tarinfo.issym():
-            self.makelink(tarinfo, targetpath)
-        elif tarinfo.type not in SUPPORTED_TYPES:
-            self.makeunknown(tarinfo, targetpath)
+        if cpioinfo.isreg():
+            self.makefile(cpioinfo, targetpath)
+        elif cpioinfo.isdir():
+            self.makedir(cpioinfo, targetpath)
+        elif cpioinfo.isfifo():
+            self.makefifo(cpioinfo, targetpath)
+        elif cpioinfo.ischr() or cpioinfo.isblk():
+            self.makedev(cpioinfo, targetpath)
+        elif cpioinfo.islnk() or cpioinfo.issym():
+            self.makelink(cpioinfo, targetpath)
+        elif cpioinfo.type not in SUPPORTED_TYPES:
+            self.makeunknown(cpioinfo, targetpath)
         else:
-            self.makefile(tarinfo, targetpath)
+            self.makefile(cpioinfo, targetpath)
 
-        self.chown(tarinfo, targetpath)
-        if not tarinfo.issym():
-            self.chmod(tarinfo, targetpath)
-            self.utime(tarinfo, targetpath)
+        self.chown(cpioinfo, targetpath)
+        if not cpioinfo.issym():
+            self.chmod(cpioinfo, targetpath)
+            self.utime(cpioinfo, targetpath)
 
     #--------------------------------------------------------------------------
     # Below are the different file methods. They are called via
     # _extract_member() when extract() is called. They can be replaced in a
     # subclass to implement other functionality.
 
-    def makedir(self, tarinfo, targetpath):
+    def makedir(self, cpioinfo, targetpath):
         """Make a directory called targetpath.
         """
         try:
@@ -1683,7 +1683,7 @@ class TarFile(object):
             if e.errno != errno.EEXIST:
                 raise
 
-    def makefile(self, tarinfo, targetpath):
+    def makefile(self, cpioinfo, targetpath):
         """Make a file called targetpath.
         """
         source = self.extractfile(tarinfo)
@@ -1692,15 +1692,15 @@ class TarFile(object):
         source.close()
         target.close()
 
-    def makeunknown(self, tarinfo, targetpath):
-        """Make a file from a TarInfo object with an unknown type
+    def makeunknown(self, cpioinfo, targetpath):
+        """Make a file from a CpioInfo object with an unknown type
            at targetpath.
         """
-        self.makefile(tarinfo, targetpath)
-        self._dbg(1, "tarfile: Unknown file type %r, " \
-                     "extracted as regular file." % tarinfo.type)
+        self.makefile(cpioinfo, targetpath)
+        self._dbg(1, "cpiofile: Unknown file type %r, " \
+                     "extracted as regular file." % cpioinfo.type)
 
-    def makefifo(self, tarinfo, targetpath):
+    def makefifo(self, cpioinfo, targetpath):
         """Make a fifo called targetpath.
         """
         if hasattr(os, "mkfifo"):
@@ -1708,36 +1708,36 @@ class TarFile(object):
         else:
             raise ExtractError("fifo not supported by system")
 
-    def makedev(self, tarinfo, targetpath):
+    def makedev(self, cpioinfo, targetpath):
         """Make a character or block device called targetpath.
         """
         if not hasattr(os, "mknod") or not hasattr(os, "makedev"):
             raise ExtractError("special devices not supported by system")
 
-        mode = tarinfo.mode
-        if tarinfo.isblk():
+        mode = cpioinfo.mode
+        if cpioinfo.isblk():
             mode |= stat.S_IFBLK
         else:
             mode |= stat.S_IFCHR
 
         os.mknod(targetpath, mode,
-                 os.makedev(tarinfo.devmajor, tarinfo.devminor))
+                 os.makedev(cpioinfo.devmajor, cpioinfo.devminor))
 
-    def makelink(self, tarinfo, targetpath):
+    def makelink(self, cpioinfo, targetpath):
         """Make a (symbolic) link called targetpath. If it cannot be created
           (platform limitation), we try to make a copy of the referenced file
           instead of a link.
         """
-        linkpath = tarinfo.linkname
+        linkpath = cpioinfo.linkname
         try:
-            if tarinfo.issym():
+            if cpioinfo.issym():
                 os.symlink(linkpath, targetpath)
             else:
                 # See extract().
-                os.link(tarinfo._link_target, targetpath)
+                os.link(cpioinfo._link_target, targetpath)
         except AttributeError:
-            if tarinfo.issym():
-                linkpath = os.path.join(os.path.dirname(tarinfo.name),
+            if cpioinfo.issym():
+                linkpath = os.path.join(os.path.dirname(cpioinfo.name),
                                         linkpath)
                 linkpath = normpath(linkpath)
 
@@ -1750,27 +1750,27 @@ class TarFile(object):
                 except EnvironmentError, e:
                     raise IOError("link could not be created")
 
-    def chown(self, tarinfo, targetpath):
-        """Set owner of targetpath according to tarinfo.
+    def chown(self, cpioinfo, targetpath):
+        """Set owner of targetpath according to cpioinfo.
         """
         if pwd and hasattr(os, "geteuid") and os.geteuid() == 0:
             # We have to be root to do so.
             try:
-                g = grp.getgrnam(tarinfo.gname)[2]
+                g = grp.getgrnam(cpioinfo.gname)[2]
             except KeyError:
                 try:
-                    g = grp.getgrgid(tarinfo.gid)[2]
+                    g = grp.getgrgid(cpioinfo.gid)[2]
                 except KeyError:
                     g = os.getgid()
             try:
-                u = pwd.getpwnam(tarinfo.uname)[2]
+                u = pwd.getpwnam(cpioinfo.uname)[2]
             except KeyError:
                 try:
-                    u = pwd.getpwuid(tarinfo.uid)[2]
+                    u = pwd.getpwuid(cpioinfo.uid)[2]
                 except KeyError:
                     u = os.getuid()
             try:
-                if tarinfo.issym() and hasattr(os, "lchown"):
+                if cpioinfo.issym() and hasattr(os, "lchown"):
                     os.lchown(targetpath, u, g)
                 else:
                     if sys.platform != "os2emx":
@@ -1778,33 +1778,33 @@ class TarFile(object):
             except EnvironmentError, e:
                 raise ExtractError("could not change owner")
 
-    def chmod(self, tarinfo, targetpath):
-        """Set file permissions of targetpath according to tarinfo.
+    def chmod(self, cpioinfo, targetpath):
+        """Set file permissions of targetpath according to cpioinfo.
         """
         if hasattr(os, 'chmod'):
             try:
-                os.chmod(targetpath, tarinfo.mode)
+                os.chmod(targetpath, cpioinfo.mode)
             except EnvironmentError, e:
                 raise ExtractError("could not change mode")
 
-    def utime(self, tarinfo, targetpath):
-        """Set modification time of targetpath according to tarinfo.
+    def utime(self, cpioinfo, targetpath):
+        """Set modification time of targetpath according to cpioinfo.
         """
         if not hasattr(os, 'utime'):
             return
-        if sys.platform == "win32" and tarinfo.isdir():
+        if sys.platform == "win32" and cpioinfo.isdir():
             # According to msdn.microsoft.com, it is an error (EACCES)
             # to use utime() on directories.
             return
         try:
-            os.utime(targetpath, (tarinfo.mtime, tarinfo.mtime))
+            os.utime(targetpath, (cpioinfo.mtime, cpioinfo.mtime))
         except EnvironmentError, e:
             raise ExtractError("could not change modification time")
 
     #--------------------------------------------------------------------------
     def next(self):
-        """Return the next member of the archive as a TarInfo object, when
-           TarFile is opened for reading. Return None if there is no more
+        """Return the next member of the archive as a CpioInfo object, when
+           CpioFile is opened for reading. Return None if there is no more
            available.
         """
         self._check("ra")
@@ -1821,15 +1821,15 @@ class TarFile(object):
                 return None
 
             try:
-                tarinfo = TarInfo.frombuf(buf)
+                cpioinfo = CpioInfo.frombuf(buf)
 
-                # Set the TarInfo object's offset to the current position of the
-                # TarFile and set self.offset to the position where the data blocks
+                # Set the CpioInfo object's offset to the current position of the
+                # CpioFile and set self.offset to the position where the data blocks
                 # should begin.
-                tarinfo.offset = self.offset
+                cpioinfo.offset = self.offset
                 self.offset += BLOCKSIZE
 
-                tarinfo = self.proc_member(tarinfo)
+                cpioinfo = self.proc_member(cpioinfo)
 
             except HeaderError, e:
                 if self.ignore_zeros:
@@ -1842,57 +1842,57 @@ class TarFile(object):
                     return None
             break
 
-        # Some old tar programs represent a directory as a regular
+        # Some old cpio programs represent a directory as a regular
         # file with a trailing slash.
-        if tarinfo.isreg() and tarinfo.name.endswith("/"):
-            tarinfo.type = DIRTYPE
+        if cpioinfo.isreg() and cpioinfo.name.endswith("/"):
+            cpioinfo.type = DIRTYPE
 
         # Directory names should have a '/' at the end.
-        if tarinfo.isdir():
-            tarinfo.name += "/"
+        if cpioinfo.isdir():
+            cpioinfo.name += "/"
 
-        self.members.append(tarinfo)
-        return tarinfo
+        self.members.append(cpioinfo)
+        return cpioinfo
 
     #--------------------------------------------------------------------------
     # The following are methods that are called depending on the type of a
-    # member. The entry point is proc_member() which is called with a TarInfo
+    # member. The entry point is proc_member() which is called with a CpioInfo
     # object created from the header block from the current offset. The
     # proc_member() method can be overridden in a subclass to add custom
     # proc_*() methods. A proc_*() method MUST implement the following
     # operations:
-    # 1. Set tarinfo.offset_data to the position where the data blocks begin,
+    # 1. Set cpioinfo.offset_data to the position where the data blocks begin,
     #    if there is data that follows.
     # 2. Set self.offset to the position where the next member's header will
     #    begin.
-    # 3. Return tarinfo or another valid TarInfo object.
-    def proc_member(self, tarinfo):
-        """Choose the right processing method for tarinfo depending
+    # 3. Return cpioinfo or another valid CpioInfo object.
+    def proc_member(self, cpioinfo):
+        """Choose the right processing method for cpioinfo depending
            on its type and call it.
         """
-        if tarinfo.type in (GNUTYPE_LONGNAME, GNUTYPE_LONGLINK):
-            return self.proc_gnulong(tarinfo)
-        elif tarinfo.type == GNUTYPE_SPARSE:
-            return self.proc_sparse(tarinfo)
+        if cpioinfo.type in (GNUTYPE_LONGNAME, GNUTYPE_LONGLINK):
+            return self.proc_gnulong(cpioinfo)
+        elif cpioinfo.type == GNUTYPE_SPARSE:
+            return self.proc_sparse(cpioinfo)
         else:
-            return self.proc_builtin(tarinfo)
+            return self.proc_builtin(cpioinfo)
 
-    def proc_builtin(self, tarinfo):
+    def proc_builtin(self, cpioinfo):
         """Process a builtin type member or an unknown member
            which will be treated as a regular file.
         """
-        tarinfo.offset_data = self.offset
-        if tarinfo.isreg() or tarinfo.type not in SUPPORTED_TYPES:
+        cpioinfo.offset_data = self.offset
+        if cpioinfo.isreg() or cpioinfo.type not in SUPPORTED_TYPES:
             # Skip the following data blocks.
-            self.offset += self._block(tarinfo.size)
-        return tarinfo
+            self.offset += self._block(cpioinfo.size)
+        return cpioinfo
 
-    def proc_gnulong(self, tarinfo):
+    def proc_gnulong(self, cpioinfo):
         """Process the blocks that hold a GNU longname
            or longlink member.
         """
         buf = ""
-        count = tarinfo.size
+        count = cpioinfo.size
         while count > 0:
             block = self.fileobj.read(BLOCKSIZE)
             buf += block
@@ -1901,25 +1901,25 @@ class TarFile(object):
 
         # Fetch the next header and process it.
         b = self.fileobj.read(BLOCKSIZE)
-        t = TarInfo.frombuf(b)
+        t = CpioInfo.frombuf(b)
         t.offset = self.offset
         self.offset += BLOCKSIZE
         next = self.proc_member(t)
 
-        # Patch the TarInfo object from the next header with
+        # Patch the CpioInfo object from the next header with
         # the longname information.
-        next.offset = tarinfo.offset
-        if tarinfo.type == GNUTYPE_LONGNAME:
+        next.offset = cpioinfo.offset
+        if cpioinfo.type == GNUTYPE_LONGNAME:
             next.name = buf.rstrip(NUL)
-        elif tarinfo.type == GNUTYPE_LONGLINK:
+        elif cpioinfo.type == GNUTYPE_LONGLINK:
             next.linkname = buf.rstrip(NUL)
 
         return next
 
-    def proc_sparse(self, tarinfo):
+    def proc_sparse(self, cpioinfo):
         """Process a GNU sparse header plus extra headers.
         """
-        buf = tarinfo.buf
+        buf = cpioinfo.buf
         sp = _ringbuffer()
         pos = 386
         lastpos = 0L
@@ -1965,13 +1965,13 @@ class TarFile(object):
         if lastpos < origsize:
             sp.append(_hole(lastpos, origsize - lastpos))
 
-        tarinfo.sparse = sp
+        cpioinfo.sparse = sp
 
-        tarinfo.offset_data = self.offset
-        self.offset += self._block(tarinfo.size)
-        tarinfo.size = origsize
+        cpioinfo.offset_data = self.offset
+        self.offset += self._block(cpioinfo.size)
+        cpioinfo.size = origsize
 
-        return tarinfo
+        return cpioinfo
 
     #--------------------------------------------------------------------------
     # Little helper methods:
@@ -1985,17 +1985,17 @@ class TarFile(object):
             blocks += 1
         return blocks * BLOCKSIZE
 
-    def _getmember(self, name, tarinfo=None):
+    def _getmember(self, name, cpioinfo=None):
         """Find an archive member by name from bottom to top.
-           If tarinfo is given, it is used as the starting point.
+           If cpioinfo is given, it is used as the starting point.
         """
         # Ensure that all members have been loaded.
         members = self.getmembers()
 
-        if tarinfo is None:
+        if cpioinfo is None:
             end = len(members)
         else:
-            end = members.index(tarinfo)
+            end = members.index(cpioinfo)
 
         for i in xrange(end - 1, -1, -1):
             if name == members[i].name:
@@ -2006,14 +2006,14 @@ class TarFile(object):
            members.
         """
         while True:
-            tarinfo = self.next()
-            if tarinfo is None:
+            cpioinfo = self.next()
+            if cpioinfo is None:
                 break
         self._loaded = True
 
     def _check(self, mode=None):
-        """Check if TarFile is still open, and if the operation's mode
-           corresponds to TarFile's mode.
+        """Check if CpioFile is still open, and if the operation's mode
+           corresponds to CpioFile's mode.
         """
         if self.closed:
             raise IOError("%s is closed" % self.__class__.__name__)
@@ -2026,50 +2026,50 @@ class TarFile(object):
         if self._loaded:
             return iter(self.members)
         else:
-            return TarIter(self)
+            return CpioIter(self)
 
     def _dbg(self, level, msg):
         """Write debugging output to sys.stderr.
         """
         if level <= self.debug:
             print >> sys.stderr, msg
-# class TarFile
+# class CpioFile
 
-class TarIter:
+class CpioIter:
     """Iterator Class.
 
-       for tarinfo in TarFile(...):
+       for cpioinfo in CpioFile(...):
            suite...
     """
 
-    def __init__(self, tarfile):
-        """Construct a TarIter object.
+    def __init__(self, cpiofile):
+        """Construct a CpioIter object.
         """
-        self.tarfile = tarfile
+        self.cpiofile = cpiofile
         self.index = 0
     def __iter__(self):
         """Return iterator object.
         """
         return self
     def next(self):
-        """Return the next item using TarFile's next() method.
-           When all members have been read, set TarFile as _loaded.
+        """Return the next item using CpioFile's next() method.
+           When all members have been read, set CpioFile as _loaded.
         """
         # Fix for SF #1100429: Under rare circumstances it can
         # happen that getmembers() is called during iteration,
-        # which will cause TarIter to stop prematurely.
-        if not self.tarfile._loaded:
-            tarinfo = self.tarfile.next()
-            if not tarinfo:
-                self.tarfile._loaded = True
+        # which will cause CpioIter to stop prematurely.
+        if not self.cpiofile._loaded:
+            cpioinfo = self.cpiofile.next()
+            if not cpioinfo:
+                self.cpiofile._loaded = True
                 raise StopIteration
         else:
             try:
-                tarinfo = self.tarfile.members[self.index]
+                cpioinfo = self.cpiofile.members[self.index]
             except IndexError:
                 raise StopIteration
         self.index += 1
-        return tarinfo
+        return cpioinfo
 
 # Helper classes for sparse file support
 class _section:
@@ -2115,23 +2115,23 @@ class _ringbuffer(list):
         return item
 
 #---------------------------------------------
-# zipfile compatible TarFile class
+# zipfile compatible CpioFile class
 #---------------------------------------------
-TAR_PLAIN = 0           # zipfile.ZIP_STORED
-TAR_GZIPPED = 8         # zipfile.ZIP_DEFLATED
-class TarFileCompat:
-    """TarFile class compatible with standard module zipfile's
+CPIO_PLAIN = 0           # zipfile.ZIP_STORED
+CPIO_GZIPPED = 8         # zipfile.ZIP_DEFLATED
+class CpioFileCompat:
+    """CpioFile class compatible with standard module zipfile's
        ZipFile class.
     """
-    def __init__(self, file, mode="r", compression=TAR_PLAIN):
-        if compression == TAR_PLAIN:
-            self.tarfile = TarFile.taropen(file, mode)
-        elif compression == TAR_GZIPPED:
-            self.tarfile = TarFile.gzopen(file, mode)
+    def __init__(self, file, mode="r", compression=CPIO_PLAIN):
+        if compression == CPIO_PLAIN:
+            self.cpiofile = CpioFile.cpioopen(file, mode)
+        elif compression == CPIO_GZIPPED:
+            self.cpiofile = CpioFile.gzopen(file, mode)
         else:
             raise ValueError("unknown compression constant")
         if mode[0:1] == "r":
-            members = self.tarfile.getmembers()
+            members = self.cpiofile.getmembers()
             for m in members:
                 m.filename = m.name
                 m.file_size = m.size
@@ -2140,17 +2140,17 @@ class TarFileCompat:
         return map(lambda m: m.name, self.infolist())
     def infolist(self):
         return filter(lambda m: m.type in REGULAR_TYPES,
-                      self.tarfile.getmembers())
+                      self.cpiofile.getmembers())
     def printdir(self):
-        self.tarfile.list()
+        self.cpiofile.list()
     def testzip(self):
         return
     def getinfo(self, name):
-        return self.tarfile.getmember(name)
+        return self.cpiofile.getmember(name)
     def read(self, name):
-        return self.tarfile.extractfile(self.tarfile.getmember(name)).read()
+        return self.cpiofile.extractfile(self.cpiofile.getmember(name)).read()
     def write(self, filename, arcname=None, compress_type=None):
-        self.tarfile.add(filename, arcname)
+        self.cpiofile.add(filename, arcname)
     def writestr(self, zinfo, bytes):
         try:
             from cStringIO import StringIO
@@ -2160,23 +2160,23 @@ class TarFileCompat:
         zinfo.name = zinfo.filename
         zinfo.size = zinfo.file_size
         zinfo.mtime = calendar.timegm(zinfo.date_time)
-        self.tarfile.addfile(zinfo, StringIO(bytes))
+        self.cpiofile.addfile(zinfo, StringIO(bytes))
     def close(self):
-        self.tarfile.close()
-#class TarFileCompat
+        self.cpiofile.close()
+#class CpioFileCompat
 
 #--------------------
 # exported functions
 #--------------------
-def is_tarfile(name):
-    """Return True if name points to a tar archive that we
+def is_cpiofile(name):
+    """Return True if name points to a cpio archive that we
        are able to handle, else return False.
     """
     try:
         t = open(name)
         t.close()
         return True
-    except TarError:
+    except CpioError:
         return False
 
-open = TarFile.open
+open = CpioFile.open

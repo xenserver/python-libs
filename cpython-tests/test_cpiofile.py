@@ -5,7 +5,7 @@ import tempfile
 import StringIO
 
 import unittest
-import tarfile
+import cpiofile
 
 from test import test_support
 
@@ -23,15 +23,15 @@ except ImportError:
 def path(path):
     return test_support.findfile(path)
 
-testtar = path("testtar.tar")
-tempdir = os.path.join(tempfile.gettempdir(), "testtar" + os.extsep + "dir")
+testcpio = path("testcpio.cpio")
+tempdir = os.path.join(tempfile.gettempdir(), "testcpio" + os.extsep + "dir")
 tempname = test_support.TESTFN
 membercount = 12
 
-def tarname(comp=""):
+def cpioname(comp=""):
     if not comp:
-        return testtar
-    return os.path.join(tempdir, "%s%s%s" % (testtar, os.extsep, comp))
+        return testcpio
+    return os.path.join(tempdir, "%s%s%s" % (testcpio, os.extsep, comp))
 
 def dirname():
     if not os.path.exists(tempdir):
@@ -49,10 +49,10 @@ class BaseTest(unittest.TestCase):
 
     def setUp(self):
         mode = self.mode + self.sep + self.comp
-        self.tar = tarfile.open(tarname(self.comp), mode)
+        self.cpio = cpiofile.open(cpioname(self.comp), mode)
 
     def tearDown(self):
-        self.tar.close()
+        self.cpio.close()
 
 class ReadTest(BaseTest):
 
@@ -60,12 +60,12 @@ class ReadTest(BaseTest):
         """Test member extraction.
         """
         members = 0
-        for tarinfo in self.tar:
+        for cpioinfo in self.cpio:
             members += 1
-            if not tarinfo.isreg():
+            if not cpioinfo.isreg():
                 continue
-            f = self.tar.extractfile(tarinfo)
-            self.assert_(len(f.read()) == tarinfo.size,
+            f = self.cpio.extractfile(cpioinfo)
+            self.assert_(len(f.read()) == cpioinfo.size,
                          "size read does not match expected size")
             f.close()
 
@@ -76,8 +76,8 @@ class ReadTest(BaseTest):
         """Test sparse member extraction.
         """
         if self.sep != "|":
-            f1 = self.tar.extractfile("S-SPARSE")
-            f2 = self.tar.extractfile("S-SPARSE-WITH-NULLS")
+            f1 = self.cpio.extractfile("S-SPARSE")
+            f2 = self.cpio.extractfile("S-SPARSE-WITH-NULLS")
             self.assert_(f1.read() == f2.read(),
                          "_FileObject failed on sparse file member")
 
@@ -86,11 +86,11 @@ class ReadTest(BaseTest):
         """
         if self.sep != "|":
             filename = "0-REGTYPE-TEXT"
-            self.tar.extract(filename, dirname())
+            self.cpio.extract(filename, dirname())
             f = open(os.path.join(dirname(), filename), "rU")
             lines1 = f.readlines()
             f.close()
-            lines2 = self.tar.extractfile(filename).readlines()
+            lines2 = self.cpio.extractfile(filename).readlines()
             self.assert_(lines1 == lines2,
                          "_FileObject.readline() does not work correctly")
 
@@ -98,11 +98,11 @@ class ReadTest(BaseTest):
         # Test iteration over ExFileObject.
         if self.sep != "|":
             filename = "0-REGTYPE-TEXT"
-            self.tar.extract(filename, dirname())
+            self.cpio.extract(filename, dirname())
             f = open(os.path.join(dirname(), filename), "rU")
             lines1 = f.readlines()
             f.close()
-            lines2 = [line for line in self.tar.extractfile(filename)]
+            lines2 = [line for line in self.cpio.extractfile(filename)]
             self.assert_(lines1 == lines2,
                          "ExFileObject iteration does not work correctly")
 
@@ -111,13 +111,13 @@ class ReadTest(BaseTest):
         """
         if self.sep != "|":
             filename = "0-REGTYPE-TEXT"
-            self.tar.extract(filename, dirname())
+            self.cpio.extract(filename, dirname())
             f = open(os.path.join(dirname(), filename), "rb")
             data = f.read()
             f.close()
 
-            tarinfo = self.tar.getmember(filename)
-            fobj = self.tar.extractfile(tarinfo)
+            cpioinfo = self.cpio.getmember(filename)
+            fobj = self.cpio.extractfile(cpioinfo)
 
             text = fobj.read()
             fobj.seek(0)
@@ -136,11 +136,11 @@ class ReadTest(BaseTest):
             self.assert_(s == data[2048:2058],
                          "read() after seek failed")
             fobj.seek(0, 2)
-            self.assert_(tarinfo.size == fobj.tell(),
+            self.assert_(cpioinfo.size == fobj.tell(),
                          "seek() to file's end failed")
             self.assert_(fobj.read() == "",
                          "read() at file's end did not return empty string")
-            fobj.seek(-tarinfo.size, 2)
+            fobj.seek(-cpioinfo.size, 2)
             self.assert_(0 == fobj.tell(),
                          "relative seek() to file's start failed")
             fobj.seek(512)
@@ -164,27 +164,27 @@ class ReadTest(BaseTest):
     def test_old_dirtype(self):
         """Test old style dirtype member (bug #1336623).
         """
-        # Old tars create directory members using a REGTYPE
+        # Old cpios create directory members using a REGTYPE
         # header with a "/" appended to the filename field.
 
-        # Create an old tar style directory entry.
+        # Create an old cpio style directory entry.
         filename = tmpname()
-        tarinfo = tarfile.TarInfo("directory/")
-        tarinfo.type = tarfile.REGTYPE
+        cpioinfo = cpiofile.CpioInfo("directory/")
+        cpioinfo.type = cpiofile.REGTYPE
 
         fobj = open(filename, "w")
-        fobj.write(tarinfo.tobuf())
+        fobj.write(cpioinfo.tobuf())
         fobj.close()
 
         try:
             # Test if it is still a directory entry when
             # read back.
-            tar = tarfile.open(filename)
-            tarinfo = tar.getmembers()[0]
-            tar.close()
+            cpio = cpiofile.open(filename)
+            cpioinfo = cpio.getmembers()[0]
+            cpio.close()
 
-            self.assert_(tarinfo.type == tarfile.DIRTYPE)
-            self.assert_(tarinfo.name.endswith("/"))
+            self.assert_(cpioinfo.type == cpiofile.DIRTYPE)
+            self.assert_(cpioinfo.name.endswith("/"))
         finally:
             try:
                 os.unlink(filename)
@@ -199,68 +199,68 @@ class ReadStreamTest(ReadTest):
            seeking backwards.
         """
         ReadTest.test(self)
-        tarinfo = self.tar.getmembers()[0]
-        f = self.tar.extractfile(tarinfo)
-        self.assertRaises(tarfile.StreamError, f.read)
+        cpioinfo = self.cpio.getmembers()[0]
+        f = self.cpio.extractfile(cpioinfo)
+        self.assertRaises(cpiofile.StreamError, f.read)
 
     def test_stream(self):
-        """Compare the normal tar and the stream tar.
+        """Compare the normal cpio and the stream cpio.
         """
-        stream = self.tar
-        tar = tarfile.open(tarname(), 'r')
+        stream = self.cpio
+        cpio = cpiofile.open(cpioname(), 'r')
 
         while 1:
-            t1 = tar.next()
+            t1 = cpio.next()
             t2 = stream.next()
             if t1 is None:
                 break
             self.assert_(t2 is not None, "stream.next() failed.")
 
             if t2.islnk() or t2.issym():
-                self.assertRaises(tarfile.StreamError, stream.extractfile, t2)
+                self.assertRaises(cpiofile.StreamError, stream.extractfile, t2)
                 continue
-            v1 = tar.extractfile(t1)
+            v1 = cpio.extractfile(t1)
             v2 = stream.extractfile(t2)
             if v1 is None:
                 continue
             self.assert_(v2 is not None, "stream.extractfile() failed")
             self.assert_(v1.read() == v2.read(), "stream extraction failed")
 
-        tar.close()
+        cpio.close()
         stream.close()
 
 class ReadDetectTest(ReadTest):
 
     def setUp(self):
-        self.tar = tarfile.open(tarname(self.comp), self.mode)
+        self.cpio = cpiofile.open(cpioname(self.comp), self.mode)
 
 class ReadDetectFileobjTest(ReadTest):
 
     def setUp(self):
-        name = tarname(self.comp)
-        self.tar = tarfile.open(name, mode=self.mode,
+        name = cpioname(self.comp)
+        self.cpio = cpiofile.open(name, mode=self.mode,
                                 fileobj=open(name, "rb"))
 
 class ReadAsteriskTest(ReadTest):
 
     def setUp(self):
         mode = self.mode + self.sep + "*"
-        self.tar = tarfile.open(tarname(self.comp), mode)
+        self.cpio = cpiofile.open(cpioname(self.comp), mode)
 
 class ReadStreamAsteriskTest(ReadStreamTest):
 
     def setUp(self):
         mode = self.mode + self.sep + "*"
-        self.tar = tarfile.open(tarname(self.comp), mode)
+        self.cpio = cpiofile.open(cpioname(self.comp), mode)
 
 class WriteTest(BaseTest):
     mode = 'w'
 
     def setUp(self):
         mode = self.mode + self.sep + self.comp
-        self.src = tarfile.open(tarname(self.comp), 'r')
+        self.src = cpiofile.open(cpioname(self.comp), 'r')
         self.dstname = tmpname()
-        self.dst = tarfile.open(self.dstname, mode)
+        self.dst = cpiofile.open(self.dstname, mode)
 
     def tearDown(self):
         self.src.close()
@@ -280,15 +280,15 @@ class WriteTest(BaseTest):
         self.assertNotEqual(os.stat(self.dstname).st_size, 0)
 
     def _test(self):
-        for tarinfo in self.src:
-            if not tarinfo.isreg():
+        for cpioinfo in self.src:
+            if not cpioinfo.isreg():
                 continue
-            f = self.src.extractfile(tarinfo)
-            if self.dst.posix and len(tarinfo.name) > tarfile.LENGTH_NAME and "/" not in tarinfo.name:
+            f = self.src.extractfile(cpioinfo)
+            if self.dst.posix and len(cpioinfo.name) > cpiofile.LENGTH_NAME and "/" not in cpioinfo.name:
                 self.assertRaises(ValueError, self.dst.addfile,
-                                 tarinfo, f)
+                                 cpioinfo, f)
             else:
-                self.dst.addfile(tarinfo, f)
+                self.dst.addfile(cpioinfo, f)
 
     def test_add_self(self):
         dstname = os.path.abspath(self.dstname)
@@ -306,7 +306,7 @@ class WriteTest(BaseTest):
 
 
 class Write100Test(BaseTest):
-    # The name field in a tar header stores strings of at most 100 chars.
+    # The name field in a cpio header stores strings of at most 100 chars.
     # If a string is shorter than 100 chars it has to be padded with '\0',
     # which implies that a string of exactly 100 chars is stored without
     # a trailing '\0'.
@@ -315,18 +315,18 @@ class Write100Test(BaseTest):
         self.name = "01234567890123456789012345678901234567890123456789"
         self.name += "01234567890123456789012345678901234567890123456789"
 
-        self.tar = tarfile.open(tmpname(), "w")
-        t = tarfile.TarInfo(self.name)
-        self.tar.addfile(t)
-        self.tar.close()
+        self.cpio = cpiofile.open(tmpname(), "w")
+        t = cpiofile.CpioInfo(self.name)
+        self.cpio.addfile(t)
+        self.cpio.close()
 
-        self.tar = tarfile.open(tmpname())
+        self.cpio = cpiofile.open(tmpname())
 
     def tearDown(self):
-        self.tar.close()
+        self.cpio.close()
 
     def test(self):
-        self.assertEqual(self.tar.getnames()[0], self.name,
+        self.assertEqual(self.cpio.getnames()[0], self.name,
                 "failed to store 100 char filename")
 
 
@@ -336,7 +336,7 @@ class WriteSize0Test(BaseTest):
     def setUp(self):
         self.tmpdir = dirname()
         self.dstname = tmpname()
-        self.dst = tarfile.open(self.dstname, "w")
+        self.dst = cpiofile.open(self.dstname, "w")
 
     def tearDown(self):
         self.dst.close()
@@ -345,13 +345,13 @@ class WriteSize0Test(BaseTest):
         path = os.path.join(self.tmpdir, "file")
         f = open(path, "w")
         f.close()
-        tarinfo = self.dst.gettarinfo(path)
-        self.assertEqual(tarinfo.size, 0)
+        cpioinfo = self.dst.getcpioinfo(path)
+        self.assertEqual(cpioinfo.size, 0)
         f = open(path, "w")
         f.write("aaa")
         f.close()
-        tarinfo = self.dst.gettarinfo(path)
-        self.assertEqual(tarinfo.size, 3)
+        cpioinfo = self.dst.getcpioinfo(path)
+        self.assertEqual(cpioinfo.size, 3)
 
     def test_directory(self):
         path = os.path.join(self.tmpdir, "directory")
@@ -360,15 +360,15 @@ class WriteSize0Test(BaseTest):
             # run was killed in mid-stream.
             shutil.rmtree(path)
         os.mkdir(path)
-        tarinfo = self.dst.gettarinfo(path)
-        self.assertEqual(tarinfo.size, 0)
+        cpioinfo = self.dst.getcpioinfo(path)
+        self.assertEqual(cpioinfo.size, 0)
 
     def test_symlink(self):
         if hasattr(os, "symlink"):
             path = os.path.join(self.tmpdir, "symlink")
             os.symlink("link_target", path)
-            tarinfo = self.dst.gettarinfo(path)
-            self.assertEqual(tarinfo.size, 0)
+            cpioinfo = self.dst.getcpioinfo(path)
+            self.assertEqual(cpioinfo.size, 0)
 
 
 class WriteStreamTest(WriteTest):
@@ -391,7 +391,7 @@ class WriteStreamTest(WriteTest):
             s = f.read()
             f.close()
 
-        self.assertEqual(s.count("\0"), tarfile.RECORDSIZE,
+        self.assertEqual(s.count("\0"), cpiofile.RECORDSIZE,
                          "incorrect zero padding")
 
 
@@ -399,16 +399,16 @@ class WriteGNULongTest(unittest.TestCase):
     """This testcase checks for correct creation of GNU Longname
        and Longlink extensions.
 
-       It creates a tarfile and adds empty members with either
+       It creates a cpiofile and adds empty members with either
        long names, long linknames or both and compares the size
-       of the tarfile with the expected size.
+       of the cpiofile with the expected size.
 
-       It checks for SF bug #812325 in TarFile._create_gnulong().
+       It checks for SF bug #812325 in CpioFile._create_gnulong().
 
        While I was writing this testcase, I noticed a second bug
        in the same method:
        Long{names,links} weren't null-terminated which lead to
-       bad tarfiles when their length was a multiple of 512. This
+       bad cpiofiles when their length was a multiple of 512. This
        is tested as well.
     """
 
@@ -419,15 +419,15 @@ class WriteGNULongTest(unittest.TestCase):
         return blocks * 512
 
     def _calc_size(self, name, link=None):
-        # initial tar header
+        # initial cpio header
         count = 512
 
-        if len(name) > tarfile.LENGTH_NAME:
+        if len(name) > cpiofile.LENGTH_NAME:
             # gnu longname extended header + longname
             count += 512
             count += self._length(name)
 
-        if link is not None and len(link) > tarfile.LENGTH_LINK:
+        if link is not None and len(link) > cpiofile.LENGTH_LINK:
             # gnu longlink extended header + longlink
             count += 512
             count += self._length(link)
@@ -435,26 +435,26 @@ class WriteGNULongTest(unittest.TestCase):
         return count
 
     def _test(self, name, link=None):
-        tarinfo = tarfile.TarInfo(name)
+        cpioinfo = cpiofile.CpioInfo(name)
         if link:
-            tarinfo.linkname = link
-            tarinfo.type = tarfile.LNKTYPE
+            cpioinfo.linkname = link
+            cpioinfo.type = cpiofile.LNKTYPE
 
-        tar = tarfile.open(tmpname(), "w")
-        tar.posix = False
-        tar.addfile(tarinfo)
+        cpio = cpiofile.open(tmpname(), "w")
+        cpio.posix = False
+        cpio.addfile(cpioinfo)
 
         v1 = self._calc_size(name, link)
-        v2 = tar.offset
+        v2 = cpio.offset
         self.assertEqual(v1, v2, "GNU longname/longlink creation failed")
 
-        tar.close()
+        cpio.close()
 
-        tar = tarfile.open(tmpname())
-        member = tar.next()
+        cpio = cpiofile.open(tmpname())
+        member = cpio.next()
         self.failIf(member is None, "unable to read longname member")
-        self.assert_(tarinfo.name == member.name and \
-                     tarinfo.linkname == member.linkname, \
+        self.assert_(cpioinfo.name == member.name and \
+                     cpioinfo.linkname == member.linkname, \
                      "unable to read longname member")
 
     def test_longname_1023(self):
@@ -490,47 +490,47 @@ class WriteGNULongTest(unittest.TestCase):
 class ReadGNULongTest(unittest.TestCase):
 
     def setUp(self):
-        self.tar = tarfile.open(tarname())
+        self.cpio = cpiofile.open(cpioname())
 
     def tearDown(self):
-        self.tar.close()
+        self.cpio.close()
 
     def test_1471427(self):
         """Test reading of longname (bug #1471427).
         """
         name = "test/" * 20 + "0-REGTYPE"
         try:
-            tarinfo = self.tar.getmember(name)
+            cpioinfo = self.cpio.getmember(name)
         except KeyError:
-            tarinfo = None
-        self.assert_(tarinfo is not None, "longname not found")
-        self.assert_(tarinfo.type != tarfile.DIRTYPE, "read longname as dirtype")
+            cpioinfo = None
+        self.assert_(cpioinfo is not None, "longname not found")
+        self.assert_(cpioinfo.type != cpiofile.DIRTYPE, "read longname as dirtype")
 
     def test_read_name(self):
         name = ("0-LONGNAME-" * 10)[:101]
         try:
-            tarinfo = self.tar.getmember(name)
+            cpioinfo = self.cpio.getmember(name)
         except KeyError:
-            tarinfo = None
-        self.assert_(tarinfo is not None, "longname not found")
+            cpioinfo = None
+        self.assert_(cpioinfo is not None, "longname not found")
 
     def test_read_link(self):
         link = ("1-LONGLINK-" * 10)[:101]
         name = ("0-LONGNAME-" * 10)[:101]
         try:
-            tarinfo = self.tar.getmember(link)
+            cpioinfo = self.cpio.getmember(link)
         except KeyError:
-            tarinfo = None
-        self.assert_(tarinfo is not None, "longlink not found")
-        self.assert_(tarinfo.linkname == name, "linkname wrong")
+            cpioinfo = None
+        self.assert_(cpioinfo is not None, "longlink not found")
+        self.assert_(cpioinfo.linkname == name, "linkname wrong")
 
     def test_truncated_longname(self):
-        f = open(tarname())
+        f = open(cpioname())
         fobj = StringIO.StringIO(f.read(1024))
         f.close()
-        tar = tarfile.open(name="foo.tar", fileobj=fobj)
-        self.assert_(len(tar.getmembers()) == 0, "")
-        tar.close()
+        cpio = cpiofile.open(name="foo.cpio", fileobj=fobj)
+        self.assert_(len(cpio.getmembers()) == 0, "")
+        cpio.close()
 
 
 class ExtractHardlinkTest(BaseTest):
@@ -539,12 +539,12 @@ class ExtractHardlinkTest(BaseTest):
         """Test hardlink extraction (bug #857297)
         """
         # Prevent errors from being caught
-        self.tar.errorlevel = 1
+        self.cpio.errorlevel = 1
 
-        self.tar.extract("0-REGTYPE", dirname())
+        self.cpio.extract("0-REGTYPE", dirname())
         try:
             # Extract 1-LNKTYPE which is a hardlink to 0-REGTYPE
-            self.tar.extract("1-LNKTYPE", dirname())
+            self.cpio.extract("1-LNKTYPE", dirname())
         except EnvironmentError, e:
             import errno
             if e.errno == errno.ENOENT:
@@ -552,13 +552,13 @@ class ExtractHardlinkTest(BaseTest):
 
 class CreateHardlinkTest(BaseTest):
     """Test the creation of LNKTYPE (hardlink) members in an archive.
-       In this respect tarfile.py mimics the behaviour of GNU tar: If
+       In this respect cpiofile.py mimics the behaviour of GNU cpio: If
        a file has a st_nlink > 1, it will be added a REGTYPE member
        only the first time.
     """
 
     def setUp(self):
-        self.tar = tarfile.open(tmpname(), "w")
+        self.cpio = cpiofile.open(tmpname(), "w")
 
         self.foo = os.path.join(dirname(), "foo")
         self.bar = os.path.join(dirname(), "bar")
@@ -571,32 +571,32 @@ class CreateHardlinkTest(BaseTest):
         f = open(self.foo, "w")
         f.write("foo")
         f.close()
-        self.tar.add(self.foo)
+        self.cpio.add(self.foo)
 
     def test_add_twice(self):
         # If st_nlink == 1 then the same file will be added as
         # REGTYPE every time.
-        tarinfo = self.tar.gettarinfo(self.foo)
-        self.assertEqual(tarinfo.type, tarfile.REGTYPE,
+        cpioinfo = self.cpio.getcpioinfo(self.foo)
+        self.assertEqual(cpioinfo.type, cpiofile.REGTYPE,
                 "add file as regular failed")
 
     def test_add_hardlink(self):
         # If st_nlink > 1 then the same file will be added as
         # LNKTYPE.
         os.link(self.foo, self.bar)
-        tarinfo = self.tar.gettarinfo(self.foo)
-        self.assertEqual(tarinfo.type, tarfile.LNKTYPE,
+        cpioinfo = self.cpio.getcpioinfo(self.foo)
+        self.assertEqual(cpioinfo.type, cpiofile.LNKTYPE,
                 "add file as hardlink failed")
 
-        tarinfo = self.tar.gettarinfo(self.bar)
-        self.assertEqual(tarinfo.type, tarfile.LNKTYPE,
+        cpioinfo = self.cpio.getcpioinfo(self.bar)
+        self.assertEqual(cpioinfo.type, cpiofile.LNKTYPE,
                 "add file as hardlink failed")
 
     def test_dereference_hardlink(self):
-        self.tar.dereference = True
+        self.cpio.dereference = True
         os.link(self.foo, self.bar)
-        tarinfo = self.tar.gettarinfo(self.bar)
-        self.assertEqual(tarinfo.type, tarfile.REGTYPE,
+        cpioinfo = self.cpio.getcpioinfo(self.bar)
+        self.assertEqual(cpioinfo.type, cpiofile.REGTYPE,
                 "dereferencing hardlink failed")
 
 
@@ -622,31 +622,31 @@ class ReadStreamAsteriskTestGzip(ReadStreamAsteriskTest):
 
 class FileModeTest(unittest.TestCase):
     def test_modes(self):
-        self.assertEqual(tarfile.filemode(0755), '-rwxr-xr-x')
-        self.assertEqual(tarfile.filemode(07111), '---s--s--t')
+        self.assertEqual(cpiofile.filemode(0755), '-rwxr-xr-x')
+        self.assertEqual(cpiofile.filemode(07111), '---s--s--t')
 
 class HeaderErrorTest(unittest.TestCase):
 
     def test_truncated_header(self):
-        self.assertRaises(tarfile.HeaderError, tarfile.TarInfo.frombuf, "")
-        self.assertRaises(tarfile.HeaderError, tarfile.TarInfo.frombuf, "filename\0")
-        self.assertRaises(tarfile.HeaderError, tarfile.TarInfo.frombuf, "\0" * 511)
-        self.assertRaises(tarfile.HeaderError, tarfile.TarInfo.frombuf, "\0" * 513)
+        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "")
+        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "filename\0")
+        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "\0" * 511)
+        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "\0" * 513)
 
     def test_empty_header(self):
-        self.assertRaises(tarfile.HeaderError, tarfile.TarInfo.frombuf, "\0" * 512)
+        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "\0" * 512)
 
     def test_invalid_header(self):
-        buf = tarfile.TarInfo("filename").tobuf()
+        buf = cpiofile.CpioInfo("filename").tobuf()
         buf = buf[:148] + "foo\0\0\0\0\0" + buf[156:] # invalid number field.
-        self.assertRaises(tarfile.HeaderError, tarfile.TarInfo.frombuf, buf)
+        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, buf)
 
     def test_bad_checksum(self):
-        buf = tarfile.TarInfo("filename").tobuf()
+        buf = cpiofile.CpioInfo("filename").tobuf()
         b = buf[:148] + "        " + buf[156:] # clear the checksum field.
-        self.assertRaises(tarfile.HeaderError, tarfile.TarInfo.frombuf, b)
+        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, b)
         b = "a" + buf[1:] # manipulate the buffer, so checksum won't match.
-        self.assertRaises(tarfile.HeaderError, tarfile.TarInfo.frombuf, b)
+        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, b)
 
 class OpenFileobjTest(BaseTest):
     # Test for SF bug #1496501.
@@ -654,8 +654,8 @@ class OpenFileobjTest(BaseTest):
     def test_opener(self):
         fobj = StringIO.StringIO("foo\n")
         try:
-            tarfile.open("", "r", fileobj=fobj)
-        except tarfile.ReadError:
+            cpiofile.open("", "r", fileobj=fobj)
+        except cpiofile.ReadError:
             self.assertEqual(fobj.tell(), 0, "fileobj's position has moved")
 
 if bz2:
@@ -686,19 +686,19 @@ if not gzip:
 
 def test_main():
     # Create archive.
-    f = open(tarname(), "rb")
+    f = open(cpioname(), "rb")
     fguts = f.read()
     f.close()
     if gzip:
-        # create testtar.tar.gz
-        tar = gzip.open(tarname("gz"), "wb")
-        tar.write(fguts)
-        tar.close()
+        # create testcpio.cpio.gz
+        cpio = gzip.open(cpioname("gz"), "wb")
+        cpio.write(fguts)
+        cpio.close()
     if bz2:
-        # create testtar.tar.bz2
-        tar = bz2.BZ2File(tarname("bz2"), "wb")
-        tar.write(fguts)
-        tar.close()
+        # create testcpio.cpio.bz2
+        cpio = bz2.BZ2File(cpioname("bz2"), "wb")
+        cpio.write(fguts)
+        cpio.close()
 
     tests = [
         FileModeTest,
@@ -741,9 +741,9 @@ def test_main():
         test_support.run_unittest(*tests)
     finally:
         if gzip:
-            os.remove(tarname("gz"))
+            os.remove(cpioname("gz"))
         if bz2:
-            os.remove(tarname("bz2"))
+            os.remove(cpioname("bz2"))
         if os.path.exists(dirname()):
             shutil.rmtree(dirname())
         if os.path.exists(tmpname()):

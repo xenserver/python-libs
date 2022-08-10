@@ -58,9 +58,9 @@ if sys.platform == 'mac':
     raise ImportError, "cpiofile does not work for platform==mac"
 
 try:
-    import grp as GRP, pwd as PWD
+    import grp, pwd
 except ImportError:
-    GRP = PWD = None
+    grp = pwd = None
 
 # from cpiofile import *
 __all__ = ["CpioFile", "CpioInfo", "is_cpiofile", "CpioError"]
@@ -113,11 +113,11 @@ def copyfileobj(src, dst, length=None):
         shutil.copyfileobj(src, dst)
         return
 
-    bufsize = 16 * 1024
-    blocks, remainder = divmod(length, bufsize)
-    for _ in xrange(blocks):
-        buf = src.read(bufsize)
-        if len(buf) < bufsize:
+    BUFSIZE = 16 * 1024
+    blocks, remainder = divmod(length, BUFSIZE)
+    for b in xrange(blocks):
+        buf = src.read(BUFSIZE)
+        if len(buf) < BUFSIZE:
             raise IOError("end of file reached")
         dst.write(buf)
 
@@ -128,7 +128,7 @@ def copyfileobj(src, dst, length=None):
         dst.write(buf)
     return
 
-FILEMODE_TABLE = (
+filemode_table = (
     ((S_IFLNK,      "l"),
      (S_IFREG,      "-"),
      (S_IFBLK,      "b"),
@@ -161,7 +161,7 @@ def filemode(mode):
        Used by CpioFile.list()
     """
     perm = []
-    for table in FILEMODE_TABLE:
+    for table in filemode_table:
         for bit, char in table:
             if mode & bit == bit:
                 perm.append(char)
@@ -170,13 +170,10 @@ def filemode(mode):
             perm.append("-")
     return "".join(perm)
 
-
-def normpath(path):
-    if os.sep != "/":
-        return os.path.normpath(path).replace(os.sep, "/")
-    else:
-        return os.path.normpath(path)
-
+if os.sep != "/":
+    normpath = lambda path: os.path.normpath(path).replace(os.sep, "/")
+else:
+    normpath = os.path.normpath
 
 class CpioError(Exception):
     """Base exception."""
@@ -208,9 +205,8 @@ class _LowLevelFile(object):
             "r": os.O_RDONLY,
             "w": os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
         }[mode]
-        if not hasattr(os, "O_BINARY"):
-            os.O_BINARY = 0
-        mode |= os.O_BINARY
+        if hasattr(os, "O_BINARY"):
+            mode |= os.O_BINARY
         self.fd = os.open(name, mode)
 
     def close(self):
@@ -397,7 +393,7 @@ class _Stream(object):
         """
         if pos - self.pos >= 0:
             blocks, remainder = divmod(pos - self.pos, self.bufsize)
-            for _ in xrange(blocks):
+            for i in xrange(blocks):
                 self.read(self.bufsize)
             self.read(remainder)
         else:
@@ -468,8 +464,7 @@ class _StreamProxy(object):
         self.buf = self.fileobj.read(BLOCKSIZE)
 
     def read(self, size):
-        #self.read = self.fileobj.read
-        setattr(self, "read", self.fileobj.read)
+        self.read = self.fileobj.read
         return self.buf
 
     def getcomptype(self):
@@ -653,14 +648,14 @@ class _FileInFile(object):
 
         size = min(size, section.offset + section.size - self.position)
 
-        # if isinstance(section, _data):
-        #     realpos = section.realpos + self.position - section.offset
-        #     self.fileobj.seek(self.offset + realpos)
-        #     self.position += size
-        #     return self.fileobj.read(size)
-        # else:
-        #     self.position += size
-        #     return NUL * size
+        if isinstance(section, _data):
+            realpos = section.realpos + self.position - section.offset
+            self.fileobj.seek(self.offset + realpos)
+            self.position += size
+            return self.fileobj.read(size)
+        else:
+            self.position += size
+            return NUL * size
 #class _FileInFile
 
 class ExFileObject(object):
@@ -743,8 +738,7 @@ class ExFileObject(object):
         result = []
         while True:
             line = self.readline()
-            if not line:
-                break
+            if not line: break
             result.append(line)
         return result
 
@@ -827,10 +821,8 @@ class CpioInfo(object):
         self.offset = 0         # the cpio header starts here
         self.offset_data = 0    # the file's data starts here
 
-        self.buf = None
-
     def __repr__(self):
-        return "<%s %r at %#x>" % (self.__class__.__name__, self.name, id(self))
+        return "<%s %r at %#x>" % (self.__class__.__name__,self.name,id(self))
 
     @classmethod
     def frombuf(cls, buf):
@@ -1047,8 +1039,8 @@ class CpioFile(object):
             raise ReadError("file could not be opened successfully")
 
         elif ":" in mode:
-            fmode, comptype = mode.split(":", 1)
-            fmode = fmode or "r"
+            filemode, comptype = mode.split(":", 1)
+            filemode = filemode or "r"
             comptype = comptype or "cpio"
 
             # Select the *open() function according to
@@ -1057,18 +1049,18 @@ class CpioFile(object):
                 func = getattr(cls, cls.OPEN_METH[comptype])
             else:
                 raise CompressionError("unknown compression type %r" % comptype)
-            return func(name, fmode, fileobj)
+            return func(name, filemode, fileobj)
 
         elif "|" in mode:
-            fmode, comptype = mode.split("|", 1)
-            fmode = fmode or "r"
+            filemode, comptype = mode.split("|", 1)
+            filemode = filemode or "r"
             comptype = comptype or "cpio"
 
-            if fmode not in "rw":
+            if filemode not in "rw":
                 raise ValueError("mode must be 'r' or 'w'")
 
-            t = cls(name, fmode,
-                    _Stream(name, fmode, comptype, fileobj, bufsize))
+            t = cls(name, filemode,
+                    _Stream(name, filemode, comptype, fileobj, bufsize))
             t._extfileobj = False
             return t
 
@@ -1095,9 +1087,7 @@ class CpioFile(object):
 
         try:
             import gzip
-            # gzip.GzipFile
-            if not hasattr(gzip, "GzipFile"):
-                raise AttributeError
+            gzip.GzipFile
         except (ImportError, AttributeError):
             raise CompressionError("gzip module is not available")
 
@@ -1239,7 +1229,7 @@ class CpioFile(object):
         if arcname is None:
             arcname = name
         arcname = normpath(arcname)
-        _, arcname = os.path.splitdrive(arcname)
+        drv, arcname = os.path.splitdrive(arcname)
         while arcname[0:1] == "/":
             arcname = arcname[1:]
 
@@ -1528,7 +1518,7 @@ class CpioFile(object):
             ti.gid   = cpioinfo.gid
             try:
                 self._extract_member(ti, ti.name)
-            except Exception:
+            except:
                 pass
 
         if cpioinfo.issym():
@@ -1578,8 +1568,7 @@ class CpioFile(object):
             if self.inodes.has_key(cpioinfo.ino):
                 # actual file exists, create link
                 # FIXME handle platforms that don't support hardlinks
-                os.link(os.path.join(cpioinfo._link_path,
-                                     self.inodes[cpioinfo.ino][0]), targetpath)
+                os.link(os.path.join(cpioinfo._link_path, self.inodes[cpioinfo.ino][0]), targetpath)
             else:
                 extractinfo = self._datamember(cpioinfo)
 
@@ -1651,14 +1640,14 @@ class CpioFile(object):
     def chown(self, cpioinfo, targetpath):
         """Set owner of targetpath according to cpioinfo.
         """
-        if PWD and hasattr(os, "geteuid") and os.geteuid() == 0:
+        if pwd and hasattr(os, "geteuid") and os.geteuid() == 0:
             # We have to be root to do so.
             try:
-                g = GRP.getgrgid(cpioinfo.gid)[2]
+                g = grp.getgrgid(cpioinfo.gid)[2]
             except KeyError:
                 g = os.getgid()
             try:
-                u = PWD.getpwuid(cpioinfo.uid)[2]
+                u = pwd.getpwuid(cpioinfo.uid)[2]
             except KeyError:
                 u = os.getuid()
             try:
@@ -1874,11 +1863,11 @@ class CpioFileCompat(object):
     """CpioFile class compatible with standard module zipfile's
        ZipFile class.
     """
-    def __init__(self, fpath, mode="r", compression=CPIO_PLAIN):
+    def __init__(self, file, mode="r", compression=CPIO_PLAIN):
         if compression == CPIO_PLAIN:
-            self.cpiofile = CpioFile.cpioopen(fpath, mode)
+            self.cpiofile = CpioFile.cpioopen(file, mode)
         elif compression == CPIO_GZIPPED:
-            self.cpiofile = CpioFile.gzopen(fpath, mode)
+            self.cpiofile = CpioFile.gzopen(file, mode)
         else:
             raise ValueError("unknown compression constant")
         if mode[0:1] == "r":
@@ -1930,5 +1919,4 @@ def is_cpiofile(name):
     except CpioError:
         return False
 
-def cpioOpen(*al, **ad):
-    return CpioFile.open(*al, **ad)
+open = CpioFile.open

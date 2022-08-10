@@ -1452,7 +1452,7 @@ class CpioFile(object):
         else:
             cpioinfo = self.getmember(member)
 
-        # Prepare the link cpioget for makelink().
+        # Prepare the link target for makelink().
         if cpioinfo.islnk():
             cpioinfo._link_path = path
 
@@ -1476,7 +1476,7 @@ class CpioFile(object):
         """Extract a member from the archive as a file object. `member' may be
            a filename or a CpioInfo object. If `member' is a regular file, a
            file-like object is returned. If `member' is a link, a file-like
-           object is constructed from the link's cpioget. If `member' is none of
+           object is constructed from the link's target. If `member' is none of
            the above, None is returned.
            The file-like object is read-only and provides the following
            methods: read(), readline(), readlines(), seek() and tell()
@@ -1500,7 +1500,7 @@ class CpioFile(object):
                 # stream of cpio blocks.
                 raise StreamError("cannot extract symlink as file object")
             else:
-                # A symlink's file object is its cpioget's file object.
+                # A symlink's file object is its target's file object.
                 return self.extractfile(self._getmember(cpioinfo.linkname,
                                                         cpioinfo))
         else:
@@ -1508,17 +1508,17 @@ class CpioFile(object):
             # blkdev, etc.), return None instead of a file object.
             return None
 
-    def _extract_member(self, cpioinfo, cpiogetpath):
+    def _extract_member(self, cpioinfo, targetpath):
         """Extract the CpioInfo object cpioinfo to a physical
-           file called cpiogetpath.
+           file called targetpath.
         """
         # Fetch the CpioInfo object for the given name
         # and build the destination pathname, replacing
         # forward slashes to platform specific separators.
-        cpiogetpath = os.path.normpath(cpiogetpath)
+        targetpath = os.path.normpath(targetpath)
 
         # Create all upper directories.
-        upperdirs = os.path.dirname(cpiogetpath)
+        upperdirs = os.path.dirname(targetpath)
         if upperdirs and not os.path.exists(upperdirs):
             ti = CpioInfo()
             ti.name  = upperdirs
@@ -1537,39 +1537,39 @@ class CpioFile(object):
             self._dbg(1, cpioinfo.name)
 
         if cpioinfo.isreg():
-            self.makefile(cpioinfo, cpiogetpath)
+            self.makefile(cpioinfo, targetpath)
         elif cpioinfo.isdir():
-            self.makedir(cpioinfo, cpiogetpath)
+            self.makedir(cpioinfo, targetpath)
         elif cpioinfo.isfifo():
-            self.makefifo(cpioinfo, cpiogetpath)
+            self.makefifo(cpioinfo, targetpath)
         elif cpioinfo.ischr() or cpioinfo.isblk():
-            self.makedev(cpioinfo, cpiogetpath)
+            self.makedev(cpioinfo, targetpath)
         elif cpioinfo.issym():
-            self.makesymlink(cpioinfo, cpiogetpath)
+            self.makesymlink(cpioinfo, targetpath)
         else:
-            self.makefile(cpioinfo, cpiogetpath)
+            self.makefile(cpioinfo, targetpath)
 
-        self.chown(cpioinfo, cpiogetpath)
+        self.chown(cpioinfo, targetpath)
         if not cpioinfo.issym():
-            self.chmod(cpioinfo, cpiogetpath)
-            self.utime(cpioinfo, cpiogetpath)
+            self.chmod(cpioinfo, targetpath)
+            self.utime(cpioinfo, targetpath)
 
     #--------------------------------------------------------------------------
     # Below are the different file methods. They are called via
     # _extract_member() when extract() is called. They can be replaced in a
     # subclass to implement other functionality.
 
-    def makedir(self, cpioinfo, cpiogetpath):
-        """Make a directory called cpiogetpath.
+    def makedir(self, cpioinfo, targetpath):
+        """Make a directory called targetpath.
         """
         try:
-            os.mkdir(cpiogetpath)
+            os.mkdir(targetpath)
         except EnvironmentError, e:
             if e.errno != errno.EEXIST:
                 raise
 
-    def makefile(self, cpioinfo, cpiogetpath):
-        """Make a file called cpiogetpath.
+    def makefile(self, cpioinfo, targetpath):
+        """Make a file called targetpath.
         """
         extractinfo = None
         if cpioinfo.nlink == 1:
@@ -1579,7 +1579,7 @@ class CpioFile(object):
                 # actual file exists, create link
                 # FIXME handle platforms that don't support hardlinks
                 os.link(os.path.join(cpioinfo._link_path,
-                                     self.inodes[cpioinfo.ino][0]), cpiogetpath)
+                                     self.inodes[cpioinfo.ino][0]), targetpath)
             else:
                 extractinfo = self._datamember(cpioinfo)
 
@@ -1589,21 +1589,21 @@ class CpioFile(object):
 
         if extractinfo:
             source = self.extractfile(extractinfo)
-            cpioget = file(cpiogetpath, "wb")
-            copyfileobj(source, cpioget)
+            target = file(targetpath, "wb")
+            copyfileobj(source, target)
             source.close()
-            cpioget.close()
+            target.close()
 
-    def makefifo(self, cpioinfo, cpiogetpath):
-        """Make a fifo called cpiogetpath.
+    def makefifo(self, cpioinfo, targetpath):
+        """Make a fifo called targetpath.
         """
         if hasattr(os, "mkfifo"):
-            os.mkfifo(cpiogetpath)
+            os.mkfifo(targetpath)
         else:
             raise ExtractError("fifo not supported by system")
 
-    def makedev(self, cpioinfo, cpiogetpath):
-        """Make a character or block device called cpiogetpath.
+    def makedev(self, cpioinfo, targetpath):
+        """Make a character or block device called targetpath.
         """
         if not hasattr(os, "mknod") or not hasattr(os, "makedev"):
             raise ExtractError("special devices not supported by system")
@@ -1614,25 +1614,25 @@ class CpioFile(object):
         else:
             mode |= stat.S_IFCHR
 
-        os.mknod(cpiogetpath, mode,
+        os.mknod(targetpath, mode,
                  os.makedev(cpioinfo.devmajor, cpioinfo.devminor))
 
-    def makesymlink(self, cpioinfo, cpiogetpath):
+    def makesymlink(self, cpioinfo, targetpath):
         # FIXME handle platforms that don't support symlinks
-        os.symlink(cpioinfo.linkname, cpiogetpath)
+        os.symlink(cpioinfo.linkname, targetpath)
 
-    def makelink(self, cpioinfo, cpiogetpath):
-        """Make a (symbolic) link called cpiogetpath. If it cannot be created
+    def makelink(self, cpioinfo, targetpath):
+        """Make a (symbolic) link called targetpath. If it cannot be created
           (platform limitation), we try to make a copy of the referenced file
           instead of a link.
         """
         linkpath = cpioinfo.linkname
         try:
             if cpioinfo.issym():
-                os.symlink(linkpath, cpiogetpath)
+                os.symlink(linkpath, targetpath)
             else:
                 # See extract().
-                os.link(cpioinfo._link_cpioget, cpiogetpath)
+                os.link(cpioinfo._link_target, targetpath)
         except AttributeError:
             if cpioinfo.issym():
                 linkpath = os.path.join(os.path.dirname(cpioinfo.name),
@@ -1640,16 +1640,16 @@ class CpioFile(object):
                 linkpath = normpath(linkpath)
 
             try:
-                self._extract_member(self.getmember(linkpath), cpiogetpath)
+                self._extract_member(self.getmember(linkpath), targetpath)
             except (EnvironmentError, KeyError):
                 linkpath = os.path.normpath(linkpath)
                 try:
-                    shutil.copy2(linkpath, cpiogetpath)
+                    shutil.copy2(linkpath, targetpath)
                 except EnvironmentError:
                     raise IOError("link could not be created")
 
-    def chown(self, cpioinfo, cpiogetpath):
-        """Set owner of cpiogetpath according to cpioinfo.
+    def chown(self, cpioinfo, targetpath):
+        """Set owner of targetpath according to cpioinfo.
         """
         if PWD and hasattr(os, "geteuid") and os.geteuid() == 0:
             # We have to be root to do so.
@@ -1663,24 +1663,24 @@ class CpioFile(object):
                 u = os.getuid()
             try:
                 if cpioinfo.issym() and hasattr(os, "lchown"):
-                    os.lchown(cpiogetpath, u, g)
+                    os.lchown(targetpath, u, g)
                 else:
                     if sys.platform != "os2emx":
-                        os.chown(cpiogetpath, u, g)
+                        os.chown(targetpath, u, g)
             except EnvironmentError:
                 raise ExtractError("could not change owner")
 
-    def chmod(self, cpioinfo, cpiogetpath):
-        """Set file permissions of cpiogetpath according to cpioinfo.
+    def chmod(self, cpioinfo, targetpath):
+        """Set file permissions of targetpath according to cpioinfo.
         """
         if hasattr(os, 'chmod'):
             try:
-                os.chmod(cpiogetpath, cpioinfo.mode)
+                os.chmod(targetpath, cpioinfo.mode)
             except EnvironmentError:
                 raise ExtractError("could not change mode")
 
-    def utime(self, cpioinfo, cpiogetpath):
-        """Set modification time of cpiogetpath according to cpioinfo.
+    def utime(self, cpioinfo, targetpath):
+        """Set modification time of targetpath according to cpioinfo.
         """
         if not hasattr(os, 'utime'):
             return
@@ -1689,7 +1689,7 @@ class CpioFile(object):
             # to use utime() on directories.
             return
         try:
-            os.utime(cpiogetpath, (cpioinfo.mtime, cpioinfo.mtime))
+            os.utime(targetpath, (cpioinfo.mtime, cpioinfo.mtime))
         except EnvironmentError:
             raise ExtractError("could not change modification time")
 

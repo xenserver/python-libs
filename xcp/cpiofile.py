@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 #-------------------------------------------------------------------
 # cpiofile.py
@@ -36,7 +36,7 @@
 
 __version__ = "0.1"
 __author__  = "Simon Rowe"
-__credits__ = "Lars Gustäbel"
+__credits__ = "Lars Gustäbel, Gustavo Niemeyer, Niels Gustäbel, Richard Townsend."
 
 #---------
 # Imports
@@ -663,10 +663,6 @@ class _FileInFile(object):
         #     return NUL * size
 #class _FileInFile
 
-SEEK_SET = 0
-SEEK_CUR = 1
-SEEK_END = 2
-
 class ExFileObject(object):
     """File-like object for reading an archive member.
        Is returned by CpioFile.extractfile().
@@ -760,20 +756,20 @@ class ExFileObject(object):
 
         return self.position
 
-    def seek(self, pos, whence=SEEK_SET):
+    def seek(self, pos, whence=os.SEEK_SET):
         """Seek to a position in the file.
         """
         if self.closed:
             raise ValueError("I/O operation on closed file")
 
-        if whence == SEEK_SET:
+        if whence == os.SEEK_SET:
             self.position = min(max(pos, 0), self.size)
-        elif whence == SEEK_CUR:
+        elif whence == os.SEEK_CUR:
             if pos < 0:
                 self.position = max(self.position + pos, 0)
             else:
                 self.position = min(self.position + pos, self.size)
-        elif whence == SEEK_END:
+        elif whence == os.SEEK_END:
             self.position = max(min(self.size + pos, self.size), 0)
         else:
             raise ValueError("Invalid argument")
@@ -1192,11 +1188,6 @@ class CpioFile(object):
             self.fileobj.write(buf)
             self.offset += len(buf)
 
-#            blocks, remainder = divmod(self.offset, BLOCKSIZE)
-#            if remainder > 0:
-#                self.fileobj.write((BLOCKSIZE - remainder) * NUL)
-#                self.offset += (BLOCKSIZE - remainder)
-
         if not self._extfileobj:
             self.fileobj.close()
         self.closed = True
@@ -1311,7 +1302,14 @@ class CpioFile(object):
                 print "%d-%02d-%02d %02d:%02d:%02d" \
                       % time.localtime(cpioinfo.mtime)[:6],
 
-            print cpioinfo.name
+            print cpioinfo.name,
+
+            if verbose:
+                if cpioinfo.issym():
+                    print "->", cpioinfo.linkname,
+                if cpioinfo.islnk():
+                    print "link to", cpioinfo.linkname,
+            print
 
     def add(self, name, arcname=None, recursive=True):
         """Add the file `name' to the archive. `name' may be any type of file
@@ -1456,7 +1454,6 @@ class CpioFile(object):
 
         # Prepare the link cpioget for makelink().
         if cpioinfo.islnk():
-#            cpioinfo._link_cpioget = os.path.join(path, cpioinfo.linkname)
             cpioinfo._link_path = path
 
         try:
@@ -1491,7 +1488,12 @@ class CpioFile(object):
         else:
             cpioinfo = self.getmember(member)
 
-        if cpioinfo.issym():
+        if cpioinfo.isreg():
+            return self.fileobject(self, cpioinfo)
+
+        elif cpioinfo.islnk():
+            return self.fileobject(self, self._datamember(cpioinfo))
+        elif cpioinfo.issym():
             if isinstance(self.fileobj, _Stream):
                 # A small but ugly workaround for the case that someone tries
                 # to extract a symlink as a file-object from a non-seekable
@@ -1501,10 +1503,6 @@ class CpioFile(object):
                 # A symlink's file object is its cpioget's file object.
                 return self.extractfile(self._getmember(cpioinfo.linkname,
                                                         cpioinfo))
-        elif cpioinfo.islnk():
-            return self.fileobject(self, self._datamember(cpioinfo))
-        elif cpioinfo.isreg():
-            return self.fileobject(self, cpioinfo)
         else:
             # If there's no data associated with the member (directory, chrdev,
             # blkdev, etc.), return None instead of a file object.

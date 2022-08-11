@@ -35,5 +35,6 @@ setup(name='python-libs',
                 ],
       requires=[
           'branding',
+          'future',
       ],
      )

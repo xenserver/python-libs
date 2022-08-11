@@ -23,6 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from future.utils import raise_
 import os
 import os.path
 import tempfile
@@ -52,13 +53,13 @@ def mount(dev, mountpoint, options = None, fstype = None, label = None):
 
     rc, out, err = xcp.cmd.runCmd(cmd, with_stdout=True, with_stderr=True)
     if rc != 0:
-        raise MountException, "out: '%s' err: '%s'" % (out, err)
+        raise_(MountException, "out: '%s' err: '%s'" % (out, err))
 
 def bindMount(source, mountpoint):
     cmd = [ '/bin/mount', '--bind', source, mountpoint]
     rc, out, err = xcp.cmd.runCmd(cmd, with_stdout=True, with_stderr=True)
     if rc != 0:
-        raise MountException, "out: '%s' err: '%s'" % (out, err)
+        raise_(MountException, "out: '%s' err: '%s'" % (out, err))
 
 def umount(mountpoint, force = False):
     # -d option also removes the loop device (if present)

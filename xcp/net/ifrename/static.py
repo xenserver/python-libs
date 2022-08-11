@@ -127,7 +127,7 @@ class StaticRules(object):
                     LOG.error("No source of data to parse")
                     return False
 
-            except IOError, e:
+            except IOError as e:
                 LOG.error("IOError while reading file: %s" % (e,))
                 return False
         finally:
@@ -230,7 +230,7 @@ class StaticRules(object):
                     if nic.mac == value:
                         try:
                             rule = MACPCI(nic.mac, nic.pci, tname=target)
-                        except Exception, e:
+                        except Exception as e:
                             LOG.warning("Error creating rule: %s" % (e,))
                             continue
                         self.rules.append(rule)
@@ -251,7 +251,7 @@ class StaticRules(object):
                     if nic.ppn == value:
                         try:
                             rule = MACPCI(nic.mac, nic.pci, tname=target)
-                        except Exception, e:
+                        except Exception as e:
                             LOG.warning("Error creating rule: %s" % (e,))
                             continue
                         self.rules.append(rule)
@@ -265,7 +265,7 @@ class StaticRules(object):
                 try:
                     nic = pci_sbdfi_to_nic(value, state)
                     rule = MACPCI(nic.mac, nic.pci, tname=target)
-                except Exception, e:
+                except Exception as e:
                     LOG.warning("Error creating rule: %s" % (e,))
                     continue
                 self.rules.append(rule)
@@ -278,7 +278,7 @@ class StaticRules(object):
                     if nic.label == value:
                         try:
                             rule = MACPCI(nic.mac, nic.pci, tname=target)
-                        except Exception, e:
+                        except Exception as e:
                             LOG.warning("Error creating rule: %s" % (e,))
                             continue
                         self.rules.append(rule)
@@ -340,7 +340,7 @@ class StaticRules(object):
                     LOG.error("No source of data to parse")
                     return False
 
-            except IOError, e:
+            except IOError as e:
                 LOG.error("IOError while reading file: %s" % (e,))
                 return False
         finally:

@@ -23,6 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from __future__ import print_function
 import os
 import os.path
 import re
@@ -455,47 +456,47 @@ class Bootloader(object):
         elif os.path.exists(os.path.join(root, "boot/grub/menu.lst")):
             return cls.readGrub(os.path.join(root, "boot/grub/menu.lst"))
         else:
-            raise RuntimeError, "No existing bootloader configuration found"
+            raise RuntimeError("No existing bootloader configuration found")
 
     def writeExtLinux(self, dst_file = None):
         if hasattr(dst_file, 'name'):
             fh = dst_file
         else:
             fh = open(dst_file, 'w')
-        print >> fh, "# location " + self.location
+        print("# location " + self.location, file=fh)
 
         if self.serial:
             if self.serial.get('flow', None) is None: 
-                print >> fh, "serial %s %s" % (self.serial['port'],
-                                               self.serial['baud'])
+                print("serial %s %s" % (self.serial['port'],
+                                               self.serial['baud']), file=fh)
             else:
-                print >> fh, "serial %s %s %s" % (self.serial['port'],
+                print("serial %s %s %s" % (self.serial['port'],
                                                   self.serial['baud'],
-                                                  self.serial['flow'])
+                                                  self.serial['flow']), file=fh)
         if self.default:
-            print >> fh, "default " + self.default
-        print >> fh, "prompt 1"
+            print("default " + self.default, file=fh)
+        print("prompt 1", file=fh)
         if self.timeout:
-            print >> fh, "timeout %d" % self.timeout
+            print("timeout %d" % self.timeout, file=fh)
 
         for label in self.menu_order:
-            print >> fh, "\nlabel " + label
+            print("\nlabel " + label, file=fh)
             m = self.menu[label]
             if m.title:
-                print >> fh, "  # " + m.title
+                print("  # " + m.title, file=fh)
             if m.tboot:
-                print >> fh, "  kernel mboot.c32"
-                print >> fh, "  append %s %s --- %s %s --- %s %s --- %s" % \
+                print("  kernel mboot.c32", file=fh)
+                print("  append %s %s --- %s %s --- %s %s --- %s" % \
                     (m.tboot, m.tboot_args, m.hypervisor, m.hypervisor_args,
-                     m.kernel, m.kernel_args, m.initrd)
+                     m.kernel, m.kernel_args, m.initrd), file=fh)
             elif m.hypervisor:
-                print >> fh, "  kernel mboot.c32"
-                print >> fh, "  append %s %s --- %s %s --- %s" % \
-                    (m.hypervisor, m.hypervisor_args, m.kernel, m.kernel_args, m.initrd)
+                print("  kernel mboot.c32", file=fh)
+                print("  append %s %s --- %s %s --- %s" % \
+                    (m.hypervisor, m.hypervisor_args, m.kernel, m.kernel_args, m.initrd), file=fh)
             else:
-                print >> fh, "  kernel " + m.kernel
-                print >> fh, "  append " + m.kernel_args
-                print >> fh, "  initrd " + m.initrd
+                print("  kernel " + m.kernel, file=fh)
+                print("  append " + m.kernel_args, file=fh)
+                print("  initrd " + m.initrd, file=fh)
         if not hasattr(dst_file, 'name'):
             fh.close()
 
@@ -504,32 +505,32 @@ class Bootloader(object):
             fh = dst_file
         else:
             fh = open(dst_file, 'w')
-        print >> fh, "# location " + self.location
+        print("# location " + self.location, file=fh)
 
         if self.serial:
-            print >> fh, "serial --unit=%s --speed=%s" % (self.serial['port'],
-                                                          self.serial['baud'])
-            print >> fh, "terminal --timeout=10 console serial"
+            print("serial --unit=%s --speed=%s" % (self.serial['port'],
+                                                          self.serial['baud']), file=fh)
+            print("terminal --timeout=10 console serial", file=fh)
         else:
-            print >> fh, "terminal console"
+            print("terminal console", file=fh)
         if self.default:
             for i in range(len(self.menu_order)):
                 if self.menu_order[i] == self.default:
-                    print >> fh, "default %d" % i
+                    print("default %d" % i, file=fh)
                     break
         if self.timeout:
-            print >> fh, "timeout %d" % (self.timeout / 10)
+            print("timeout %d" % (self.timeout / 10), file=fh)
 
         for label in self.menu_order:
             m = self.menu[label]
-            print >> fh, "\ntitle " + m.title
+            print("\ntitle " + m.title, file=fh)
             if m.hypervisor:
-                print >> fh, "   kernel " + m.hypervisor + " " + m.hypervisor_args
-                print >> fh, "   module " + m.kernel + " " + m.kernel_args
-                print >> fh, "   module " + m.initrd
+                print("   kernel " + m.hypervisor + " " + m.hypervisor_args, file=fh)
+                print("   module " + m.kernel + " " + m.kernel_args, file=fh)
+                print("   module " + m.initrd, file=fh)
             else:
-                print >> fh, "   kernel " + m.kernel + " " + m.kernel_args
-                print >> fh, "   initrd " + m.initrd
+                print("   kernel " + m.kernel + " " + m.kernel_args, file=fh)
+                print("   initrd " + m.initrd, file=fh)
         if not hasattr(dst_file, 'name'):
             fh.close()
 
@@ -540,19 +541,19 @@ class Bootloader(object):
             fh = open(dst_file, 'w')
 
         if self.serial:
-            print >> fh, "serial --unit=%s --speed=%s" % (self.serial['port'],
-                                                          self.serial['baud'])
-            print >> fh, "terminal_input serial console"
-            print >> fh, "terminal_output serial console"
+            print("serial --unit=%s --speed=%s" % (self.serial['port'],
+                                                          self.serial['baud']), file=fh)
+            print("terminal_input serial console", file=fh)
+            print("terminal_output serial console", file=fh)
         if self.default:
             for i in range(len(self.menu_order)):
                 if self.menu_order[i] == self.default:
-                    print >> fh, "set default=%d" % i
+                    print("set default=%d" % i, file=fh)
                     break
             else:
-                print >> fh, "set default='%s'" % str(self.default)
+                print("set default='%s'" % str(self.default), file=fh)
         if self.timeout:
-            print >> fh, "set timeout=%d" % (self.timeout / 10)
+            print("set timeout=%d" % (self.timeout / 10), file=fh)
 
         boilerplate = getattr(self, 'boilerplate', [])[:]
         boilerplate.reverse()
@@ -563,41 +564,41 @@ class Bootloader(object):
             if boilerplate:
                 text = boilerplate.pop()
                 if text:
-                    print >> fh, "\n".join(text)
+                    print("\n".join(text), file=fh)
 
             extra = ' '
             try:
                 extra = m.extra
             except AttributeError:
                 pass
-            print >> fh, "menuentry '%s'%s{" % (m.title, extra)
+            print("menuentry '%s'%s{" % (m.title, extra), file=fh)
 
             try:
                 contents = "\n".join(m.contents)
                 if contents:
-                    print >> fh, contents
+                    print(contents, file=fh)
             except AttributeError:
                 pass
 
             if m.root:
-                print >> fh, "\tsearch --label --set root %s" % m.root
+                print("\tsearch --label --set root %s" % m.root, file=fh)
 
             if m.hypervisor:
                 if m.tboot:
-                    print >> fh, "\tmultiboot2 %s %s" % (m.tboot, m.tboot_args)
-                    print >> fh, "\tmodule2 %s %s" % (m.hypervisor, m.hypervisor_args)
+                    print("\tmultiboot2 %s %s" % (m.tboot, m.tboot_args), file=fh)
+                    print("\tmodule2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
                 else:
-                    print >> fh, "\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args)
+                    print("\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
                 if m.kernel:
-                    print >> fh, "\tmodule2 %s %s" % (m.kernel, m.kernel_args)
+                    print("\tmodule2 %s %s" % (m.kernel, m.kernel_args), file=fh)
                 if m.initrd:
-                    print >> fh, "\tmodule2 %s" % m.initrd
+                    print("\tmodule2 %s" % m.initrd, file=fh)
             else:
                 if m.kernel:
-                    print >> fh, "\tlinux %s %s" % (m.kernel, m.kernel_args)
+                    print("\tlinux %s %s" % (m.kernel, m.kernel_args), file=fh)
                 if m.initrd:
-                    print >> fh, "\tinitrd %s" % m.initrd
-            print >> fh, "}"
+                    print("\tinitrd %s" % m.initrd, file=fh)
+            print("}", file=fh)
         if not hasattr(dst_file, 'name'):
             fh.close()
 
@@ -642,9 +643,9 @@ class Bootloader(object):
         if b.menu[b.default].kernel != kernel_link_name:
             backup = []
             if not os.path.exists(os.path.join(root, kernel_link_name[1:])):
-                raise RuntimeError, "kernel symlink not found"
+                raise RuntimeError("kernel symlink not found")
             if not os.path.exists(os.path.join(root, initrd_link_name[1:])):
-                raise RuntimeError, "initrd symlink not found"
+                raise RuntimeError("initrd symlink not found")
             old_kernel_link = b.menu[b.default].kernel
             old_ver = 'old'
             m = re.search(r'(-\d+\.\d+)-', old_kernel_link)

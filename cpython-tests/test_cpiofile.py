@@ -19,6 +19,10 @@ try:
     import bz2
 except ImportError:
     bz2 = None
+try:
+    import lzma
+except ImportError:
+    lzma = None
 
 def path(path):
     return test_support.findfile(path)
@@ -433,6 +437,25 @@ if bz2:
     class ReadStreamAsteriskTestBzip2(ReadStreamAsteriskTest):
         comp = "bz2"
 
+if lzma:
+    # Xz TestCases
+    class ReadTestXz(ReadTestGzip):
+        comp = "xz"
+    class ReadStreamTestXz(ReadStreamTestGzip):
+        comp = "xz"
+    class WriteTestXz(WriteTest):
+        comp = "xz"
+    class WriteStreamTestXz(WriteStreamTestGzip):
+        comp = "xz"
+    class ReadDetectTestXz(ReadDetectTest):
+        comp = "xz"
+    class ReadDetectFileobjTestXz(ReadDetectFileobjTest):
+        comp = "xz"
+    class ReadAsteriskTestXz(ReadAsteriskTest):
+        comp = "xz"
+    class ReadStreamAsteriskTestXz(ReadStreamAsteriskTest):
+        comp = "xz"
+
 # If importing gzip failed, discard the Gzip TestCases.
 if not gzip:
     del ReadTestGzip
@@ -453,6 +476,11 @@ def test_main():
     if bz2:
         # create testcpio.cpio.bz2
         cpio = bz2.BZ2File(cpioname("bz2"), "wb")
+        cpio.write(fguts)
+        cpio.close()
+    if lzma:
+        # create testcpio.cpio.xz
+        cpio = lzma.LZMAFile(cpioname("xz"), "wb")
         cpio.write(fguts)
         cpio.close()
 
@@ -489,6 +517,15 @@ def test_main():
             ReadDetectTestBzip2, ReadDetectFileobjTestBzip2,
             ReadAsteriskTestBzip2, ReadStreamAsteriskTestBzip2
         ])
+
+    if lzma:
+        tests.extend([
+            ReadTestXz, ReadStreamTestXz,
+            WriteTestXz, WriteStreamTestXz,
+            ReadDetectTestXz, ReadDetectFileobjTestXz,
+            ReadAsteriskTestXz, ReadStreamAsteriskTestXz
+        ])
+
     try:
         test_support.run_unittest(*tests)
     finally:
@@ -496,6 +533,8 @@ def test_main():
             os.remove(cpioname("gz"))
         if bz2:
             os.remove(cpioname("bz2"))
+        if lzma:
+            os.remove(cpioname("xz"))
         if os.path.exists(dirname()):
             shutil.rmtree(dirname())
         if os.path.exists(tmpname()):

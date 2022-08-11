@@ -118,7 +118,7 @@ class FilesystemAccessor(Accessor):
 
 class MountingAccessor(FilesystemAccessor):
     def __init__(self, mount_types, mount_source, mount_options = None):
-        ro = isinstance(mount_options, types.ListType) and 'ro' in mount_options
+        ro = isinstance(mount_options, list) and 'ro' in mount_options
         super(MountingAccessor, self).__init__(None, ro)
 
         self.mount_types = mount_types
@@ -135,7 +135,7 @@ class MountingAccessor(FilesystemAccessor):
                 try:
                     opts = self.mount_options
                     if fs == 'iso9660':
-                        if isinstance(opts, types.ListType):
+                        if isinstance(opts, list):
                             if 'ro' not in opts:
                                 opts.append('ro')
                         else:

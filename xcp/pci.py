@@ -124,7 +124,7 @@ class PCI(object):
         else:
             try:
                 return self.integer == PCI(rhs).integer
-            except StandardError:
+            except Exception:
                 return NotImplemented
 
     def __ne__(self, rhs):
@@ -133,7 +133,7 @@ class PCI(object):
         else:
             try:
                 return self.integer != PCI(rhs).integer
-            except StandardError:
+            except Exception:
                 return NotImplemented
 
     def __hash__(self):
@@ -145,7 +145,7 @@ class PCI(object):
         else:
             try:
                 return self.integer < PCI(rhs).integer
-            except StandardError:
+            except Exception:
                 return NotImplemented
 
     def __le__(self, rhs):
@@ -154,7 +154,7 @@ class PCI(object):
         else:
             try:
                 return self.integer <= PCI(rhs).integer
-            except StandardError:
+            except Exception:
                 return NotImplemented
 
     def __gt__(self, rhs):
@@ -163,7 +163,7 @@ class PCI(object):
         else:
             try:
                 return self.integer > PCI(rhs).integer
-            except StandardError:
+            except Exception:
                 return NotImplemented
 
     def __ge__(self, rhs):
@@ -172,7 +172,7 @@ class PCI(object):
         else:
             try:
                 return self.integer >= PCI(rhs).integer
-            except StandardError:
+            except Exception:
                 return NotImplemented
 
 
@@ -232,7 +232,7 @@ class PCIIds(object):
         for f in ['/usr/share/hwdata/pci.ids']:
             if os.path.exists(f):
                 return cls(f)
-        raise Exception, 'Failed to open PCI database'
+        raise Exception('Failed to open PCI database')
 
     def findVendor(self, vendor):
         return vendor in self.vendor_dict and self.vendor_dict[vendor] or None

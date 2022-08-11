@@ -1489,8 +1489,10 @@ class CpioFile(object):
                 raise StreamError("cannot extract symlink as file object")
             else:
                 # A symlink's file object is its target's file object.
-                return self.extractfile(self._getmember(cpioinfo.linkname,
-                                                        cpioinfo))
+                targetinfo = self._getmember(cpioinfo.linkname, cpioinfo)
+                if targetinfo is None:
+                    raise ExtractError("failed to extract a dangling symlink")
+                return self.extractfile(targetinfo)
         else:
             # If there's no data associated with the member (directory, chrdev,
             # blkdev, etc.), return None instead of a file object.

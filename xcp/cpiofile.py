@@ -555,7 +555,6 @@ class _BZ2Proxy(_CMPProxy):
             self.buf = ""
         else:
             self.cmpobj = bz2.BZ2Compressor()
-
 # class _BZ2Proxy
 
 class _XZProxy(_CMPProxy):
@@ -571,12 +570,11 @@ class _XZProxy(_CMPProxy):
         import lzma
         self.pos = 0
         if self.mode == "r":
-            self.cmpobj = lzma.BZ2Decompressor()
+            self.cmpobj = lzma.LZMADecompressor()
             self.fileobj.seek(0)
             self.buf = ""
         else:
-            self.cmpobj = lzma.BZ2Compressor()
-
+            self.cmpobj = lzma.LZMACompressor()
 # class _XZProxy
 
 
@@ -1144,21 +1142,21 @@ class CpioFile(object):
         if fileobj is not None:
             fileobj = _XZProxy(fileobj, mode)
         else:
-            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, 'dict_size': 20 })
+            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel})
 
         try:
             t = cls.cpioopen(name, mode, fileobj)
-        except IOError:
+        except (IOError, lzma.error):
             raise ReadError("not a XZ file")
         t._extfileobj = False
         return t
 
     # All *open() methods are registered here.
     OPEN_METH = {
-        "cpio": "cpioopen",   # uncompressed cpio
+        "cpio": "cpioopen", # uncompressed cpio
         "gz":  "gzopen",    # gzip compressed cpio
         "bz2": "bz2open",   # bzip2 compressed cpio
-        "xz":  "xzopen "    # xz compressed cpio
+        "xz":  "xzopen",    # xz compressed cpio
     }
 
     #--------------------------------------------------------------------------

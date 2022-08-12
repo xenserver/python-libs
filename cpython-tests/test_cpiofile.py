@@ -161,36 +161,6 @@ class ReadTest(BaseTest):
                          "read() after readline() failed")
             fobj.close()
 
-    def test_old_dirtype(self):
-        """Test old style dirtype member (bug #1336623).
-        """
-        # Old cpios create directory members using a REGTYPE
-        # header with a "/" appended to the filename field.
-
-        # Create an old cpio style directory entry.
-        filename = tmpname()
-        cpioinfo = cpiofile.CpioInfo("directory/")
-        cpioinfo.type = cpiofile.REGTYPE
-
-        fobj = open(filename, "w")
-        fobj.write(cpioinfo.tobuf())
-        fobj.close()
-
-        try:
-            # Test if it is still a directory entry when
-            # read back.
-            cpio = cpiofile.open(filename)
-            cpioinfo = cpio.getmembers()[0]
-            cpio.close()
-
-            self.assert_(cpioinfo.type == cpiofile.DIRTYPE)
-            self.assert_(cpioinfo.name.endswith("/"))
-        finally:
-            try:
-                os.unlink(filename)
-            except:
-                pass
-
 class ReadStreamTest(ReadTest):
     sep = "|"
 
@@ -266,12 +236,7 @@ class WriteTest(BaseTest):
         self.src.close()
         self.dst.close()
 
-    def test_posix(self):
-        self.dst.posix = 1
-        self._test()
-
-    def test_nonposix(self):
-        self.dst.posix = 0
+    def test(self):
         self._test()
 
     def test_small(self):
@@ -284,11 +249,7 @@ class WriteTest(BaseTest):
             if not cpioinfo.isreg():
                 continue
             f = self.src.extractfile(cpioinfo)
-            if self.dst.posix and len(cpioinfo.name) > cpiofile.LENGTH_NAME and "/" not in cpioinfo.name:
-                self.assertRaises(ValueError, self.dst.addfile,
-                                 cpioinfo, f)
-            else:
-                self.dst.addfile(cpioinfo, f)
+            self.dst.addfile(cpioinfo, f)
 
     def test_add_self(self):
         dstname = os.path.abspath(self.dstname)
@@ -303,31 +264,6 @@ class WriteTest(BaseTest):
         self.dst.add(dstname)
         os.chdir(cwd)
         self.assertEqual(self.dst.getnames(), [], "added the archive to itself")
-
-
-class Write100Test(BaseTest):
-    # The name field in a cpio header stores strings of at most 100 chars.
-    # If a string is shorter than 100 chars it has to be padded with '\0',
-    # which implies that a string of exactly 100 chars is stored without
-    # a trailing '\0'.
-
-    def setUp(self):
-        self.name = "01234567890123456789012345678901234567890123456789"
-        self.name += "01234567890123456789012345678901234567890123456789"
-
-        self.cpio = cpiofile.open(tmpname(), "w")
-        t = cpiofile.CpioInfo(self.name)
-        self.cpio.addfile(t)
-        self.cpio.close()
-
-        self.cpio = cpiofile.open(tmpname())
-
-    def tearDown(self):
-        self.cpio.close()
-
-    def test(self):
-        self.assertEqual(self.cpio.getnames()[0], self.name,
-                "failed to store 100 char filename")
 
 
 class WriteSize0Test(BaseTest):
@@ -374,164 +310,7 @@ class WriteSize0Test(BaseTest):
 class WriteStreamTest(WriteTest):
     sep = '|'
 
-    def test_padding(self):
-        self.dst.close()
-
-        if self.comp == "gz":
-            f = gzip.GzipFile(self.dstname)
-            s = f.read()
-            f.close()
-        elif self.comp == "bz2":
-            f = bz2.BZ2Decompressor()
-            s = file(self.dstname).read()
-            s = f.decompress(s)
-            self.assertEqual(len(f.unused_data), 0, "trailing data")
-        else:
-            f = file(self.dstname)
-            s = f.read()
-            f.close()
-
-        self.assertEqual(s.count("\0"), cpiofile.RECORDSIZE,
-                         "incorrect zero padding")
-
-
-class WriteGNULongTest(unittest.TestCase):
-    """This testcase checks for correct creation of GNU Longname
-       and Longlink extensions.
-
-       It creates a cpiofile and adds empty members with either
-       long names, long linknames or both and compares the size
-       of the cpiofile with the expected size.
-
-       It checks for SF bug #812325 in CpioFile._create_gnulong().
-
-       While I was writing this testcase, I noticed a second bug
-       in the same method:
-       Long{names,links} weren't null-terminated which lead to
-       bad cpiofiles when their length was a multiple of 512. This
-       is tested as well.
-    """
-
-    def _length(self, s):
-        blocks, remainder = divmod(len(s) + 1, 512)
-        if remainder:
-            blocks += 1
-        return blocks * 512
-
-    def _calc_size(self, name, link=None):
-        # initial cpio header
-        count = 512
-
-        if len(name) > cpiofile.LENGTH_NAME:
-            # gnu longname extended header + longname
-            count += 512
-            count += self._length(name)
-
-        if link is not None and len(link) > cpiofile.LENGTH_LINK:
-            # gnu longlink extended header + longlink
-            count += 512
-            count += self._length(link)
-
-        return count
-
-    def _test(self, name, link=None):
-        cpioinfo = cpiofile.CpioInfo(name)
-        if link:
-            cpioinfo.linkname = link
-            cpioinfo.type = cpiofile.LNKTYPE
-
-        cpio = cpiofile.open(tmpname(), "w")
-        cpio.posix = False
-        cpio.addfile(cpioinfo)
-
-        v1 = self._calc_size(name, link)
-        v2 = cpio.offset
-        self.assertEqual(v1, v2, "GNU longname/longlink creation failed")
-
-        cpio.close()
-
-        cpio = cpiofile.open(tmpname())
-        member = cpio.next()
-        self.failIf(member is None, "unable to read longname member")
-        self.assert_(cpioinfo.name == member.name and \
-                     cpioinfo.linkname == member.linkname, \
-                     "unable to read longname member")
-
-    def test_longname_1023(self):
-        self._test(("longnam/" * 127) + "longnam")
-
-    def test_longname_1024(self):
-        self._test(("longnam/" * 127) + "longname")
-
-    def test_longname_1025(self):
-        self._test(("longnam/" * 127) + "longname_")
-
-    def test_longlink_1023(self):
-        self._test("name", ("longlnk/" * 127) + "longlnk")
-
-    def test_longlink_1024(self):
-        self._test("name", ("longlnk/" * 127) + "longlink")
-
-    def test_longlink_1025(self):
-        self._test("name", ("longlnk/" * 127) + "longlink_")
-
-    def test_longnamelink_1023(self):
-        self._test(("longnam/" * 127) + "longnam",
-                   ("longlnk/" * 127) + "longlnk")
-
-    def test_longnamelink_1024(self):
-        self._test(("longnam/" * 127) + "longname",
-                   ("longlnk/" * 127) + "longlink")
-
-    def test_longnamelink_1025(self):
-        self._test(("longnam/" * 127) + "longname_",
-                   ("longlnk/" * 127) + "longlink_")
-
-class ReadGNULongTest(unittest.TestCase):
-
-    def setUp(self):
-        self.cpio = cpiofile.open(cpioname())
-
-    def tearDown(self):
-        self.cpio.close()
-
-    def test_1471427(self):
-        """Test reading of longname (bug #1471427).
-        """
-        name = "test/" * 20 + "0-REGTYPE"
-        try:
-            cpioinfo = self.cpio.getmember(name)
-        except KeyError:
-            cpioinfo = None
-        self.assert_(cpioinfo is not None, "longname not found")
-        self.assert_(cpioinfo.type != cpiofile.DIRTYPE, "read longname as dirtype")
-
-    def test_read_name(self):
-        name = ("0-LONGNAME-" * 10)[:101]
-        try:
-            cpioinfo = self.cpio.getmember(name)
-        except KeyError:
-            cpioinfo = None
-        self.assert_(cpioinfo is not None, "longname not found")
-
-    def test_read_link(self):
-        link = ("1-LONGLINK-" * 10)[:101]
-        name = ("0-LONGNAME-" * 10)[:101]
-        try:
-            cpioinfo = self.cpio.getmember(link)
-        except KeyError:
-            cpioinfo = None
-        self.assert_(cpioinfo is not None, "longlink not found")
-        self.assert_(cpioinfo.linkname == name, "linkname wrong")
-
-    def test_truncated_longname(self):
-        f = open(cpioname())
-        fobj = StringIO.StringIO(f.read(1024))
-        f.close()
-        cpio = cpiofile.open(name="foo.cpio", fileobj=fobj)
-        self.assert_(len(cpio.getmembers()) == 0, "")
-        cpio.close()
-
+    # FIXME could have a test_trailer()
 
 class ExtractHardlinkTest(BaseTest):
 
@@ -625,29 +404,6 @@ class FileModeTest(unittest.TestCase):
         self.assertEqual(cpiofile.filemode(0755), '-rwxr-xr-x')
         self.assertEqual(cpiofile.filemode(07111), '---s--s--t')
 
-class HeaderErrorTest(unittest.TestCase):
-
-    def test_truncated_header(self):
-        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "")
-        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "filename\0")
-        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "\0" * 511)
-        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "\0" * 513)
-
-    def test_empty_header(self):
-        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, "\0" * 512)
-
-    def test_invalid_header(self):
-        buf = cpiofile.CpioInfo("filename").tobuf()
-        buf = buf[:148] + "foo\0\0\0\0\0" + buf[156:] # invalid number field.
-        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, buf)
-
-    def test_bad_checksum(self):
-        buf = cpiofile.CpioInfo("filename").tobuf()
-        b = buf[:148] + "        " + buf[156:] # clear the checksum field.
-        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, b)
-        b = "a" + buf[1:] # manipulate the buffer, so checksum won't match.
-        self.assertRaises(cpiofile.HeaderError, cpiofile.CpioInfo.frombuf, b)
-
 class OpenFileobjTest(BaseTest):
     # Test for SF bug #1496501.
 
@@ -702,7 +458,6 @@ def test_main():
 
     tests = [
         FileModeTest,
-        HeaderErrorTest,
         OpenFileobjTest,
         ReadTest,
         ReadStreamTest,
@@ -711,11 +466,8 @@ def test_main():
         ReadAsteriskTest,
         ReadStreamAsteriskTest,
         WriteTest,
-        Write100Test,
         WriteSize0Test,
         WriteStreamTest,
-        WriteGNULongTest,
-        ReadGNULongTest,
     ]
 
     if hasattr(os, "link"):

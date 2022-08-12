@@ -27,7 +27,8 @@ jobs:
 
       - name: Test
         run: |
-          pytest --cov -rP
+          coverage run cpython-tests/test_cpiofile.py
+          pytest tests/ --cov --cov-append -rP
           coverage xml
           coverage html
           coverage html -d htmlcov-tests --include="tests/*"

@@ -2,6 +2,7 @@
 source =
        xcp/
        tests/
+       cpython-tests/
 
 [report]
 # Regexes for lines to exclude from consideration

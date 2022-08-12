@@ -5,7 +5,7 @@ import tempfile
 import StringIO
 
 import unittest
-import cpiofile
+from xcp import cpiofile
 
 from test import test_support
 
@@ -186,7 +186,7 @@ class ReadStreamTest(ReadTest):
                 break
             self.assert_(t2 is not None, "stream.next() failed.")
 
-            if t2.islnk() or t2.issym():
+            if t2.issym():
                 self.assertRaises(cpiofile.StreamError, stream.extractfile, t2)
                 continue
             v1 = cpio.extractfile(t1)
@@ -356,7 +356,7 @@ class CreateHardlinkTest(BaseTest):
         # If st_nlink == 1 then the same file will be added as
         # REGTYPE every time.
         cpioinfo = self.cpio.getcpioinfo(self.foo)
-        self.assertEqual(cpioinfo.type, cpiofile.REGTYPE,
+        self.assertTrue(cpioinfo.isreg(),
                 "add file as regular failed")
 
     def test_add_hardlink(self):
@@ -364,18 +364,18 @@ class CreateHardlinkTest(BaseTest):
         # LNKTYPE.
         os.link(self.foo, self.bar)
         cpioinfo = self.cpio.getcpioinfo(self.foo)
-        self.assertEqual(cpioinfo.type, cpiofile.LNKTYPE,
+        self.assertTrue(cpioinfo.islnk(),
                 "add file as hardlink failed")
 
         cpioinfo = self.cpio.getcpioinfo(self.bar)
-        self.assertEqual(cpioinfo.type, cpiofile.LNKTYPE,
+        self.assertTrue(cpioinfo.islnk(),
                 "add file as hardlink failed")
 
     def test_dereference_hardlink(self):
         self.cpio.dereference = True
         os.link(self.foo, self.bar)
         cpioinfo = self.cpio.getcpioinfo(self.bar)
-        self.assertEqual(cpioinfo.type, cpiofile.REGTYPE,
+        self.assertTrue(cpioinfo.isreg(),
                 "dereferencing hardlink failed")
 
 

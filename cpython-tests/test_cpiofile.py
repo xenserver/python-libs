@@ -2,7 +2,6 @@ import sys
 import os
 import shutil
 import tempfile
-import StringIO
 
 import unittest
 from xcp import cpiofile
@@ -411,16 +410,6 @@ class FileModeTest(unittest.TestCase):
         self.assertEqual(cpiofile.filemode(0o755), '-rwxr-xr-x')
         self.assertEqual(cpiofile.filemode(0o7111), '---s--s--t')
 
-class OpenFileobjTest(BaseTest):
-    # Test for SF bug #1496501.
-
-    def test_opener(self):
-        fobj = StringIO.StringIO("foo\n")
-        try:
-            cpiofile.open("", "r", fileobj=fobj)
-        except cpiofile.ReadError:
-            self.assertEqual(fobj.tell(), 0, "fileobj's position has moved")
-
 if bz2:
     # Bzip2 TestCases
     class ReadTestBzip2(ReadTestGzip):
@@ -489,7 +478,6 @@ def test_main():
 
     tests = [
         FileModeTest,
-        OpenFileobjTest,
         ReadTest,
         ReadStreamTest,
         ReadDetectTest,

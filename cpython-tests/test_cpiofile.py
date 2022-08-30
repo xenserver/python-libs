@@ -7,7 +7,10 @@ import StringIO
 import unittest
 from xcp import cpiofile
 
-from test import test_support
+if sys.version_info < (3, 0):
+    from test import test_support
+else:
+    from test import support as test_support
 
 # Check for our compression modules.
 try:
@@ -328,7 +331,7 @@ class ExtractHardlinkTest(BaseTest):
         try:
             # Extract 1-LNKTYPE which is a hardlink to 0-REGTYPE
             self.cpio.extract("1-LNKTYPE", dirname())
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             import errno
             if e.errno == errno.ENOENT:
                 self.fail("hardlink not extracted properly")
@@ -405,8 +408,8 @@ class ReadStreamAsteriskTestGzip(ReadStreamAsteriskTest):
 
 class FileModeTest(unittest.TestCase):
     def test_modes(self):
-        self.assertEqual(cpiofile.filemode(0755), '-rwxr-xr-x')
-        self.assertEqual(cpiofile.filemode(07111), '---s--s--t')
+        self.assertEqual(cpiofile.filemode(0o755), '-rwxr-xr-x')
+        self.assertEqual(cpiofile.filemode(0o7111), '---s--s--t')
 
 class OpenFileobjTest(BaseTest):
     # Test for SF bug #1496501.

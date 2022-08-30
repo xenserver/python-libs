@@ -49,6 +49,7 @@ import errno
 import time
 import struct
 import copy
+import io
 
 if sys.platform == 'mac':
     # This module needs work for MacOS9, especially in the area of pathname
@@ -946,6 +947,7 @@ class CpioFile(object):
         self.name = None
         if name:
             self.name = os.path.abspath(name)
+        assert not isinstance(fileobj, io.TextIOBase)
         self.fileobj = fileobj
 
         # Init datastructures

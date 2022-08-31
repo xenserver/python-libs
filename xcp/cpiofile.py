@@ -50,6 +50,7 @@ import errno
 import time
 import struct
 import copy
+import io
 
 import six
 
@@ -959,6 +960,7 @@ class CpioFile(six.Iterator):
         self.name = None
         if name:
             self.name = os.path.abspath(name)
+        assert not isinstance(fileobj, io.TextIOBase)
         self.fileobj = fileobj
 
         # Init datastructures

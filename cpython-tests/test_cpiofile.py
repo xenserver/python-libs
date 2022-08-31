@@ -186,11 +186,11 @@ class ReadStreamTest(ReadTest):
         cpio = cpiofile.open(cpioname(), 'r')
 
         while 1:
-            t1 = cpio.next()
-            t2 = stream.next()
+            t1 = next(cpio)
+            t2 = next(stream)
             if t1 is None:
                 break
-            self.assert_(t2 is not None, "stream.next() failed.")
+            self.assert_(t2 is not None, "next(stream) failed.")
 
             if t2.issym():
                 self.assertRaises(cpiofile.StreamError, stream.extractfile, t2)

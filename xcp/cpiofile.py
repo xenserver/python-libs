@@ -710,6 +710,8 @@ class ExFileObject(object):
         self.position += len(buf)
         return buf
 
+    # FIXME no universal-newlines, a TextIOWrapper would help but hey
+    # we're not using cpio archives on non-unices, right ?
     def readline(self, size=-1):
         """Read one entire line from the file. If size is present
            and non-negative, return a string with at most that
@@ -718,16 +720,16 @@ class ExFileObject(object):
         if self.closed:
             raise ValueError("I/O operation on closed file")
 
-        if "\n" in self.buffer:
-            pos = self.buffer.find("\n") + 1
+        if b"\n" in self.buffer:
+            pos = self.buffer.find(b"\n") + 1
         else:
             buffers = [self.buffer]
             while True:
                 buf = self.fileobj.read(self.blocksize)
                 buffers.append(buf)
-                if not buf or "\n" in buf:
-                    self.buffer = "".join(buffers)
-                    pos = self.buffer.find("\n") + 1
+                if not buf or b"\n" in buf:
+                    self.buffer = b"".join(buffers)
+                    pos = self.buffer.find(b"\n") + 1
                     if pos == 0:
                         # no newline found.
                         pos = len(self.buffer)
@@ -739,7 +741,7 @@ class ExFileObject(object):
         buf = self.buffer[:pos]
         self.buffer = self.buffer[pos:]
         self.position += len(buf)
-        return buf
+        return six.ensure_text(buf)
 
     def readlines(self):
         """Return a list with all remaining lines.
@@ -1794,8 +1796,9 @@ class CpioFile(six.Iterator):
         else:
             end = members.index(cpioinfo)
 
+        encoded_name = six.ensure_binary(name)
         for i in range(end - 1, -1, -1):
-            if name == members[i].name:
+            if encoded_name == members[i].name:
                 return members[i]
 
     def _load(self):

@@ -146,7 +146,7 @@ class ReadTest(BaseTest):
             fobj.seek(0, 2)
             self.assert_(cpioinfo.size == fobj.tell(),
                          "seek() to file's end failed")
-            self.assert_(fobj.read() == "",
+            self.assert_(fobj.read() == b"",
                          "read() at file's end did not return empty string")
             fobj.seek(-cpioinfo.size, 2)
             self.assert_(0 == fobj.tell(),

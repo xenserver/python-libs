@@ -6,6 +6,8 @@ import tempfile
 import unittest
 from xcp import cpiofile
 
+import six
+
 if sys.version_info < (3, 0):
     from test import test_support
 else:
@@ -94,7 +96,7 @@ class ReadTest(BaseTest):
             filename = "0-REGTYPE-TEXT"
             self.cpio.extract(filename, dirname())
             f = open(os.path.join(dirname(), filename), "rU")
-            lines1 = f.readlines()
+            lines1 = [six.ensure_text(line) for line in f.readlines()]
             f.close()
             lines2 = self.cpio.extractfile(filename).readlines()
             self.assert_(lines1 == lines2,
@@ -106,7 +108,7 @@ class ReadTest(BaseTest):
             filename = "0-REGTYPE-TEXT"
             self.cpio.extract(filename, dirname())
             f = open(os.path.join(dirname(), filename), "rU")
-            lines1 = f.readlines()
+            lines1 = [six.ensure_text(line) for line in f.readlines()]
             f.close()
             lines2 = [line for line in self.cpio.extractfile(filename)]
             self.assert_(lines1 == lines2,

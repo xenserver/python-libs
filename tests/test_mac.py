@@ -11,18 +11,21 @@ class TestInvalidMAC(unittest.TestCase):
 
     def test_null_str(self):
         val = ""
-        self.assertRaises(ValueError, MAC, val)
+        with self.assertRaises(ValueError):
+            MAC(val)
         self.assertFalse(MAC.is_valid(val))
 
     def test_non_str(self):
 
         for val in [None, [], {}]:
-            self.assertRaises(TypeError, MAC, val)
+            with self.assertRaises(TypeError):
+                MAC(val)
             self.assertFalse(MAC.is_valid(val))
 
     def test_colon_too_few_octets(self):
         val = "00:00:00:00:00"
-        self.assertRaises(ValueError, MAC, val)
+        with self.assertRaises(ValueError):
+            MAC(val)
         self.assertFalse(MAC.is_valid(val))
 
     def test_colon_invalid_octets(self):
@@ -32,27 +35,32 @@ class TestInvalidMAC(unittest.TestCase):
                      "12:34:56g:78:90:ab"
                      "12:34::78:90:ab"
                      ]:
-            self.assertRaises(ValueError, MAC, val)
+            with self.assertRaises(ValueError):
+                MAC(val)
             self.assertFalse(MAC.is_valid(val))
 
     def test_colon_too_many_octets(self):
         val = "00:00:00:00:00:00:00"
-        self.assertRaises(ValueError, MAC, val)
+        with self.assertRaises(ValueError):
+            MAC(val)
         self.assertFalse(MAC.is_valid(val))
 
     def test_dash_too_few_octetes(self):
         val = "00-00-00-00-00"
-        self.assertRaises(ValueError, MAC, val)
+        with self.assertRaises(ValueError):
+            MAC(val)
         self.assertFalse(MAC.is_valid(val))
 
     def test_dash_too_many_octets(self):
         val = "00-00-00-00-00-00-00"
-        self.assertRaises(ValueError, MAC, val)
+        with self.assertRaises(ValueError):
+            MAC(val)
         self.assertFalse(MAC.is_valid(val))
 
     def test_dotquad_too_few_quads(self):
         val = "0000.0000"
-        self.assertRaises(ValueError, MAC, val)
+        with self.assertRaises(ValueError):
+            MAC(val)
         self.assertFalse(MAC.is_valid(val))
 
     def test_dotquad_invalid_quads(self):
@@ -62,12 +70,14 @@ class TestInvalidMAC(unittest.TestCase):
                      "abcd.efgh.ijkl",
                      "1234.-5678.90Ab"
                      ]:
-            self.assertRaises(ValueError, MAC, val)
+            with self.assertRaises(ValueError):
+                MAC(val)
             self.assertFalse(MAC.is_valid(val))
 
     def test_dotquad_too_many_quads(self):
         val = "0000.0000.0000.0000"
-        self.assertRaises(ValueError, MAC, val)
+        with self.assertRaises(ValueError):
+            MAC(val)
         self.assertFalse(MAC.is_valid(val))
 
 class TestValidMAC(unittest.TestCase):

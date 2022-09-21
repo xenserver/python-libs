@@ -1,30 +1,27 @@
 from __future__ import print_function
+from hashlib import md5
 import os
+import sys
 import shutil
 import subprocess
 import unittest
 import warnings
 
-from xcp.cpiofile import CpioFile, CpioInfo, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
+from xcp.cpiofile import CpioFile, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
 
-try:
-    from hashlib import md5
-except:
-    from md5 import md5
-
-def writeRandomFile(fn, size, start='', add='a'):
-    f = open(fn, 'wb')
-    m = md5()
-    m.update(start)
-    assert(len(add) != 0)
-    while size > 0:
-        d = m.digest()
-        if size < len(d):
-            d=d[:size]
-        f.write(d)
-        size -= len(d)
-        m.update(add)
-    f.close()
+def writeRandomFile(fn, size, start=b'', add=b'a'):
+    "Create a pseudo-random reproducible file from seeds `start` amd `add`"
+    with open(fn, 'wb') as f:
+        m = md5()
+        m.update(start)
+        assert(len(add) != 0)
+        while size > 0:
+            d = m.digest()
+            if size < len(d):
+                d=d[:size]
+            f.write(d)
+            size -= len(d)
+            m.update(add)
 
 
 def check_call(cmd):
@@ -41,8 +38,14 @@ class TestCpio(unittest.TestCase):
         shutil.rmtree('archive', True)
         os.mkdir('archive')
         writeRandomFile('archive/data', 10491)
-        self.md5data = md5(open('archive/data').read()).hexdigest()
-        check_call("find archive | cpio -o -H newc > archive.cpio")
+        with open('archive/data', 'rb') as fd:
+            self.md5data = md5(fd.read()).hexdigest()
+        # fixed timestamps for cpio reproducibility
+        os.utime('archive/data', (0, 0))
+        os.utime('archive', (0, 0))
+
+        check_call(
+            "find archive | cpio --reproducible -o -H newc > archive.cpio")
         check_call("gzip -c < archive.cpio > archive.cpio.gz")
         check_call("bzip2 -c < archive.cpio > archive.cpio.bz2")
         try:
@@ -55,7 +58,7 @@ class TestCpio(unittest.TestCase):
             self.doXZ = False
 
     def tearDown(self):
-        check_call("rm -rf archive archive.cpio* archive2")
+        check_call("rm -rf archive archive.cpio* archive2 archive2.cpio*")
 
     # TODO check with file (like 'r:*')
     # TODO use cat to check properly for pipes
@@ -79,10 +82,12 @@ class TestCpio(unittest.TestCase):
         arc.close()
 
     def archiveCreate(self, fn, fmt='w'):
-        os.unlink(fn)
+        if os.path.exists(fn):
+            os.unlink(fn)
         arc = CpioFile.open(fn, fmt)
         f = arc.getcpioinfo('archive/data')
-        arc.addfile(f, open('archive/data'))
+        with open('archive/data', 'rb') as fd:
+            arc.addfile(f, fd)
         # test recursively add "."
         os.chdir('archive')
         arc.add(".")
@@ -91,17 +96,24 @@ class TestCpio(unittest.TestCase):
         arc.close()
         # special case for XZ, test check type (crc32)
         if fmt.endswith('xz'):
-            f = open(fn, 'rb')
-            f.seek(6)
-            self.assertEqual(f.read(2), '\x00\x01')
-            f.close()
+            with open(fn, 'rb') as f:
+                # check xz magic
+                self.assertEqual(f.read(6), b"\xfd7zXZ\0")
+                # check stream flags
+                if sys.version_info < (3, 0):
+                    expected_flags = b'\x00\x01' # pylzma defaults to CRC32
+                else:
+                    expected_flags = b'\x00\x04' # python3 defaults to CRC64
+                self.assertEqual(f.read(2), expected_flags)
         self.archiveExtract(fn)
 
     def doArchive(self, fn, fmt=None):
         self.archiveExtract(fn)
-        self.archiveCreate(fn, fmt is None and 'w' or 'w|%s' % fmt )
-        if not fmt is None:
-            self.archiveExtract(fn, 'r|%s' % fmt)
+        fn2 = "archive2" + fn[len("archive"):]
+        print("creating %s" % fn2)
+        self.archiveCreate(fn2, fmt is None and 'w' or 'w|%s' % fmt)
+        if fmt is not None:
+            self.archiveExtract(fn2, 'r|%s' % fmt)
 
     def test_plain(self):
         self.doArchive('archive.cpio')

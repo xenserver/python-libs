@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 # -*- coding: iso-8859-1 -*-
 #-------------------------------------------------------------------
 # cpiofile.py
@@ -37,7 +37,7 @@ from __future__ import print_function
 
 __version__ = "0.1"
 __author__  = "Simon Rowe"
-__credits__ = "Lars Gustäbel"
+__credits__ = "Lars Gustäbel, Gustavo Niemeyer, Niels Gustäbel, Richard Townsend."
 
 #---------
 # Imports
@@ -50,6 +50,7 @@ import errno
 import time
 import struct
 import copy
+import io
 
 import six
 
@@ -72,9 +73,9 @@ __all__ = ["CpioFile", "CpioInfo", "is_cpiofile", "CpioError"]
 # cpio constants
 #---------------------------------------------------------
 MAGIC_NEWC      = 0x070701           # magic for SVR4 portable format (no CRC)
-TRAILER_NAME    = "TRAILER!!!"       # filename in final member
+TRAILER_NAME    = b"TRAILER!!!"      # filename in final member
 WORDSIZE        = 4                  # pad size
-NUL             = "\0"               # the null character
+NUL             = b"\0"              # the null character
 BLOCKSIZE       = 512                # length of processing blocks
 HEADERSIZE_SVR4 = 110                # length of fixed header
 
@@ -255,7 +256,7 @@ class _Stream(object):
         self.comptype = comptype
         self.fileobj  = fileobj
         self.bufsize  = bufsize
-        self.buf      = ""
+        self.buf      = b""
         self.pos      = 0
         self.closed   = False
 
@@ -265,7 +266,7 @@ class _Stream(object):
             except ImportError:
                 raise CompressionError("zlib module is not available")
             self.zlib = zlib
-            self.crc = zlib.crc32("")
+            self.crc = zlib.crc32(b"")
             if mode == "r":
                 self._init_read_gz()
             else:
@@ -277,7 +278,7 @@ class _Stream(object):
             except ImportError:
                 raise CompressionError("bz2 module is not available")
             if mode == "r":
-                self.dbuf = ""
+                self.dbuf = b""
                 self.cmp = bz2.BZ2Decompressor()
             else:
                 self.cmp = bz2.BZ2Compressor()
@@ -288,7 +289,7 @@ class _Stream(object):
             except ImportError:
                 raise CompressionError("lzma module is not available")
             if mode == "r":
-                self.dbuf = ""
+                self.dbuf = b""
                 self.cmp = lzma.LZMADecompressor()
             else:
                 self.cmp = lzma.LZMACompressor()
@@ -306,7 +307,7 @@ class _Stream(object):
                                             self.zlib.DEF_MEM_LEVEL,
                                             0)
         timestamp = struct.pack("<L", int(time.time()))
-        self.__write("\037\213\010\010%s\002\377" % timestamp)
+        self.__write(b"\037\213\010\010%s\002\377" % timestamp)
         if self.name.endswith(".gz"):
             self.name = self.name[:-3]
         self.__write(self.name + NUL)
@@ -342,7 +343,7 @@ class _Stream(object):
 
         if self.mode == "w" and self.buf:
             self.fileobj.write(self.buf)
-            self.buf = ""
+            self.buf = b""
             if self.comptype == "gz":
                 # The native zlib crc is an unsigned 32-bit integer, but
                 # the Python wrapper implicitly casts that to a signed C
@@ -362,12 +363,12 @@ class _Stream(object):
         """Initialize for reading a gzip compressed fileobj.
         """
         self.cmp = self.zlib.decompressobj(-self.zlib.MAX_WBITS)
-        self.dbuf = ""
+        self.dbuf = b""
 
         # taken from gzip.GzipFile with some alterations
-        if self.__read(2) != "\037\213":
+        if self.__read(2) != b"\037\213":
             raise ReadError("not a gzip file")
-        if self.__read(1) != "\010":
+        if self.__read(1) != b"\010":
             raise CompressionError("unsupported compression method")
 
         flag = ord(self.__read(1))
@@ -419,7 +420,7 @@ class _Stream(object):
                 if not buf:
                     break
                 t.append(buf)
-            buf = "".join(t)
+            buf = b"".join(t)
         else:
             buf = self._read(size)
         self.pos += len(buf)
@@ -440,7 +441,7 @@ class _Stream(object):
             buf = self.cmp.decompress(buf)
             t.append(buf)
             c += len(buf)
-        t = "".join(t)
+        t = b"".join(t)
         self.dbuf = t[size:]
         return t[:size]
 
@@ -456,7 +457,7 @@ class _Stream(object):
                 break
             t.append(buf)
             c += len(buf)
-        t = "".join(t)
+        t = b"".join(t)
         self.buf = t[size:]
         return t[:size]
 # class _Stream
@@ -476,11 +477,11 @@ class _StreamProxy(object):
         return self.buf
 
     def getcomptype(self):
-        if self.buf.startswith("\037\213\010"):
+        if self.buf.startswith(b"\037\213\010"):
             return "gz"
-        if self.buf.startswith("BZh91"):
+        if self.buf.startswith(b"BZh91"):
             return "bz2"
-        if self.buf.startswith("\xfd7zXZ"):
+        if self.buf.startswith(b"\xfd7zXZ\0"):
             return "xz"
         return "cpio"
 
@@ -510,7 +511,7 @@ class _CMPProxy(object):
             except EOFError:
                 break
             x += len(data)
-        self.buf = "".join(b)
+        self.buf = b"".join(b)
 
         buf = self.buf[:size]
         self.buf = self.buf[size:]
@@ -560,7 +561,7 @@ class _BZ2Proxy(_CMPProxy):
         if self.mode == "r":
             self.cmpobj = bz2.BZ2Decompressor()
             self.fileobj.seek(0)
-            self.buf = ""
+            self.buf = b""
         else:
             self.cmpobj = bz2.BZ2Compressor()
 
@@ -581,7 +582,7 @@ class _XZProxy(_CMPProxy):
         if self.mode == "r":
             self.cmpobj = lzma.BZ2Decompressor()
             self.fileobj.seek(0)
-            self.buf = ""
+            self.buf = b""
         else:
             self.cmpobj = lzma.BZ2Compressor()
 
@@ -644,7 +645,7 @@ class _FileInFile(object):
                 break
             size -= len(buf)
             data.append(buf)
-        return "".join(data)
+        return b"".join(data)
 
     def readsparsesection(self, size):
         """Read a single section of a sparse file.
@@ -652,7 +653,7 @@ class _FileInFile(object):
         section = self.sparse.find(self.position)
 
         if section is None:
-            return ""
+            return b""
 
         size = min(size, section.offset + section.size - self.position)
 
@@ -665,10 +666,6 @@ class _FileInFile(object):
         #     self.position += size
         #     return NUL * size
 #class _FileInFile
-
-SEEK_SET = 0
-SEEK_CUR = 1
-SEEK_END = 2
 
 class ExFileObject(object):
     """File-like object for reading an archive member.
@@ -687,7 +684,7 @@ class ExFileObject(object):
         self.size = cpioinfo.size
 
         self.position = 0
-        self.buffer = ""
+        self.buffer = b""
 
     def read(self, size=None):
         """Read at most size bytes from the file. If size is not
@@ -696,11 +693,11 @@ class ExFileObject(object):
         if self.closed:
             raise ValueError("I/O operation on closed file")
 
-        buf = ""
+        buf = b""
         if self.buffer:
             if size is None:
                 buf = self.buffer
-                self.buffer = ""
+                self.buffer = b""
             else:
                 buf = self.buffer[:size]
                 self.buffer = self.buffer[size:]
@@ -713,6 +710,8 @@ class ExFileObject(object):
         self.position += len(buf)
         return buf
 
+    # FIXME no universal-newlines, a TextIOWrapper would help but hey
+    # we're not using cpio archives on non-unices, right ?
     def readline(self, size=-1):
         """Read one entire line from the file. If size is present
            and non-negative, return a string with at most that
@@ -721,16 +720,16 @@ class ExFileObject(object):
         if self.closed:
             raise ValueError("I/O operation on closed file")
 
-        if "\n" in self.buffer:
-            pos = self.buffer.find("\n") + 1
+        if b"\n" in self.buffer:
+            pos = self.buffer.find(b"\n") + 1
         else:
             buffers = [self.buffer]
             while True:
                 buf = self.fileobj.read(self.blocksize)
                 buffers.append(buf)
-                if not buf or "\n" in buf:
-                    self.buffer = "".join(buffers)
-                    pos = self.buffer.find("\n") + 1
+                if not buf or b"\n" in buf:
+                    self.buffer = b"".join(buffers)
+                    pos = self.buffer.find(b"\n") + 1
                     if pos == 0:
                         # no newline found.
                         pos = len(self.buffer)
@@ -742,7 +741,7 @@ class ExFileObject(object):
         buf = self.buffer[:pos]
         self.buffer = self.buffer[pos:]
         self.position += len(buf)
-        return buf
+        return six.ensure_text(buf)
 
     def readlines(self):
         """Return a list with all remaining lines.
@@ -763,25 +762,25 @@ class ExFileObject(object):
 
         return self.position
 
-    def seek(self, pos, whence=SEEK_SET):
+    def seek(self, pos, whence=os.SEEK_SET):
         """Seek to a position in the file.
         """
         if self.closed:
             raise ValueError("I/O operation on closed file")
 
-        if whence == SEEK_SET:
+        if whence == os.SEEK_SET:
             self.position = min(max(pos, 0), self.size)
-        elif whence == SEEK_CUR:
+        elif whence == os.SEEK_CUR:
             if pos < 0:
                 self.position = max(self.position + pos, 0)
             else:
                 self.position = min(self.position + pos, self.size)
-        elif whence == SEEK_END:
+        elif whence == os.SEEK_END:
             self.position = max(min(self.size + pos, self.size), 0)
         else:
             raise ValueError("Invalid argument")
 
-        self.buffer = ""
+        self.buffer = b""
         self.fileobj.seek(self.position)
 
     def close(self):
@@ -865,23 +864,23 @@ class CpioInfo(object):
     def tobuf(self):
         """Return a cpio header as a string.
         """
-        buf = "%06X" % MAGIC_NEWC
-        buf += "%08X" % self.ino
-        buf += "%08X" % self.mode
-        buf += "%08X" % self.uid
-        buf += "%08X" % self.gid
-        buf += "%08X" % self.nlink
-        buf += "%08X" % self.mtime
-        buf += "%08X" % (self.linkname == '' and self.size or
+        buf = b"%06X" % MAGIC_NEWC
+        buf += b"%08X" % self.ino
+        buf += b"%08X" % self.mode
+        buf += b"%08X" % self.uid
+        buf += b"%08X" % self.gid
+        buf += b"%08X" % self.nlink
+        buf += b"%08X" % int(self.mtime)
+        buf += b"%08X" % (self.linkname == '' and self.size or
                          len(self.linkname))
-        buf += "%08X" % self.devmajor
-        buf += "%08X" % self.devminor
-        buf += "%08X" % self.rdevmajor
-        buf += "%08X" % self.rdevminor
-        buf += "%08X" % (len(self.name)+1)
-        buf += "%08X" % self.check
+        buf += b"%08X" % self.devmajor
+        buf += b"%08X" % self.devminor
+        buf += b"%08X" % self.rdevmajor
+        buf += b"%08X" % self.rdevminor
+        buf += b"%08X" % (len(self.name)+1)
+        buf += b"%08X" % self.check
 
-        buf += self.name + NUL
+        buf += six.ensure_binary(self.name) + NUL
         _, remainder = divmod(len(buf), WORDSIZE)
         if remainder != 0:
             # pad to next word
@@ -963,6 +962,7 @@ class CpioFile(six.Iterator):
         self.name = None
         if name:
             self.name = os.path.abspath(name)
+        assert not isinstance(fileobj, io.TextIOBase)
         self.fileobj = fileobj
 
         # Init datastructures
@@ -1195,11 +1195,6 @@ class CpioFile(six.Iterator):
             self.fileobj.write(buf)
             self.offset += len(buf)
 
-#            blocks, remainder = divmod(self.offset, BLOCKSIZE)
-#            if remainder > 0:
-#                self.fileobj.write((BLOCKSIZE - remainder) * NUL)
-#                self.offset += (BLOCKSIZE - remainder)
-
         if not self._extfileobj:
             self.fileobj.close()
         self.closed = True
@@ -1312,7 +1307,14 @@ class CpioFile(six.Iterator):
                     print("%10d" % cpioinfo.size, end=' ')
                 print("%d-%02d-%02d %02d:%02d:%02d" % time.localtime(cpioinfo.mtime)[:6], end=' ')
 
-            print(cpioinfo.name)
+            print(cpioinfo.name, end="")
+
+            if verbose:
+                if cpioinfo.issym():
+                    print("->", cpioinfo.linkname, end="")
+                if cpioinfo.islnk():
+                    print("link to", cpioinfo.linkname, end="")
+            print()
 
     def add(self, name, arcname=None, recursive=True):
         """Add the file `name' to the archive. `name' may be any type of file
@@ -1455,9 +1457,8 @@ class CpioFile(six.Iterator):
         else:
             cpioinfo = self.getmember(member)
 
-        # Prepare the link cpioget for makelink().
+        # Prepare the link target for makelink().
         if cpioinfo.islnk():
-#            cpioinfo._link_cpioget = os.path.join(path, cpioinfo.linkname)
             cpioinfo._link_path = path
 
         try:
@@ -1480,7 +1481,7 @@ class CpioFile(six.Iterator):
         """Extract a member from the archive as a file object. `member' may be
            a filename or a CpioInfo object. If `member' is a regular file, a
            file-like object is returned. If `member' is a link, a file-like
-           object is constructed from the link's cpioget. If `member' is none of
+           object is constructed from the link's target. If `member' is none of
            the above, None is returned.
            The file-like object is read-only and provides the following
            methods: read(), readline(), readlines(), seek() and tell()
@@ -1492,36 +1493,37 @@ class CpioFile(six.Iterator):
         else:
             cpioinfo = self.getmember(member)
 
-        if cpioinfo.issym():
+        if cpioinfo.isreg():
+            return self.fileobject(self, cpioinfo)
+
+        elif cpioinfo.islnk():
+            return self.fileobject(self, self._datamember(cpioinfo))
+        elif cpioinfo.issym():
             if isinstance(self.fileobj, _Stream):
                 # A small but ugly workaround for the case that someone tries
                 # to extract a symlink as a file-object from a non-seekable
                 # stream of cpio blocks.
                 raise StreamError("cannot extract symlink as file object")
             else:
-                # A symlink's file object is its cpioget's file object.
+                # A symlink's file object is its target's file object.
                 return self.extractfile(self._getmember(cpioinfo.linkname,
                                                         cpioinfo))
-        elif cpioinfo.islnk():
-            return self.fileobject(self, self._datamember(cpioinfo))
-        elif cpioinfo.isreg():
-            return self.fileobject(self, cpioinfo)
         else:
             # If there's no data associated with the member (directory, chrdev,
             # blkdev, etc.), return None instead of a file object.
             return None
 
-    def _extract_member(self, cpioinfo, cpiogetpath):
+    def _extract_member(self, cpioinfo, targetpath):
         """Extract the CpioInfo object cpioinfo to a physical
-           file called cpiogetpath.
+           file called targetpath.
         """
         # Fetch the CpioInfo object for the given name
         # and build the destination pathname, replacing
         # forward slashes to platform specific separators.
-        cpiogetpath = os.path.normpath(cpiogetpath)
+        targetpath = os.path.normpath(targetpath)
 
         # Create all upper directories.
-        upperdirs = os.path.dirname(cpiogetpath)
+        upperdirs = os.path.dirname(targetpath)
         if upperdirs and not os.path.exists(upperdirs):
             ti = CpioInfo()
             ti.name  = upperdirs
@@ -1540,39 +1542,39 @@ class CpioFile(six.Iterator):
             self._dbg(1, cpioinfo.name)
 
         if cpioinfo.isreg():
-            self.makefile(cpioinfo, cpiogetpath)
+            self.makefile(cpioinfo, targetpath)
         elif cpioinfo.isdir():
-            self.makedir(cpioinfo, cpiogetpath)
+            self.makedir(cpioinfo, targetpath)
         elif cpioinfo.isfifo():
-            self.makefifo(cpioinfo, cpiogetpath)
+            self.makefifo(cpioinfo, targetpath)
         elif cpioinfo.ischr() or cpioinfo.isblk():
-            self.makedev(cpioinfo, cpiogetpath)
+            self.makedev(cpioinfo, targetpath)
         elif cpioinfo.issym():
-            self.makesymlink(cpioinfo, cpiogetpath)
+            self.makesymlink(cpioinfo, targetpath)
         else:
-            self.makefile(cpioinfo, cpiogetpath)
+            self.makefile(cpioinfo, targetpath)
 
-        self.chown(cpioinfo, cpiogetpath)
+        self.chown(cpioinfo, targetpath)
         if not cpioinfo.issym():
-            self.chmod(cpioinfo, cpiogetpath)
-            self.utime(cpioinfo, cpiogetpath)
+            self.chmod(cpioinfo, targetpath)
+            self.utime(cpioinfo, targetpath)
 
     #--------------------------------------------------------------------------
     # Below are the different file methods. They are called via
     # _extract_member() when extract() is called. They can be replaced in a
     # subclass to implement other functionality.
 
-    def makedir(self, cpioinfo, cpiogetpath):
-        """Make a directory called cpiogetpath.
+    def makedir(self, cpioinfo, targetpath):
+        """Make a directory called targetpath.
         """
         try:
-            os.mkdir(cpiogetpath)
+            os.mkdir(targetpath)
         except EnvironmentError as e:
             if e.errno != errno.EEXIST:
                 raise
 
-    def makefile(self, cpioinfo, cpiogetpath):
-        """Make a file called cpiogetpath.
+    def makefile(self, cpioinfo, targetpath):
+        """Make a file called targetpath.
         """
         extractinfo = None
         if cpioinfo.nlink == 1:
@@ -1582,7 +1584,7 @@ class CpioFile(six.Iterator):
                 # actual file exists, create link
                 # FIXME handle platforms that don't support hardlinks
                 os.link(os.path.join(cpioinfo._link_path,
-                                     self.inodes[cpioinfo.ino][0]), cpiogetpath)
+                                     six.ensure_text(self.inodes[cpioinfo.ino][0])), targetpath)
             else:
                 extractinfo = self._datamember(cpioinfo)
 
@@ -1592,21 +1594,21 @@ class CpioFile(six.Iterator):
 
         if extractinfo:
             source = self.extractfile(extractinfo)
-            cpioget = file(cpiogetpath, "wb")
-            copyfileobj(source, cpioget)
+            target = file(targetpath, "wb")
+            copyfileobj(source, target)
             source.close()
-            cpioget.close()
+            target.close()
 
-    def makefifo(self, cpioinfo, cpiogetpath):
-        """Make a fifo called cpiogetpath.
+    def makefifo(self, cpioinfo, targetpath):
+        """Make a fifo called targetpath.
         """
         if hasattr(os, "mkfifo"):
-            os.mkfifo(cpiogetpath)
+            os.mkfifo(targetpath)
         else:
             raise ExtractError("fifo not supported by system")
 
-    def makedev(self, cpioinfo, cpiogetpath):
-        """Make a character or block device called cpiogetpath.
+    def makedev(self, cpioinfo, targetpath):
+        """Make a character or block device called targetpath.
         """
         if not hasattr(os, "mknod") or not hasattr(os, "makedev"):
             raise ExtractError("special devices not supported by system")
@@ -1617,25 +1619,25 @@ class CpioFile(six.Iterator):
         else:
             mode |= stat.S_IFCHR
 
-        os.mknod(cpiogetpath, mode,
+        os.mknod(targetpath, mode,
                  os.makedev(cpioinfo.devmajor, cpioinfo.devminor))
 
-    def makesymlink(self, cpioinfo, cpiogetpath):
+    def makesymlink(self, cpioinfo, targetpath):
         # FIXME handle platforms that don't support symlinks
-        os.symlink(cpioinfo.linkname, cpiogetpath)
+        os.symlink(cpioinfo.linkname, targetpath)
 
-    def makelink(self, cpioinfo, cpiogetpath):
-        """Make a (symbolic) link called cpiogetpath. If it cannot be created
+    def makelink(self, cpioinfo, targetpath):
+        """Make a (symbolic) link called targetpath. If it cannot be created
           (platform limitation), we try to make a copy of the referenced file
           instead of a link.
         """
         linkpath = cpioinfo.linkname
         try:
             if cpioinfo.issym():
-                os.symlink(linkpath, cpiogetpath)
+                os.symlink(linkpath, targetpath)
             else:
                 # See extract().
-                os.link(cpioinfo._link_cpioget, cpiogetpath)
+                os.link(cpioinfo._link_target, targetpath)
         except AttributeError:
             if cpioinfo.issym():
                 linkpath = os.path.join(os.path.dirname(cpioinfo.name),
@@ -1643,16 +1645,16 @@ class CpioFile(six.Iterator):
                 linkpath = normpath(linkpath)
 
             try:
-                self._extract_member(self.getmember(linkpath), cpiogetpath)
+                self._extract_member(self.getmember(linkpath), targetpath)
             except (EnvironmentError, KeyError):
                 linkpath = os.path.normpath(linkpath)
                 try:
-                    shutil.copy2(linkpath, cpiogetpath)
+                    shutil.copy2(linkpath, targetpath)
                 except EnvironmentError:
                     raise IOError("link could not be created")
 
-    def chown(self, cpioinfo, cpiogetpath):
-        """Set owner of cpiogetpath according to cpioinfo.
+    def chown(self, cpioinfo, targetpath):
+        """Set owner of targetpath according to cpioinfo.
         """
         if PWD and hasattr(os, "geteuid") and os.geteuid() == 0:
             # We have to be root to do so.
@@ -1666,24 +1668,24 @@ class CpioFile(six.Iterator):
                 u = os.getuid()
             try:
                 if cpioinfo.issym() and hasattr(os, "lchown"):
-                    os.lchown(cpiogetpath, u, g)
+                    os.lchown(targetpath, u, g)
                 else:
                     if sys.platform != "os2emx":
-                        os.chown(cpiogetpath, u, g)
+                        os.chown(targetpath, u, g)
             except EnvironmentError:
                 raise ExtractError("could not change owner")
 
-    def chmod(self, cpioinfo, cpiogetpath):
-        """Set file permissions of cpiogetpath according to cpioinfo.
+    def chmod(self, cpioinfo, targetpath):
+        """Set file permissions of targetpath according to cpioinfo.
         """
         if hasattr(os, 'chmod'):
             try:
-                os.chmod(cpiogetpath, cpioinfo.mode)
+                os.chmod(targetpath, cpioinfo.mode)
             except EnvironmentError:
                 raise ExtractError("could not change mode")
 
-    def utime(self, cpioinfo, cpiogetpath):
-        """Set modification time of cpiogetpath according to cpioinfo.
+    def utime(self, cpioinfo, targetpath):
+        """Set modification time of targetpath according to cpioinfo.
         """
         if not hasattr(os, 'utime'):
             return
@@ -1692,7 +1694,7 @@ class CpioFile(six.Iterator):
             # to use utime() on directories.
             return
         try:
-            os.utime(cpiogetpath, (cpioinfo.mtime, cpioinfo.mtime))
+            os.utime(targetpath, (cpioinfo.mtime, cpioinfo.mtime))
         except EnvironmentError:
             raise ExtractError("could not change modification time")
 
@@ -1794,8 +1796,9 @@ class CpioFile(six.Iterator):
         else:
             end = members.index(cpioinfo)
 
+        encoded_name = six.ensure_binary(name)
         for i in range(end - 1, -1, -1):
-            if name == members[i].name:
+            if encoded_name == members[i].name:
                 return members[i]
 
     def _load(self):

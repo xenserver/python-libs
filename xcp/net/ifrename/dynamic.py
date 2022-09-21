@@ -104,7 +104,7 @@ class DynamicRules(object):
                     LOG.error("No source of data to parse")
                     return False
 
-            except IOError, e:
+            except IOError as e:
                 LOG.error("IOError while reading file: %s" % (e,))
                 return False
         finally:
@@ -137,7 +137,7 @@ class DynamicRules(object):
                     if len(entry) != 3:
                         raise ValueError("Expected 3 entries")
                     macpci = MACPCI(entry[0], entry[1], tname=entry[2])
-                except (TypeError, ValueError), e:
+                except (TypeError, ValueError) as e:
                     LOG.warning("Invalid lastboot data entry: %s"
                                 % (e,))
                     continue
@@ -149,7 +149,7 @@ class DynamicRules(object):
                     if len(entry) != 3:
                         raise ValueError("Expected 3 entries")
                     macpci = MACPCI(entry[0], entry[1], tname=entry[2])
-                except (TypeError, ValueError), e:
+                except (TypeError, ValueError) as e:
                     LOG.warning("Invalid old data entry: %s" % (e,))
                     continue
                 self.old.append(macpci)
@@ -178,7 +178,7 @@ class DynamicRules(object):
                     if nic.mac == value:
                         try:
                             rule = MACPCI(nic.mac, nic.pci, tname=target)
-                        except Exception, e:
+                        except Exception as e:
                             LOG.warning("Error creating rule: %s" % (e,))
                             continue
                         self.rules.append(rule)
@@ -199,7 +199,7 @@ class DynamicRules(object):
                     if nic.ppn == value:
                         try:
                             rule = MACPCI(nic.mac, nic.pci, tname=target)
-                        except Exception, e:
+                        except Exception as e:
                             LOG.warning("Error creating rule: %s" % (e,))
                             continue
                         self.rules.append(rule)
@@ -213,7 +213,7 @@ class DynamicRules(object):
                 try:
                     nic = pci_sbdfi_to_nic(value, state)
                     rule = MACPCI(nic.mac, nic.pci, tname=target)
-                except Exception, e:
+                except Exception as e:
                     LOG.warning("Error creating rule: %s" % (e,))
                     continue
                 self.rules.append(rule)
@@ -226,7 +226,7 @@ class DynamicRules(object):
                     if nic.label == value:
                         try:
                             rule = MACPCI(nic.mac, nic.pci, tname=target)
-                        except Exception, e:
+                        except Exception as e:
                             LOG.warning("Error creating rule: %s" % (e,))
                             continue
                         self.rules.append(rule)
@@ -257,7 +257,7 @@ class DynamicRules(object):
                     return False
                 MACPCI(entry[0], entry[1], tname=entry[2])
                 return True
-            except Exception, e:
+            except Exception as e:
                 LOG.warning("Failed to validate '%s' because '%s'"
                             % (entry, e))
                 return False
@@ -301,7 +301,7 @@ class DynamicRules(object):
                     LOG.error("No source of data to parse")
                     return False
 
-            except IOError, e:
+            except IOError as e:
                 LOG.error("IOError while reading file: %s" % (e,))
                 return False
         finally:

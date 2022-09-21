@@ -28,6 +28,8 @@ import os.path
 import xml.dom.minidom
 import ConfigParser
 
+import six
+
 import xcp.version as version
 import xcp.xmlunwrap as xmlunwrap
 
@@ -187,8 +189,9 @@ class YumRepository(BaseRepository):
                 ver_str = treeinfo.get(category, 'version')
             repo_ver = version.Version.from_string(ver_str)
 
-        except Exception, e:
-            raise RepoFormatError, "Failed to open %s: %s" % (cls.TREEINFO_FILENAME, str(e))
+        except Exception as e:
+            six.raise_from(RepoFormatError("Failed to open %s: %s" %
+                                           (cls.TREEINFO_FILENAME, str(e))), e)
         access.finish()
         return repo_ver
 
@@ -230,8 +233,9 @@ class Repository(BaseRepository):
                 for line in extra:
                     package_list.append(line.strip())
                 extra.close()
-        except Exception, e:
-            raise RepoFormatError, "Failed to open %s: %s" % (cls.REPOLIST_FILENAME, str(e))
+        except Exception as e:
+            six.raise_from(RepoFormatError("Failed to open %s: %s" %
+                                           (cls.REPOLIST_FILENAME, str(e))), e)
 
         for loc in package_list:
             if cls.isRepo(access, loc):
@@ -250,17 +254,17 @@ class Repository(BaseRepository):
 
         try:
             repofile = access.openAddress(os.path.join(base, self.REPOSITORY_FILENAME))
-        except Exception, e:
+        except Exception as e:
             access.finish()
-            raise NoRepository, e
+            six.raise_from(NoRepository(), e)
         self._parse_repofile(repofile)
         repofile.close()
 
         try:
             pkgfile = access.openAddress(os.path.join(base, self.PKGDATA_FILENAME))
-        except Exception, e:
+        except Exception as e:
             access.finish()
-            raise NoRepository, e
+            six.raise_from(NoRepository(), e)
         self._parse_packages(pkgfile)
         pkgfile.close()
 
@@ -289,8 +293,8 @@ class Repository(BaseRepository):
         # build xml doc object
         try:
             xmldoc = xml.dom.minidom.parseString(repofile_contents)
-        except:
-            raise RepoFormatError, "%s not in XML" % self.REPOSITORY_FILENAME
+        except Exception as e:
+            six.raise_from(RepoFormatError("%s not in XML" % self.REPOSITORY_FILENAME), e)
 
         try:
             repo_node = xmlunwrap.getElementsByTagName(xmldoc, ['repository'], mandatory = True)
@@ -313,8 +317,8 @@ class Repository(BaseRepository):
                     del req['build']
                 assert req['test'] in self.OPER_MAP
                 self.requires.append(req)
-        except:
-            raise RepoFormatError, "%s format error" % self.REPOSITORY_FILENAME
+        except Exception as e:
+            six.raise_from(RepoFormatError("%s format error" % self.REPOSITORY_FILENAME), e)
 
         self.identifier = "%s:%s" % (self.originator, self.name)
         ver_str = self.version
@@ -332,8 +336,8 @@ class Repository(BaseRepository):
         # build xml doc object
         try:
             xmldoc = xml.dom.minidom.parseString(pkgfile_contents)
-        except:
-            raise RepoFormatError, "%s not in XML" % self.PKGDATA_FILENAME
+        except Exception as e:
+            six.raise_from(RepoFormatError("%s not in XML" % self.PKGDATA_FILENAME), e)
 
         for pkg_node in xmlunwrap.getElementsByTagName(xmldoc, ['package']):
             pkg = self._create_package(pkg_node)

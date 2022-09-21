@@ -47,8 +47,8 @@ def readInventory(root = '/'):
         try:
             fh = open(os.path.join(root, 'etc/xensource-inventory'))
 
-            for line in ( x for x in ( y.strip() for y in fh.xreadlines() )
-                          if not x.startswith('#') ):
+            for line in (x for x in (y.strip() for y in fh)
+                         if not x.startswith('#')):
 
                 vals = line.split('=', 1)
 
@@ -59,7 +59,7 @@ def readInventory(root = '/'):
 
                 d[vals[0]] = vals[1].strip('"\'')
 
-        except IOError, e:
+        except IOError as e:
             raise InventoryError("Error reading from file '%s'" % (e,))
 
     finally:

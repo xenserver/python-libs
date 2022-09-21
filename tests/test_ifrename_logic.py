@@ -1,3 +1,4 @@
+from __future__ import print_function
 import logging
 import sys
 import unittest
@@ -43,15 +44,15 @@ class TestSimpleLogic(unittest.TestCase):
         self.siobuff.close()
 
     def debug_state(self, ts):
-        print >>sys.stderr, ""
-        print >>sys.stderr, self.siobuff.getvalue()
-        print >>sys.stderr, ""
+        print("", file=sys.stderr)
+        print(self.siobuff.getvalue(), file=sys.stderr)
+        print("", file=sys.stderr)
         if len(ts):
             for (s,d) in ts:
-                print >>sys.stderr, "'%s' -> '%s'" % (s, d)
+                print("'%s' -> '%s'" % (s, d), file=sys.stderr)
         else:
-            print >>sys.stderr, "No transactions"
-        print >>sys.stderr, ""
+            print("No transactions", file=sys.stderr)
+        print("", file=sys.stderr)
 
 
     def test_newhw_norules_1eth(self):
@@ -268,16 +269,16 @@ class TestUseCases(unittest.TestCase):
         self.siobuff.close()
 
     def debug_state(self, ts):
-        print >>sys.stderr, ""
-        print >>sys.stderr, self.siobuff.getvalue()
-        print >>sys.stderr, ""
+        print("", file=sys.stderr)
+        print(self.siobuff.getvalue(), file=sys.stderr)
+        print("", file=sys.stderr)
         if len(ts):
-            print >>sys.stderr, "Transactions:"
+            print("Transactions:", file=sys.stderr)
             for (s,d) in ts:
-                print >>sys.stderr, "'%s' -> '%s'" % (s, d)
+                print("'%s' -> '%s'" % (s, d), file=sys.stderr)
         else:
-            print >>sys.stderr, "No transactions"
-        print >>sys.stderr, ""
+            print("No transactions", file=sys.stderr)
+        print("", file=sys.stderr)
 
     def test_usecase1(self):
         """
@@ -559,7 +560,7 @@ class TestInputSanitisation(unittest.TestCase):
         """Because unittest.TestCase seems to be missing this functionality"""
         try:
             fn(*argl, **kwargs)
-        except excp, e:
+        except excp as e:
             self.fail("function raised %s unexpectedly: %s"
                       % (excp, e))
 

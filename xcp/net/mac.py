@@ -57,7 +57,7 @@ class MAC(object):
         """Constructor"""
 
         self.octets = []
-        self.integer = -1L
+        self.integer = -1
 
         if isinstance(addr, (str, unicode)):
 

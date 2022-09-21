@@ -310,7 +310,7 @@ class _Stream(object):
         self.__write(b"\037\213\010\010%s\002\377" % timestamp)
         if self.name.endswith(".gz"):
             self.name = self.name[:-3]
-        self.__write(self.name + NUL)
+        self.__write(six.ensure_binary(self.name) + NUL)
 
     def write(self, s):
         """Write string s to the stream.
@@ -951,7 +951,7 @@ class CpioFile(six.Iterator):
         self.mode = {"r": "rb", "a": "r+b", "w": "wb"}[mode]
 
         if not fileobj:
-            fileobj = file(name, self.mode)
+            fileobj = bltn_open(name, self.mode)
             self._extfileobj = False
         else:
             if name is None and hasattr(fileobj, "name"):
@@ -1109,7 +1109,7 @@ class CpioFile(six.Iterator):
             raise CompressionError("gzip module is not available")
 
         if fileobj is None:
-            fileobj = file(name, mode + "b")
+            fileobj = bltn_open(name, mode + "b")
 
         try:
             t = cls.cpioopen(name, mode, gzip.GzipFile(name, mode, compresslevel, fileobj))
@@ -1354,7 +1354,7 @@ class CpioFile(six.Iterator):
 
         # Append the cpio header and data to the archive.
         if cpioinfo.isreg():
-            f = file(name, "rb")
+            f = bltn_open(name, "rb")
             self.addfile(cpioinfo, f)
             f.close()
 
@@ -1420,7 +1420,7 @@ class CpioFile(six.Iterator):
                 # Extract directory with a safe mode, so that
                 # all files below can be extracted as well.
                 try:
-                    os.makedirs(os.path.join(path, cpioinfo.name), 0o777)
+                    os.makedirs(os.path.join(path, six.ensure_text(cpioinfo.name)), 0o777)
                 except EnvironmentError:
                     pass
                 directories.append(cpioinfo)
@@ -1428,12 +1428,12 @@ class CpioFile(six.Iterator):
                 self.extract(cpioinfo, path)
 
         # Reverse sort directories.
-        directories.sort(lambda a, b: cmp(a.name, b.name))
+        directories.sort(key=lambda x: x.name)
         directories.reverse()
 
         # Set correct owner, mtime and filemode on directories.
         for cpioinfo in directories:
-            path = os.path.join(path, cpioinfo.name)
+            path = os.path.join(path, six.ensure_text(cpioinfo.name))
             try:
                 self.chown(cpioinfo, path)
                 self.utime(cpioinfo, path)
@@ -1462,7 +1462,7 @@ class CpioFile(six.Iterator):
             cpioinfo._link_path = path
 
         try:
-            self._extract_member(cpioinfo, os.path.join(path, cpioinfo.name))
+            self._extract_member(cpioinfo, os.path.join(path, six.ensure_text(cpioinfo.name)))
         except EnvironmentError as e:
             if self.errorlevel > 0:
                 raise
@@ -1594,7 +1594,7 @@ class CpioFile(six.Iterator):
 
         if extractinfo:
             source = self.extractfile(extractinfo)
-            target = file(targetpath, "wb")
+            target = bltn_open(targetpath, "wb")
             copyfileobj(source, target)
             source.close()
             target.close()
@@ -1926,5 +1926,5 @@ def is_cpiofile(name):
     except CpioError:
         return False
 
-def cpioOpen(*al, **ad):
-    return CpioFile.open(*al, **ad)
+bltn_open = open
+open = CpioFile.open

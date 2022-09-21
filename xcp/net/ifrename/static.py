@@ -89,7 +89,7 @@ class StaticRules(object):
     methods = ["mac", "pci", "ppn", "label", "guess"]
     validators = { "mac": VALID_MAC,
                    "pci": VALID_PCI,
-                   "ppn": re.compile("^(?:em\d+|p(?:ci)?\d+p\d+)$")
+                   "ppn": re.compile(r"^(?:em\d+|p(?:ci)?\d+p\d+)$")
                    }
 
     def __init__(self, path=None, fd=None):

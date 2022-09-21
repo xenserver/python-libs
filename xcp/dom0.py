@@ -96,7 +96,7 @@ def default_memory(host_mem_kib):
     return default_memory_for_version(host_mem_kib, platform_version)
 
 
-_size_and_unit_re = re.compile("^(-?\d+)([bkmg]?)$", re.IGNORECASE)
+_size_and_unit_re = re.compile(r"^(-?\d+)([bkmg]?)$", re.IGNORECASE)
 
 def _parse_size_and_unit(s):
     m = _size_and_unit_re.match(s)

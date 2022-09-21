@@ -23,10 +23,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import md5
+from hashlib import md5
+import io
 import os.path
 import xml.dom.minidom
-import ConfigParser
+import configparser
+import sys
 
 import six
 
@@ -179,10 +181,17 @@ class YumRepository(BaseRepository):
 
         access.start()
         try:
-            treeinfofp = access.openAddress(cls.TREEINFO_FILENAME)
-            treeinfo = ConfigParser.SafeConfigParser()
-            treeinfo.readfp(treeinfofp)
-            treeinfofp.close()
+            rawtreeinfofp = access.openAddress(cls.TREEINFO_FILENAME)
+            if sys.version_info < (3, 0) or isinstance(rawtreeinfofp, io.TextIOBase):
+                # e.g. with FileAccessor
+                treeinfofp = rawtreeinfofp
+            else:
+                # e.g. with HTTPAccessor
+                treeinfofp = io.TextIOWrapper(rawtreeinfofp, encoding='utf-8')
+            treeinfo = configparser.ConfigParser()
+            treeinfo.read_file(treeinfofp)
+            treeinfofp = None
+            rawtreeinfofp.close()
             if treeinfo.has_section('system-v1'):
                 ver_str = treeinfo.get('system-v1', category_map[category])
             else:
@@ -246,7 +255,7 @@ class Repository(BaseRepository):
     def __init__(self, access, base, is_group = False):
         BaseRepository.__init__(self, access, base)
         self.is_group = is_group
-        self._md5 = md5.new()
+        self._md5 = md5()
         self.requires = []
         self.packages = []
 
@@ -288,7 +297,7 @@ class Repository(BaseRepository):
         repofile.close()
 
         # update md5sum for repo
-        self._md5.update(repofile_contents)
+        self._md5.update(repofile_contents.encode())
 
         # build xml doc object
         try:

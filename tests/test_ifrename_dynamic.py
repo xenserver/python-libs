@@ -1,12 +1,10 @@
+from __future__ import unicode_literals
 import json
 import logging
 import unittest
 from copy import deepcopy
 
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
+from io import StringIO
 
 from xcp.net.ifrename.dynamic import DynamicRules
 from xcp.net.ifrename.macpci import MACPCI
@@ -16,7 +14,7 @@ from xcp.logger import LOG, openLog, closeLogs
 class TestLoadAndParse(unittest.TestCase):
 
     def setUp(self):
-        self.logbuf = StringIO.StringIO()
+        self.logbuf = StringIO()
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):
@@ -26,7 +24,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_null(self):
 
-        fd = StringIO.StringIO("")
+        fd = StringIO("")
         dr = DynamicRules(fd=fd)
 
         self.assertTrue(dr.load_and_parse())
@@ -36,7 +34,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_empty(self):
 
-        fd = StringIO.StringIO(
+        fd = StringIO(
             '{"lastboot":[],"old":[]}'
             )
         dr = DynamicRules(fd=fd)
@@ -48,7 +46,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_one_invalid(self):
 
-        fd = StringIO.StringIO(
+        fd = StringIO(
             '{"lastboot":[["","",""]],"old":[]}'
             )
         dr = DynamicRules(fd=fd)
@@ -60,7 +58,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_one_valid_lastboot(self):
 
-        fd = StringIO.StringIO(
+        fd = StringIO(
             '{"lastboot":[["01:23:45:67:89:0a","00:10.2","eth2"]],"old":[]}'
             )
         dr = DynamicRules(fd=fd)
@@ -74,7 +72,7 @@ class TestLoadAndParse(unittest.TestCase):
 
     def test_one_valid_lastboot2(self):
 
-        fd = StringIO.StringIO(
+        fd = StringIO(
             '{"lastboot":[],"old":[["01:23:45:67:89:0a","00:10.2","eth2"]]}'
             )
         dr = DynamicRules(fd=fd)
@@ -88,7 +86,7 @@ class TestLoadAndParse(unittest.TestCase):
 class TestGenerate(unittest.TestCase):
 
     def setUp(self):
-        self.logbuf = StringIO.StringIO()
+        self.logbuf = StringIO()
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):
@@ -149,7 +147,7 @@ class TestGenerate(unittest.TestCase):
 class TestSave(unittest.TestCase):
 
     def setUp(self):
-        self.logbuf = StringIO.StringIO()
+        self.logbuf = StringIO()
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):

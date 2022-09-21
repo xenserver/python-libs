@@ -25,12 +25,16 @@
 
 """accessor - provide common interface to access methods"""
 
+# pylint: disable=wrong-import-position,wrong-import-order
+from future import standard_library
+standard_library.install_aliases()
+
 import ftplib
 import os
 import tempfile
-import urllib
-import urllib2
-import urlparse
+import urllib.request           # pylint: disable=import-error
+import urllib.error             # pylint: disable=import-error
+import urllib.parse             # pylint: disable=import-error
 import errno
 
 import xcp.mount as mount
@@ -67,7 +71,7 @@ class Accessor(object):
 
         return True
 
-    def openAddress(self, name):
+    def openAddress(self, address):
         """should be overloaded"""
         pass
 
@@ -95,9 +99,9 @@ class FilesystemAccessor(Accessor):
         super(FilesystemAccessor, self).__init__(ro)
         self.location = location
 
-    def openAddress(self, addr):
+    def openAddress(self, address):
         try:
-            file = open(os.path.join(self.location, addr), 'r')
+            filehandle = open(os.path.join(self.location, address), 'r')
         except OSError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -113,10 +117,10 @@ class FilesystemAccessor(Accessor):
         except Exception as e:
             self.lastError = 500
             return False
-        return file
+        return filehandle
 
 class MountingAccessor(FilesystemAccessor):
-    def __init__(self, mount_types, mount_source, mount_options = None):
+    def __init__(self, mount_types, mount_source, mount_options=None):
         ro = isinstance(mount_options, list) and 'ro' in mount_options
         super(MountingAccessor, self).__init__(None, ro)
 
@@ -250,14 +254,14 @@ def rebuild_url(url_parts):
     host = url_parts.hostname
     if url_parts.port:
         host += ':' + str(url_parts.port)
-    return urlparse.urlunsplit(
+    return urllib.parse.urlunsplit(
         (url_parts.scheme, host,
          url_parts.path, '', ''))
 
 class FTPAccessor(Accessor):
     def __init__(self, baseAddress, ro):
         super(FTPAccessor, self).__init__(ro)
-        self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
+        self.url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
         self.start_count = 0
         self.cleanup = False
         self.ftp = None
@@ -280,12 +284,12 @@ class FTPAccessor(Accessor):
             username = self.url_parts.username
             password = self.url_parts.password
             if username:
-                username = urllib.unquote(username)
+                username = urllib.parse.unquote(username)
             if password:
-                password = urllib.unquote(password)
+                password = urllib.parse.unquote(password)
             self.ftp.login(username, password)
 
-            directory = urllib.unquote(self.url_parts.path[1:])
+            directory = urllib.parse.unquote(self.url_parts.path[1:])
             if directory != '':
                 logger.debug("Changing to " + directory)
                 self.ftp.cwd(directory)
@@ -305,12 +309,12 @@ class FTPAccessor(Accessor):
         try:
             logger.debug("Testing "+path)
             self._cleanup()
-            url = urllib.unquote(path)
+            url = urllib.parse.unquote(path)
 
             if self.ftp.size(url) is not None:
                 return True
             lst = self.ftp.nlst(os.path.dirname(url))
-            return os.path.basename(url) in map(os.path.basename, lst)
+            return os.path.basename(url) in list(map(os.path.basename, lst))
         except IOError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -330,7 +334,7 @@ class FTPAccessor(Accessor):
     def openAddress(self, address):
         logger.debug("Opening "+address)
         self._cleanup()
-        url = urllib.unquote(address)
+        url = urllib.parse.unquote(address)
 
         self.ftp.voidcmd('TYPE I')
         s = self.ftp.transfercmd('RETR ' + url).makefile('rb')
@@ -339,7 +343,7 @@ class FTPAccessor(Accessor):
 
     def writeFile(self, in_fh, out_name):
         self._cleanup()
-        fname = urllib.unquote(out_name)
+        fname = urllib.parse.unquote(out_name)
 
         logger.debug("Storing as " + fname)
         self.ftp.storbinary('STOR ' + fname, in_fh)
@@ -351,28 +355,28 @@ class HTTPAccessor(Accessor):
     def __init__(self, baseAddress, ro):
         assert ro
         super(HTTPAccessor, self).__init__(ro)
-        self.url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
+        self.url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
 
         if self.url_parts.username:
             username = self.url_parts.username
             if username is not None:
-                username = urllib.unquote(self.url_parts.username)
+                username = urllib.parse.unquote(self.url_parts.username)
             password = self.url_parts.password
             if password is not None:
-                password = urllib.unquote(self.url_parts.password)
-            self.passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+                password = urllib.parse.unquote(self.url_parts.password)
+            self.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             self.passman.add_password(None, self.url_parts.hostname,
                                       username, password)
-            self.authhandler = urllib2.HTTPBasicAuthHandler(self.passman)
-            self.opener = urllib2.build_opener(self.authhandler)
-            urllib2.install_opener(self.opener)
+            self.authhandler = urllib.request.HTTPBasicAuthHandler(self.passman)
+            self.opener = urllib.request.build_opener(self.authhandler)
+            urllib.request.install_opener(self.opener)
 
         self.baseAddress = rebuild_url(self.url_parts)
 
     def openAddress(self, address):
         try:
-            urlFile = urllib2.urlopen(os.path.join(self.baseAddress, address))
-        except urllib2.HTTPError as e:
+            urlFile = urllib.request.urlopen(os.path.join(self.baseAddress, address))
+        except urllib.error.HTTPError as e:
             self.lastError = e.code
             return False
         return urlFile
@@ -389,7 +393,7 @@ SUPPORTED_ACCESSORS = {'nfs': NFSAccessor,
                        }
 
 def createAccessor(baseAddress, *args):
-    url_parts = urlparse.urlsplit(baseAddress, allow_fragments=False)
+    url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
 
-    assert url_parts.scheme in SUPPORTED_ACCESSORS.keys()
+    assert url_parts.scheme in SUPPORTED_ACCESSORS
     return SUPPORTED_ACCESSORS[url_parts.scheme](baseAddress, *args)

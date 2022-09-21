@@ -25,7 +25,7 @@
 
 """version - version comparison methods"""
 
-class Version:
+class Version(object):
     def __init__(self, ver, build = None):
         self.ver = ver
         self.build = build
@@ -52,7 +52,7 @@ class Version:
         if '-' in ver_str:
             ver_str, build = ver_str.split('-', 1)
 
-        ver = map(cls.intify, ver_str.split('.'))
+        ver = [cls.intify(i) for i in ver_str.split('.')]
 
         return cls(ver, build)
 

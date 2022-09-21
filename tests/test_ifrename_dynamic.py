@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-
-import unittest, sys, os, os.path as path, logging
 import json
+import logging
+import unittest
 from copy import deepcopy
 
 try:
@@ -175,7 +174,3 @@ class TestSave(unittest.TestCase):
 
         self.assertEqual(json.loads(dr.write(False)), {'lastboot': [],
                                                        'old': []})
-
-
-if __name__ == "__main__":
-    sys.exit(unittest.main())

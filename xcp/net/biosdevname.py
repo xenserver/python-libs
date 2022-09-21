@@ -35,19 +35,6 @@ from subprocess import Popen, PIPE
 
 __ALL_POLICIES = [ "physical", "all_ethN" ]
 
-def __run_single_device(eth, policy = "physical"):
-    """
-    Run 'biosdevname -i eth' for a specified policy.
-    Return (stdout, stderr, returncode) tuple.
-    """
-
-    proc = Popen(["/sbin/biosdevname", "--policy", policy,
-                  "-i"], stdout=PIPE, stderr=PIPE)
-
-    stdout, stderr = proc.communicate()
-
-    return ( stdout, stderr, proc.returncode )
-
 def __run_all_devices(policy = "physical"):
     """
     Run 'biosdevname -d' for a specified policy.

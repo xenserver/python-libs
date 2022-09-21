@@ -466,10 +466,10 @@ class Bootloader(object):
 
         if self.serial:
             if self.serial.get('flow', None) is None: 
-                print >> fh, "serial %d %d" % (self.serial['port'],
+                print >> fh, "serial %s %s" % (self.serial['port'],
                                                self.serial['baud'])
             else:
-                print >> fh, "serial %d %d %s" % (self.serial['port'],
+                print >> fh, "serial %s %s %s" % (self.serial['port'],
                                                   self.serial['baud'],
                                                   self.serial['flow'])
         if self.default:
@@ -507,7 +507,7 @@ class Bootloader(object):
         print >> fh, "# location " + self.location
 
         if self.serial:
-            print >> fh, "serial --unit=%d --speed=%s" % (self.serial['port'],
+            print >> fh, "serial --unit=%s --speed=%s" % (self.serial['port'],
                                                           self.serial['baud'])
             print >> fh, "terminal --timeout=10 console serial"
         else:
@@ -540,7 +540,7 @@ class Bootloader(object):
             fh = open(dst_file, 'w')
 
         if self.serial:
-            print >> fh, "serial --unit=%d --speed=%s" % (self.serial['port'],
+            print >> fh, "serial --unit=%s --speed=%s" % (self.serial['port'],
                                                           self.serial['baud'])
             print >> fh, "terminal_input serial console"
             print >> fh, "terminal_output serial console"

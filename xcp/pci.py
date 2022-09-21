@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2013, Citrix Inc.
 # All rights reserved.
 #
@@ -314,17 +312,3 @@ def pci_sbdfi_to_nic(sbdfi, nics):
         raise Exception("Insufficient NICs with PCI SBDF %s (Found %d, wanted at least %d)" % (value, len(matching_nics), index))
 
     return matching_nics[index]
-
-
-if __name__ == "__main__":
-    IDS = PCIIds.read()
-    VIDEO_CLASS = IDS.lookupClass('Display controller')
-
-    DEVS = PCIDevices()
-    for video_dev in DEVS.findByClass(VIDEO_CLASS):
-        print video_dev['id'], IDS.findVendor(video_dev['vendor']), \
-        IDS.findDevice(video_dev['vendor'], video_dev['device'])
-        print DEVS.findRelatedFunctions(video_dev['id'])
-    print DEVS.findRelatedFunctions('00:1d.1')
-
-

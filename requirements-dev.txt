@@ -5,6 +5,7 @@ diff_cover
 mock
 pytest
 pytest-cov
+parameterized
 # dependencies also in setup.py until they can be used
 six
 future

@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-import unittest, sys, os, os.path as path
+import unittest
 
 from xcp.net.mac import MAC
 
@@ -235,6 +233,3 @@ class TestHashability(unittest.TestCase):
         self.assertEqual(d[m1], "zero")
         self.assertEqual(d[m2], "ascending")
         self.assertEqual(d[m3], "random")
-
-if __name__ == "__main__":
-    sys.exit(unittest.main())

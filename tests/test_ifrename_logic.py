@@ -1,6 +1,6 @@
-#!/usr/bin/env python
-
-import unittest, sys, os, os.path as path, logging
+import logging
+import sys
+import unittest
 from copy import deepcopy
 
 try:
@@ -651,6 +651,3 @@ class TestInputSanitisation(unittest.TestCase):
 
         self.assertNotRaises(OldStateError, rename,
                           [], [], [], [self.s123])
-
-if __name__ == "__main__":
-    sys.exit(unittest.main())

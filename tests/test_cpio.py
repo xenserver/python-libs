@@ -1,10 +1,10 @@
-#!/usr/bin/env python
-
-import unittest, sys, os, os.path as path
+import os
+import shutil
+import subprocess
+import unittest
 import warnings
 
-from xcp.cpiofile import CpioFile, CpioInfo
-import subprocess, shutil
+from xcp.cpiofile import CpioFile, CpioInfo, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
 
 try:
     from hashlib import md5
@@ -53,7 +53,7 @@ class TestCpio(unittest.TestCase):
             self.doXZ = False
 
     def tearDown(self):
-        check_call("rm -rf archive archive.cpio*")
+        check_call("rm -rf archive archive.cpio* archive2")
 
     # TODO check with file (like 'r:*')
     # TODO use cat to check properly for pipes
@@ -66,13 +66,25 @@ class TestCpio(unittest.TestCase):
                 self.assertEqual(len(data), f.size)
                 self.assertEqual(self.md5data, md5(data).hexdigest())
                 found = True
+        arc.close()
         self.assertTrue(found)
+        # extract with extractall and compare
+        arc = CpioFile.open(fn, fmt)
+        check_call("rm -rf archive2")
+        os.rename('archive', 'archive2')
+        arc.extractall()
+        check_call("diff -rq archive2 archive")
+        arc.close()
 
     def archiveCreate(self, fn, fmt='w'):
         os.unlink(fn)
         arc = CpioFile.open(fn, fmt)
         f = arc.getcpioinfo('archive/data')
         arc.addfile(f, open('archive/data'))
+        # test recursively add "."
+        os.chdir('archive')
+        arc.add(".")
+        os.chdir("..")
         # TODO add self crafted file
         arc.close()
         # special case for XZ, test check type (crc32)
@@ -104,5 +116,42 @@ class TestCpio(unittest.TestCase):
         print 'Running test for XZ'
         self.doArchive('archive.cpio.xz', 'xz')
 
-if __name__ == "__main__":
-    unittest.main()
+    # CpioFileCompat testing
+
+    def archiveExtractCompat(self, fn, comp):
+        arc = CpioFileCompat(fn, mode="r", compression={"": CPIO_PLAIN,
+                                                        "gz": CPIO_GZIPPED}[comp])
+        found = False
+        for f in arc.namelist():
+            info = arc.getinfo(f)
+            if info.isfile():
+                data = arc.read(f)
+                self.assertEqual(len(data), info.size)
+                self.assertEqual(self.md5data, md5(data).hexdigest())
+                found = True
+        arc.close()
+        self.assertTrue(found)
+
+    def archiveCreateCompat(self, fn, comp):
+        if os.path.exists(fn):
+            os.unlink(fn)
+        arc = CpioFileCompat(fn, mode="w", compression={"": CPIO_PLAIN,
+                                                        "gz": CPIO_GZIPPED}[comp])
+        arc.write('archive/data')
+        arc.close()
+        self.archiveExtract(fn)
+
+    def doArchiveCompat(self, fn, fmt):
+        self.archiveExtractCompat(fn, fmt)
+
+        fn2 = "archive2" + fn[len("archive"):]
+        self.archiveCreateCompat(fn2, fmt)
+        self.archiveExtractCompat(fn2, fmt)
+
+    def test_compat_plain(self):
+        self.doArchiveCompat('archive.cpio', '')
+
+    def test_compat_gz(self):
+        # FIXME: this test exhibits "unclosed file" warnings when run
+        # under `-Wd`
+        self.doArchiveCompat('archive.cpio.gz', 'gz')

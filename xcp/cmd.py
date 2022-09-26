@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2013, Citrix Inc.
 # All rights reserved.
 #
@@ -89,12 +87,3 @@ class OutputCache:
 
     def clearCache(self):
         self.cache.clear()
-
-if __name__ == '__main__':
-    c = OutputCache()
-    print c.fileContents('/tmp/foo')
-    print c.fileContents('/tmp/foo')
-    c.clearCache()
-    print c.fileContents('/tmp/foo')
-    print c.runCmd(['ls', '/tmp'], True)
-    print c.runCmd(['ls', '/tmp'], True)

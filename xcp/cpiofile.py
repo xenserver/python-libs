@@ -1158,6 +1158,7 @@ class CpioFile(object):
         if fileobj is not None:
             fileobj = _XZProxy(fileobj, mode)
         else:
+            # FIXME: not compatible with python3 API
             fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, 'dict_size': 20 })
 
         try:

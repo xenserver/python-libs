@@ -23,8 +23,12 @@ class TestAccessor(unittest.TestCase):
         a.start()
         self.assertTrue(a.access(BINFILE))
         inf = a.openAddress(BINFILE)
-        with NamedTemporaryFile("w") as outf:
-            outf.writelines(inf)
+        with NamedTemporaryFile("wb") as outf:
+            while True:
+                data = inf.read()
+                if not data: # EOF
+                    break
+                outf.write(data)
             outf.flush()
             hasher = hashlib.md5()
             with open(outf.name, "rb") as bincontents:

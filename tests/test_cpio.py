@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import shutil
 import subprocess
@@ -113,7 +114,7 @@ class TestCpio(unittest.TestCase):
     def test_xz(self):
         if not self.doXZ:
             raise unittest.SkipTest("lzma package or xz tool not available")
-        print 'Running test for XZ'
+        print('Running test for XZ')
         self.doArchive('archive.cpio.xz', 'xz')
 
     # CpioFileCompat testing

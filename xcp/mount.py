@@ -52,13 +52,13 @@ def mount(dev, mountpoint, options = None, fstype = None, label = None):
 
     rc, out, err = xcp.cmd.runCmd(cmd, with_stdout=True, with_stderr=True)
     if rc != 0:
-        raise MountException, "out: '%s' err: '%s'" % (out, err)
+        raise MountException("out: '%s' err: '%s'" % (out, err))
 
 def bindMount(source, mountpoint):
     cmd = [ '/bin/mount', '--bind', source, mountpoint]
     rc, out, err = xcp.cmd.runCmd(cmd, with_stdout=True, with_stderr=True)
     if rc != 0:
-        raise MountException, "out: '%s' err: '%s'" % (out, err)
+        raise MountException("out: '%s' err: '%s'" % (out, err))
 
 def umount(mountpoint, force = False):
     # -d option also removes the loop device (if present)

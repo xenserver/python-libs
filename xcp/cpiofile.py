@@ -33,6 +33,7 @@
 
    Derived from Lars Gustäbel's tarfile.py
 """
+from __future__ import print_function
 
 __version__ = "0.1"
 __author__  = "Simon Rowe"
@@ -55,7 +56,7 @@ if sys.platform == 'mac':
     # handling. In many places it is assumed a simple substitution of / by the
     # local os.path.sep is good enough to convert pathnames, but this does not
     # work with the mac rooted:path:name versus :nonrooted:path:name syntax
-    raise ImportError, "cpiofile does not work for platform==mac"
+    raise ImportError("cpiofile does not work for platform==mac")
 
 try:
     import grp as GRP, pwd as PWD
@@ -78,26 +79,26 @@ HEADERSIZE_SVR4 = 110                # length of fixed header
 #---------------------------------------------------------
 # Bits used in the mode field, values in octal.
 #---------------------------------------------------------
-S_IFLNK = 0120000        # symbolic link
-S_IFREG = 0100000        # regular file
-S_IFBLK = 0060000        # block device
-S_IFDIR = 0040000        # directory
-S_IFCHR = 0020000        # character device
-S_IFIFO = 0010000        # fifo
+S_IFLNK = 0o120000        # symbolic link
+S_IFREG = 0o100000        # regular file
+S_IFBLK = 0o060000        # block device
+S_IFDIR = 0o040000        # directory
+S_IFCHR = 0o020000        # character device
+S_IFIFO = 0o010000        # fifo
 
-TSUID   = 04000          # set UID on execution
-TSGID   = 02000          # set GID on execution
-TSVTX   = 01000          # reserved
+TSUID   = 0o4000          # set UID on execution
+TSGID   = 0o2000          # set GID on execution
+TSVTX   = 0o1000          # reserved
 
-TUREAD  = 0400           # read by owner
-TUWRITE = 0200           # write by owner
-TUEXEC  = 0100           # execute/search by owner
-TGREAD  = 0040           # read by group
-TGWRITE = 0020           # write by group
-TGEXEC  = 0010           # execute/search by group
-TOREAD  = 0004           # read by other
-TOWRITE = 0002           # write by other
-TOEXEC  = 0001           # execute/search by other
+TUREAD  = 0o400           # read by owner
+TUWRITE = 0o200           # write by owner
+TUEXEC  = 0o100           # execute/search by owner
+TGREAD  = 0o040           # read by group
+TGWRITE = 0o020           # write by group
+TGEXEC  = 0o010           # execute/search by group
+TOREAD  = 0o004           # read by other
+TOWRITE = 0o002           # write by other
+TOEXEC  = 0o001           # execute/search by other
 
 #---------------------------------------------------------
 # Some useful functions
@@ -253,7 +254,7 @@ class _Stream(object):
         self.fileobj  = fileobj
         self.bufsize  = bufsize
         self.buf      = ""
-        self.pos      = 0L
+        self.pos      = 0
         self.closed   = False
 
         if comptype == "gz":
@@ -347,8 +348,8 @@ class _Stream(object):
                 # while the same crc on a 64-bit box may "look positive".
                 # To avoid irksome warnings from the `struct` module, force
                 # it to look positive on all boxes.
-                self.fileobj.write(struct.pack("<L", self.crc & 0xffffffffL))
-                self.fileobj.write(struct.pack("<L", self.pos & 0xffffFFFFL))
+                self.fileobj.write(struct.pack("<L", self.crc & 0xffffffff))
+                self.fileobj.write(struct.pack("<L", self.pos & 0xffffFFFF))
 
         if not self._extfileobj:
             self.fileobj.close()
@@ -812,7 +813,7 @@ class CpioInfo(object):
            of the member.
         """
         self.ino = 0            # i-node
-        self.mode = S_IFREG | 0444
+        self.mode = S_IFREG | 0o444
         self.uid = 0            # user id
         self.gid = 0            # group id
         self.nlink = 1          # number of links
@@ -966,22 +967,22 @@ class CpioFile(object):
         self.closed = False
         self.members = []       # list of members as CpioInfo objects
         self._loaded = False    # flag if all members have been read
-        self.offset = 0L        # current position in the archive file
+        self.offset = 0        # current position in the archive file
         self.inodes = {}        # dictionary caching the inodes of
                                 # archive members already added
 
         if self._mode == "r":
             self.firstmember = None
-            self.firstmember = self.next()
+            self.firstmember = next(self)
 
         if self._mode == "a":
             # Move to the end of the archive,
             # before the trailer.
             self.firstmember = None
-            last_offset = 0L
+            last_offset = 0
             while True:
                 try:
-                    cpioinfo = self.next()
+                    cpioinfo = next(self)
                 except ReadError:
                     self.fileobj.seek(0)
                     break
@@ -1280,7 +1281,7 @@ class CpioFile(object):
         if stat.S_ISREG(stmd):
             cpioinfo.size = statres.st_size
         else:
-            cpioinfo.size = 0L
+            cpioinfo.size = 0
         cpioinfo.devmajor = os.major(statres.st_dev)
         cpioinfo.devminor = os.minor(statres.st_dev)
         if stat.S_ISCHR(stmd) or stat.S_ISBLK(stmd):
@@ -1302,17 +1303,16 @@ class CpioFile(object):
 
         for cpioinfo in self:
             if verbose:
-                print filemode(cpioinfo.mode),
-                print "%d/%d" % (cpioinfo.uid, cpioinfo.gid),
+                print(filemode(cpioinfo.mode), end=' ')
+                print("%d/%d" % (cpioinfo.uid, cpioinfo.gid), end=' ')
                 if cpioinfo.ischr() or cpioinfo.isblk():
-                    print "%10s" % ("%d,%d" \
-                                    % (cpioinfo.devmajor, cpioinfo.devminor)),
+                    print("%10s" % ("%d,%d" % (cpioinfo.devmajor, cpioinfo.devminor)), end=' ')
                 else:
-                    print "%10d" % cpioinfo.size,
-                print "%d-%02d-%02d %02d:%02d:%02d" \
-                      % time.localtime(cpioinfo.mtime)[:6],
+                    print("%10d" % cpioinfo.size, end=' ')
+                print("%d-%02d-%02d %02d:%02d:%02d" \
+                      % time.localtime(cpioinfo.mtime)[:6], end=' ')
 
-            print cpioinfo.name
+            print(cpioinfo.name)
 
     def add(self, name, arcname=None, recursive=True):
         """Add the file `name' to the archive. `name' may be any type of file
@@ -1377,7 +1377,7 @@ class CpioFile(object):
         cpioinfo = copy.copy(cpioinfo)
 
         if cpioinfo.nlink > 1:
-            if self.hardlinks and self.inodes.has_key(cpioinfo.ino):
+            if self.hardlinks and cpioinfo.ino in self.inodes:
                 # this inode has already been added
                 cpioinfo.size = 0
                 self.inodes[cpioinfo.ino].append(cpioinfo.name)
@@ -1418,7 +1418,7 @@ class CpioFile(object):
                 # Extract directory with a safe mode, so that
                 # all files below can be extracted as well.
                 try:
-                    os.makedirs(os.path.join(path, cpioinfo.name), 0777)
+                    os.makedirs(os.path.join(path, cpioinfo.name), 0o777)
                 except EnvironmentError:
                     pass
                 directories.append(cpioinfo)
@@ -1436,7 +1436,7 @@ class CpioFile(object):
                 self.chown(cpioinfo, path)
                 self.utime(cpioinfo, path)
                 self.chmod(cpioinfo, path)
-            except ExtractError, e:
+            except ExtractError as e:
                 if self.errorlevel > 1:
                     raise
                 else:
@@ -1462,7 +1462,7 @@ class CpioFile(object):
 
         try:
             self._extract_member(cpioinfo, os.path.join(path, cpioinfo.name))
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             if self.errorlevel > 0:
                 raise
             else:
@@ -1470,7 +1470,7 @@ class CpioFile(object):
                     self._dbg(1, "cpiofile: %s" % e.strerror)
                 else:
                     self._dbg(1, "cpiofile: %s %r" % (e.strerror, e.filename))
-        except ExtractError, e:
+        except ExtractError as e:
             if self.errorlevel > 1:
                 raise
             else:
@@ -1525,7 +1525,7 @@ class CpioFile(object):
         if upperdirs and not os.path.exists(upperdirs):
             ti = CpioInfo()
             ti.name  = upperdirs
-            ti.mode  = S_IFDIR | 0777
+            ti.mode  = S_IFDIR | 0o777
             ti.mtime = cpioinfo.mtime
             ti.uid   = cpioinfo.uid
             ti.gid   = cpioinfo.gid
@@ -1567,7 +1567,7 @@ class CpioFile(object):
         """
         try:
             os.mkdir(cpiogetpath)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             if e.errno != errno.EEXIST:
                 raise
 
@@ -1578,7 +1578,7 @@ class CpioFile(object):
         if cpioinfo.nlink == 1:
             extractinfo = cpioinfo
         else:
-            if self.inodes.has_key(cpioinfo.ino):
+            if cpioinfo.ino in self.inodes:
                 # actual file exists, create link
                 # FIXME handle platforms that don't support hardlinks
                 os.link(os.path.join(cpioinfo._link_path,
@@ -1738,7 +1738,7 @@ class CpioFile(object):
 
             cpioinfo = self.proc_member(cpioinfo)
 
-        except ValueError, e:
+        except ValueError as e:
             if self.offset == 0:
                 raise ReadError("empty, unreadable or compressed "
                                 "file: %s" % e)
@@ -1803,7 +1803,7 @@ class CpioFile(object):
            members.
         """
         while True:
-            cpioinfo = self.next()
+            cpioinfo = next(self)
             if cpioinfo is None:
                 break
         self._loaded = True
@@ -1829,7 +1829,7 @@ class CpioFile(object):
         """Write debugging output to sys.stderr.
         """
         if level <= self.debug:
-            print >> sys.stderr, msg
+            print(msg, file=sys.stderr)
 # class CpioFile
 
 class CpioIter(object):
@@ -1856,7 +1856,7 @@ class CpioIter(object):
         # happen that getmembers() is called during iteration,
         # which will cause CpioIter to stop prematurely.
         if not self.cpiofile._loaded:
-            cpioinfo = self.cpiofile.next()
+            cpioinfo = next(self.cpiofile)
             if not cpioinfo:
                 self.cpiofile._loaded = True
                 raise StopIteration

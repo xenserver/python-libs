@@ -7,3 +7,4 @@ pytest
 pytest-cov
 # dependencies also in setup.py until they can be used
 six
+future

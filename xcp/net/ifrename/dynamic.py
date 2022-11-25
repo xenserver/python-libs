@@ -170,7 +170,7 @@ class DynamicRules(object):
             LOG.warning("Discovered physical policy naming quirks in provided "
                         "state.  Disabling 'method=ppn' generation")
 
-        for target, (method, value) in self.formulae.iteritems():
+        for target, (method, value) in self.formulae.items():
 
             if method == "mac":
 
@@ -262,8 +262,8 @@ class DynamicRules(object):
                             % (entry, e))
                 return False
 
-        lastboot = filter(validate, self.lastboot)
-        old = filter(validate, self.old)
+        lastboot = [x for x in self.lastboot if validate(x)]
+        old = [x for x in self.old if validate(x)]
 
         try:
             res += json.dumps({"lastboot": lastboot, "old": old},

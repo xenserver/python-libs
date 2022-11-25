@@ -33,7 +33,7 @@ import six
 import xcp.version as version
 import xcp.xmlunwrap as xmlunwrap
 
-class Package:
+class Package(object):          # pylint: disable=too-few-public-methods
     pass
 
 class BzippedPackage(Package):
@@ -46,7 +46,7 @@ class BzippedPackage(Package):
             self.optional,
             self.filename,
             self.destination
-            ) = ( repository, label, long(size), md5sum, (optional==True), fname, root )
+        ) = (repository, label, size, md5sum, optional is True, fname, root)
 
     def __repr__(self):
         return "<BzippedPackage '%s'>" % self.label
@@ -61,7 +61,7 @@ class RPMPackage(Package):
             self.optional,
             self.filename,
             self.options
-            ) = ( repository, label, long(size), md5sum, (optional==True), fname, options )
+        ) = (repository, label, size, md5sum, optional is True, fname, options)
 
     def __repr__(self):
         return "<RPMPackage '%s'>" % self.label
@@ -76,7 +76,7 @@ class DriverRPMPackage(RPMPackage):
             self.filename,
             self.kernel,
             self.options
-            ) = ( repository, label, long(size), md5sum, fname, kernel, options )
+        ) = (repository, label, size, md5sum, fname, kernel, options)
 
     def __repr__(self):
         return "<DriverRPMPackage '%s', kernel '%s'>" % (self.label, self.kernel)
@@ -90,7 +90,7 @@ class DriverPackage(Package):
             self.md5sum,
             self.filename,
             self.destination
-            ) = ( repository, label, long(size), md5sum, fname, root )
+        ) = (repository, label, size, md5sum, fname, root)
 
     def __repr__(self):
         return "<DriverPackage '%s'>" % self.label
@@ -103,7 +103,7 @@ class FirmwarePackage(Package):
             self.size,
             self.md5sum,
             self.filename
-            ) = ( repository, label, long(size), md5sum, fname )
+        ) = (repository, label, size, md5sum, fname)
 
     def __repr__(self):
         return "<FirmwarePackage '%s'>" % self.label
@@ -170,8 +170,8 @@ class YumRepository(BaseRepository):
     def isRepo(cls, access, base):
         """ Return whether there is a repository at base address
         'base' accessible using accessor."""
-        return False not in map(lambda x: access.access(os.path.join(base, x)),
-                                [cls.TREEINFO_FILENAME, cls.REPOMD_FILENAME])
+        return False not in (access.access(os.path.join(base, x))
+                             for x in [cls.TREEINFO_FILENAME, cls.REPOMD_FILENAME])
 
     @classmethod
     def _getVersion(cls, access, category):
@@ -368,8 +368,8 @@ class Repository(BaseRepository):
     def isRepo(cls, access, base):
         """ Return whether there is a repository at base address
         'base' accessible using accessor."""
-        return False not in map(lambda x: access.access(os.path.join(base, x)),
-                                [cls.REPOSITORY_FILENAME, cls.PKGDATA_FILENAME])
+        return False not in (access.access(os.path.join(base, x))
+                             for x in [cls.REPOSITORY_FILENAME, cls.PKGDATA_FILENAME])
 
     @classmethod
     def getRepoVer(cls, access):

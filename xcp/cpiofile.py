@@ -51,6 +51,8 @@ import time
 import struct
 import copy
 
+import six
+
 if sys.platform == 'mac':
     # This module needs work for MacOS9, especially in the area of pathname
     # handling. In many places it is assumed a simple substitution of / by the
@@ -116,7 +118,7 @@ def copyfileobj(src, dst, length=None):
 
     bufsize = 16 * 1024
     blocks, remainder = divmod(length, bufsize)
-    for _ in xrange(blocks):
+    for b in range(blocks):
         buf = src.read(bufsize)
         if len(buf) < bufsize:
             raise IOError("end of file reached")
@@ -303,7 +305,7 @@ class _Stream(object):
                                             -self.zlib.MAX_WBITS,
                                             self.zlib.DEF_MEM_LEVEL,
                                             0)
-        timestamp = struct.pack("<L", long(time.time()))
+        timestamp = struct.pack("<L", int(time.time()))
         self.__write("\037\213\010\010%s\002\377" % timestamp)
         if self.name.endswith(".gz"):
             self.name = self.name[:-3]
@@ -398,7 +400,7 @@ class _Stream(object):
         """
         if pos - self.pos >= 0:
             blocks, remainder = divmod(pos - self.pos, self.bufsize)
-            for _ in xrange(blocks):
+            for i in range(blocks):
                 self.read(self.bufsize)
             self.read(remainder)
         else:
@@ -917,7 +919,7 @@ class CpioInfo(object):
         return (stat.S_ISCHR(self.mode) or stat.S_ISBLK(self.mode))
 # class CpioInfo
 
-class CpioFile(object):
+class CpioFile(six.Iterator):
     """The CpioFile Class provides an interface to cpio archives.
     """
 
@@ -1110,8 +1112,7 @@ class CpioFile(object):
             fileobj = file(name, mode + "b")
 
         try:
-            t = cls.cpioopen(name, mode,
-                gzip.GzipFile(name, mode, compresslevel, fileobj))
+            t = cls.cpioopen(name, mode, gzip.GzipFile(name, mode, compresslevel, fileobj))
         except IOError:
             raise ReadError("not a gzip file")
         t._extfileobj = False
@@ -1309,8 +1310,7 @@ class CpioFile(object):
                     print("%10s" % ("%d,%d" % (cpioinfo.devmajor, cpioinfo.devminor)), end=' ')
                 else:
                     print("%10d" % cpioinfo.size, end=' ')
-                print("%d-%02d-%02d %02d:%02d:%02d" \
-                      % time.localtime(cpioinfo.mtime)[:6], end=' ')
+                print("%d-%02d-%02d %02d:%02d:%02d" % time.localtime(cpioinfo.mtime)[:6], end=' ')
 
             print(cpioinfo.name)
 
@@ -1697,7 +1697,7 @@ class CpioFile(object):
             raise ExtractError("could not change modification time")
 
     #--------------------------------------------------------------------------
-    def next(self):
+    def __next__(self):
         """Return the next member of the archive as a CpioInfo object, when
            CpioFile is opened for reading. Return None if there is no more
            available.
@@ -1794,7 +1794,7 @@ class CpioFile(object):
         else:
             end = members.index(cpioinfo)
 
-        for i in xrange(end - 1, -1, -1):
+        for i in range(end - 1, -1, -1):
             if name == members[i].name:
                 return members[i]
 
@@ -1832,7 +1832,7 @@ class CpioFile(object):
             print(msg, file=sys.stderr)
 # class CpioFile
 
-class CpioIter(object):
+class CpioIter(six.Iterator):
     """Iterator Class.
 
        for cpioinfo in CpioFile(...):
@@ -1848,7 +1848,7 @@ class CpioIter(object):
         """Return iterator object.
         """
         return self
-    def next(self):
+    def __next__(self):
         """Return the next item using CpioFile's next() method.
            When all members have been read, set CpioFile as _loaded.
         """
@@ -1891,10 +1891,9 @@ class CpioFileCompat(object):
                 m.file_size = m.size
                 m.date_time = time.gmtime(m.mtime)[:6]
     def namelist(self):
-        return map(lambda m: m.name, self.infolist())
+        return [m.name for m in self.infolist()]
     def infolist(self):
-        return filter(lambda m: m.isreg(),
-                      self.cpiofile.getmembers())
+        return [m for m in self.cpiofile.getmembers() if m.isreg()]
     def printdir(self):
         self.cpiofile.list()
     def testzip(self):
@@ -1905,16 +1904,7 @@ class CpioFileCompat(object):
         return self.cpiofile.extractfile(self.cpiofile.getmember(name)).read()
     def write(self, filename, arcname=None, compress_type=None):
         self.cpiofile.add(filename, arcname)
-    def writestr(self, zinfo, bts):
-        try:
-            from cStringIO import StringIO
-        except ImportError:
-            from StringIO import StringIO
-        import calendar
-        zinfo.name = zinfo.filename
-        zinfo.size = zinfo.file_size
-        zinfo.mtime = calendar.timegm(zinfo.date_time)
-        self.cpiofile.addfile(zinfo, StringIO(bts))
+    # deleted writestr method
     def close(self):
         self.cpiofile.close()
 #class CpioFileCompat

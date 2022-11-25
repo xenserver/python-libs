@@ -24,6 +24,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import print_function
+from __future__ import division
 import os
 import os.path
 import re
@@ -145,13 +146,12 @@ class Bootloader(object):
                         title = l[1:].lstrip()
                     elif keywrd == 'kernel' and len(els) > 1:
                         kernel = els[1]
-                    elif keywrd == 'append' and len(els) > 1 and \
-                            kernel == 'mboot.c32':
+                    elif keywrd == 'append' and len(els) > 1 and kernel == 'mboot.c32':
                         if 'tboot' in els[1]:
                             # els[2] contains tboot args, hypervisor,
                             # hypervisor args, kernel,
                             # kernel args & initrd
-                            args = map(lambda x: x.strip(), els[2].split('---'))
+                            args = [x.strip() for x in els[2].split('---')]
                             if len(args) == 4:
                                 hypervisor = args[1].split(None, 1)
                                 kernel = args[2].split(None, 1)
@@ -167,7 +167,7 @@ class Bootloader(object):
                         elif 'xen' in els[1]:
                             # els[2] contains hypervisor args, kernel,
                             # kernel args & initrd
-                            args = map(lambda x: x.strip(), els[2].split('---'))
+                            args = [x.strip() for x in els[2].split('---')]
                             if len(args) == 3:
                                 kernel = args[1].split(None, 1)
                                 if len(kernel) == 2:
@@ -519,7 +519,7 @@ class Bootloader(object):
                     print("default %d" % i, file=fh)
                     break
         if self.timeout:
-            print("timeout %d" % (self.timeout / 10), file=fh)
+            print("timeout %d" % (self.timeout // 10), file=fh)
 
         for label in self.menu_order:
             m = self.menu[label]
@@ -553,7 +553,7 @@ class Bootloader(object):
             else:
                 print("set default='%s'" % str(self.default), file=fh)
         if self.timeout:
-            print("set timeout=%d" % (self.timeout / 10), file=fh)
+            print("set timeout=%d" % (self.timeout // 10), file=fh)
 
         boilerplate = getattr(self, 'boilerplate', [])[:]
         boilerplate.reverse()

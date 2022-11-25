@@ -56,7 +56,7 @@ def runCmd(command, with_stdout = False, with_stderr = False, inputtext = None):
         return rv, err
     return rv
 
-class OutputCache:
+class OutputCache(object):
     def __init__(self):
         self.cache = {}
 

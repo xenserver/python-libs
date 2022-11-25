@@ -24,6 +24,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from __future__ import absolute_import
+from __future__ import division
 import re
 
 from . import version
@@ -40,7 +41,7 @@ def default_memory_v2(host_mem_kib):
     #
     # Add a bit extra to account for this.
     #
-    gb = (host_mem_kib + 256 * 1024) / 1024 / 1024
+    gb = (host_mem_kib + 256 * 1024) // 1024 // 1024
 
     if gb < 24:
         return 752 * 1024
@@ -62,7 +63,7 @@ def default_memory_v3(host_mem_kib):
     #
     # Add a bit extra to account for this.
     #
-    mb = (host_mem_kib + 256 * 1024) / 1024
+    mb = (host_mem_kib + 256 * 1024) // 1024
 
     # Give dom0 1 GiB + 5% of host memory, rounded to 16 MiB, limited to 8 GiB
     return min(1024 + int(mb * 0.05) & ~0xF, 8192) * 1024

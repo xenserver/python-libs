@@ -554,22 +554,8 @@ class TestInputSanitisation(unittest.TestCase):
         self.siobuff.close()
 
 
-    def assertNotRaises(self, excp, fn, *argl, **kwargs):
-        """Because unittest.TestCase seems to be missing this functionality"""
-        try:
-            fn(*argl, **kwargs)
-        except excp as e:
-            self.fail("function raised %s unexpectedly: %s"
-                      % (excp, e))
-
     def test_srule_eth_unaliased(self):
-
-        self.assertNotRaises(StaticRuleError,
-                             rename,
-                             [self.s111],
-                             [],
-                             [],
-                             [])
+        rename([self.s111], [], [], [])
 
     def test_srule_eth_alias(self):
         """
@@ -582,8 +568,8 @@ class TestInputSanitisation(unittest.TestCase):
                          [self.s112, self.s222, self.s331] ]
 
         for i in srule_inputs:
-            self.assertRaises(StaticRuleError, rename,
-                              i, [], [], [])
+            with self.assertRaises(StaticRuleError):
+                rename(i, [], [], [])
 
     def test_srule_mac_alias(self):
         """
@@ -596,8 +582,8 @@ class TestInputSanitisation(unittest.TestCase):
                          [self.s211, self.s222, self.s133] ]
 
         for i in srule_inputs:
-            self.assertRaises(StaticRuleError, rename,
-                              i, [], [], [])
+            with self.assertRaises(StaticRuleError):
+                rename(i, [], [], [])
 
     def test_curstate_eth_alias(self):
         """
@@ -610,8 +596,8 @@ class TestInputSanitisation(unittest.TestCase):
                             [self.c112, self.c222, self.c331] ]
 
         for i in curstate_inputs:
-            self.assertRaises(CurrentStateError, rename,
-                              [], i, [], [])
+            with self.assertRaises(CurrentStateError):
+                rename([], i, [], [])
 
     def test_curstate_mac_alias(self):
         """
@@ -624,8 +610,8 @@ class TestInputSanitisation(unittest.TestCase):
                             [self.c211, self.c222, self.c133] ]
 
         for i in curstate_inputs:
-            self.assertRaises(CurrentStateError, rename,
-                              [], i, [], [])
+            with self.assertRaises(CurrentStateError):
+                rename([], i, [], [])
 
     def test_laststate_input(self):
         """
@@ -633,11 +619,10 @@ class TestInputSanitisation(unittest.TestCase):
           (xx:xx.x,xx:xx:xx:xx:xx:xx)->eth##
         """
 
-        self.assertRaises(LastStateError, rename,
-                          [], [], [self.c123], [])
+        with self.assertRaises(LastStateError):
+            rename([], [], [self.c123], [])
 
-        self.assertNotRaises(LastStateError, rename,
-                          [], [], [self.s123], [])
+        rename([], [], [self.s123], [])
 
     def test_oldstate_input(self):
         """
@@ -645,8 +630,7 @@ class TestInputSanitisation(unittest.TestCase):
           (xx:xx.x,xx:xx:xx:xx:xx:xx)->eth##
         """
 
-        self.assertRaises(OldStateError, rename,
-                          [], [], [], [self.c123])
+        with self.assertRaises(OldStateError):
+            rename([], [], [], [self.c123])
 
-        self.assertNotRaises(OldStateError, rename,
-                          [], [], [], [self.s123])
+        rename([], [], [], [self.s123])

@@ -7,11 +7,14 @@ from xcp.pci import PCI, PCIIds, PCIDevices
 class TestInvalid(unittest.TestCase):
 
     def test_invalid_types(self):
-
-        self.assertRaises(TypeError, PCI, 0)
-        self.assertRaises(TypeError, PCI, (0,))
-        self.assertRaises(TypeError, PCI, [])
-        self.assertRaises(TypeError, PCI, {})
+        with self.assertRaises(TypeError):
+            PCI(0)
+        with self.assertRaises(TypeError):
+            PCI((0,))
+        with self.assertRaises(TypeError):
+            PCI([])
+        with self.assertRaises(TypeError):
+            PCI({})
 
     def test_invalid_format(self):
         pass

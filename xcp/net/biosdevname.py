@@ -65,7 +65,7 @@ def all_devices_all_names():
         if retcode:
             continue
 
-        for device in (x.strip() for x in stdout.split("\n\n") if len(x)):
+        for device in (x.strip() for x in stdout.decode().split("\n\n") if len(x)):
             dinfo = {}
 
             for l in device.split("\n"):

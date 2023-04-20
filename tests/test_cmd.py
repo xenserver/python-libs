@@ -5,6 +5,10 @@ from mock import patch, Mock, DEFAULT
 from xcp import xcp_popen_text_kwargs
 from xcp.cmd import OutputCache
 
+from .xcptestlib import set_c_locale
+
+set_c_locale()
+
 class TestCache(unittest.TestCase):
     def setUp(self):
         self.c = OutputCache()
@@ -32,7 +36,8 @@ class TestCache(unittest.TestCase):
             self.assertEqual(data, "line1\nline2\n")
 
     def test_runCmd(self):
-        output_data = "line1\nline2\n"
+        output_data = "output with\nUTF-8:\u25b6\U0001f601\n"
+
         with patch("xcp.cmd.subprocess.Popen") as popen_mock:
             # mock Popen .communicate and .returncode for
             # `output_data`on stdout, nothing on stderr, and exit

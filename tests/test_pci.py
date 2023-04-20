@@ -6,6 +6,10 @@ from mock import patch, Mock
 from xcp import xcp_popen_text_kwargs
 from xcp.pci import PCI, PCIIds, PCIDevices
 
+from .xcptestlib import set_c_locale
+
+set_c_locale()
+
 class TestInvalid(unittest.TestCase):
 
     def test_invalid_types(self):

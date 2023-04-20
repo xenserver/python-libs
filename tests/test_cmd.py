@@ -66,3 +66,9 @@ class TestCache(unittest.TestCase):
             data = self.c.runCmd(['ls', '/tmp'], with_stdout=True, with_stderr=True)
             popen_mock.assert_not_called()
             self.assertEqual(data, (42, output_data, stderr_data))
+
+    def test_runCmdCatStdin(self):
+        """Call cat with a given UTF-8 input text and expect it to be returned"""
+        stdin = "output with\nUTF-8:\u25b6\U0001f601"
+        ret = self.c.runCmd("cat", inputtext=stdin, with_stdout=True, with_stderr=True)
+        self.assertEqual(ret, (0, stdin, ""))

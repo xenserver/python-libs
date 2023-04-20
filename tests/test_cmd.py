@@ -37,12 +37,13 @@ class TestCache(unittest.TestCase):
 
     def test_runCmd(self):
         output_data = "output with\nUTF-8:\u25b6\U0001f601\n"
+        stderr_data = "error with\nUTF-8:\u2614\U0001f629\n"
 
         with patch("xcp.cmd.subprocess.Popen") as popen_mock:
             # mock Popen .communicate and .returncode for
-            # `output_data`on stdout, nothing on stderr, and exit
+            # `output_data` on stdout, `stderr_data` on stderr, and an exit
             # value of 42
-            communicate_mock = Mock(return_value=(output_data, ""))
+            communicate_mock = Mock(return_value=(output_data, stderr_data))
             popen_mock.return_value.communicate = communicate_mock
             def communicate_side_effect(_input_text):
                 popen_mock.return_value.returncode = 42
@@ -62,6 +63,6 @@ class TestCache(unittest.TestCase):
 
             # rerun as cached
             popen_mock.reset_mock()
-            data = self.c.runCmd(['ls', '/tmp'], True)
+            data = self.c.runCmd(['ls', '/tmp'], with_stdout=True, with_stderr=True)
             popen_mock.assert_not_called()
-            self.assertEqual(data, (42, output_data))
+            self.assertEqual(data, (42, output_data, stderr_data))

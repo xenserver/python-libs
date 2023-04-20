@@ -1,4 +1,5 @@
 import subprocess
+import sys
 import unittest
 from mock import patch, Mock
 
@@ -78,6 +79,14 @@ class TestPCIIds(unittest.TestCase):
         open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids", **xcp_popen_text_kwargs)
         video_class = ids.lookupClass('Display controller')
         self.assertEqual(video_class, ['03'])
+
+        # Check reading devices with UTF-8 chars:
+        if sys.version_info.major > 2:
+            self.assertEqual(ids.findSubdevice(1787, 2020), "R9 290X IceQ X\u00b2 Turbo")
+        else:
+            # Python2 would have to change the return value to unicode to return Unicode,
+            # so it returns the original UTF-8 string from the file:
+            self.assertEqual(ids.findSubdevice(1787, 2020), "R9 290X IceQ X\xc2\xb2 Turbo")
 
         with patch("xcp.pci.subprocess.Popen") as popen_mock, \
              open("tests/data/lspci-mn", **xcp_popen_text_kwargs) as fake_data:

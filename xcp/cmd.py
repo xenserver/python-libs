@@ -27,13 +27,16 @@ import subprocess
 import six
 
 import xcp.logger as logger
+from xcp import xcp_popen_text_kwargs
+
 
 def runCmd(command, with_stdout = False, with_stderr = False, inputtext = None):
     cmd = subprocess.Popen(command, bufsize=1,
                            stdin=(inputtext and subprocess.PIPE or None),
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE,
-                           shell=isinstance(command, six.string_types))
+                           shell=isinstance(command, six.string_types),
+                           **xcp_popen_text_kwargs)
 
     (out, err) = cmd.communicate(inputtext)
     rv = cmd.returncode

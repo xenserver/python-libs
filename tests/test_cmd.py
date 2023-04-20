@@ -1,6 +1,8 @@
+import subprocess
 import unittest
 from mock import patch, Mock, DEFAULT
 
+from xcp import xcp_popen_text_kwargs
 from xcp.cmd import OutputCache
 
 class TestCache(unittest.TestCase):
@@ -44,7 +46,13 @@ class TestCache(unittest.TestCase):
 
             # uncached runCmd
             data = self.c.runCmd(['ls', '/tmp'], True)
-            popen_mock.assert_called_once()
+            popen_mock.assert_called_once_with(["ls", "/tmp"],
+                                               bufsize=1,
+                                               stdin=None,
+                                               stdout=subprocess.PIPE,
+                                               stderr=subprocess.PIPE,
+                                               shell=False,
+                                               **xcp_popen_text_kwargs)
             self.assertEqual(data, (42, output_data))
 
             # rerun as cached

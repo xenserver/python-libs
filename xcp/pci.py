@@ -26,6 +26,8 @@ import subprocess
 import re
 import six
 
+from xcp import xcp_popen_text_kwargs
+
 _SBDF = (r"(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
          r"     (?P<bus>     [\da-fA-F]{2}):"   # Bus
          r"     (?P<device>  [\da-fA-F]{2})\."  # Device
@@ -185,7 +187,8 @@ class PCIIds(object):
         vendor = None
         cls = None
 
-        fh = open(fn)
+        # Enable text mode with UTF-8. On errors, replace malformed bytes with "?":
+        fh = open(fn, **xcp_popen_text_kwargs)
         for l in fh:
             line = l.rstrip()
             if line == '' or line.startswith('#'):
@@ -256,7 +259,8 @@ class PCIDevices(object):
         self.devs = {}
 
         cmd = subprocess.Popen(['lspci', '-mn'], bufsize = 1,
-                               stdout = subprocess.PIPE)
+                               stdout = subprocess.PIPE,
+                               **xcp_popen_text_kwargs)
         for l in cmd.stdout:
             line = l.rstrip()
             el = [x for x in line.replace('"', '').split() if not x.startswith('-')]

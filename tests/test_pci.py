@@ -2,6 +2,7 @@ import subprocess
 import unittest
 from mock import patch, Mock
 
+from xcp import xcp_popen_text_kwargs
 from xcp.pci import PCI, PCIIds, PCIDevices
 
 class TestInvalid(unittest.TestCase):
@@ -69,21 +70,22 @@ class TestPCIIds(unittest.TestCase):
     def tests_videoclass(self):
         with patch("xcp.pci.os.path.exists") as exists_mock, \
              patch("xcp.pci.open") as open_mock, \
-             open("tests/data/pci.ids") as fake_data:
+             open("tests/data/pci.ids", **xcp_popen_text_kwargs) as fake_data:
             exists_mock.return_value = True
             open_mock.return_value.__iter__ = Mock(return_value=iter(fake_data))
             ids = PCIIds.read()
         exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
-        open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
+        open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids", **xcp_popen_text_kwargs)
         video_class = ids.lookupClass('Display controller')
         self.assertEqual(video_class, ['03'])
 
         with patch("xcp.pci.subprocess.Popen") as popen_mock, \
-             open("tests/data/lspci-mn") as fake_data:
+             open("tests/data/lspci-mn", **xcp_popen_text_kwargs) as fake_data:
             popen_mock.return_value.stdout.__iter__ = Mock(return_value=iter(fake_data))
             devs = PCIDevices()
         popen_mock.assert_called_once_with(['lspci', '-mn'], bufsize = 1,
-                                           stdout = subprocess.PIPE)
+                                           stdout = subprocess.PIPE,
+                                           **xcp_popen_text_kwargs)
         sorted_devices = sorted(devs.findByClass(video_class),
                                 key=lambda x: x['id'])
         self.assertEqual(len(sorted_devices), 2)

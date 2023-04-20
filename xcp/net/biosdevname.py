@@ -33,6 +33,8 @@ __author__ = "Andrew Cooper"
 
 from subprocess import Popen, PIPE
 
+from xcp import xcp_popen_text_kwargs
+
 __ALL_POLICIES = [ "physical", "all_ethN" ]
 
 def __run_all_devices(policy = "physical"):
@@ -42,7 +44,7 @@ def __run_all_devices(policy = "physical"):
     """
 
     proc = Popen(["/sbin/biosdevname", "--policy", policy,
-                  "-d"], stdout=PIPE, stderr=PIPE)
+                  "-d"], stdout=PIPE, stderr=PIPE, **xcp_popen_text_kwargs)
 
     stdout, stderr = proc.communicate()
 

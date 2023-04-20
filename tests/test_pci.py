@@ -101,7 +101,31 @@ class TestPCIIds(unittest.TestCase):
                                            **xcp_popen_text_kwargs)
         sorted_devices = sorted(devs.findByClass(video_class),
                                 key=lambda x: x['id'])
+
+        # Check the content of sorted_devices:
         self.assertEqual(len(sorted_devices), 2)
+        expected = [
+            {
+                "id": "03:00.0",
+                "class": "03",
+                "subclass": "80",
+                "vendor": "1002",
+                "device": "7340",
+                "subvendor": "1462",
+                "subdevice": "12ac",
+            },
+            {
+                "id": "07:00.0",
+                "class": "03",
+                "subclass": "00",
+                "vendor": "1002",
+                "device": "1636",
+                "subvendor": "1462",
+                "subdevice": "12ac",
+            },
+        ]
+        for device in [0, 1]:
+            self.assertDictEqual(expected[device], sorted_devices[device])
 
         for (video_dev,
              num_functions,

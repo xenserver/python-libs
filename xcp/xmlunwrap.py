@@ -22,16 +22,19 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """xmlunwrap - general methods to unwrap XML elements & attributes"""
+from xml.dom.minidom import Element
 
 import six
 
 class XmlUnwrapError(Exception):
     pass
 
-def getText(nodelist):
+def getText(element):
+    # type:(Element) -> str
+    """Return the text of the element as stripped string"""
     rc = ""
 
-    for node in nodelist.childNodes:
+    for node in element.childNodes:
         if node.nodeType == node.TEXT_NODE:
             rc = rc + node.data
     if not isinstance(rc, str):  # Python 2 only, otherwise it would return unicode
@@ -47,6 +50,7 @@ def getElementsByTagName(el, tags, mandatory = False):
     return matching
 
 def getStrAttribute(el, attrs, default='', mandatory=False):
+    # type:(Element, list, str | None, bool) -> str | None
     matching = []
     for attr in attrs:
         val = el.getAttribute(attr)
@@ -59,30 +63,34 @@ def getStrAttribute(el, attrs, default='', mandatory=False):
     return matching[0]
 
 def getBoolAttribute(el, attrs, default = None):
+    # type:(Element, list, bool | None) -> bool | None
     mandatory = (default == None)
-    val = getStrAttribute(el, attrs, '', mandatory).lower()
+    # Will raise an exception if attribute is not found and default is None:
+    val = getStrAttribute(el, attrs, '', mandatory).lower()  # type: ignore
     if val == '':
         return default
     return val in ['yes', 'true']
 
 def getIntAttribute(el, attrs, default = None):
+    # type:(Element, list, int | None) -> int | None
     mandatory = (default == None)
     val = getStrAttribute(el, attrs, '', mandatory)
     if val == '':
         return default
     try:
-        int_val = int(val, 0)
+        int_val = int(val, 0)  # type: ignore  # (handled by raising XmlUnwarpError below)
     except Exception as e:
         six.raise_from(XmlUnwrapError("Invalid integer value for %s" % attrs[0]), e)
     return int_val
 
 def getMapAttribute(el, attrs, mapping, default = None):
+    # type:(Element, list, list[list], str | None) -> str
     mandatory = (default == None)
     k, v = zip(*mapping)
     key = getStrAttribute(el, attrs, default, mandatory)
 
     if key not in k:
-        raise XmlUnwrapError("Unexpected key %s for attribute" % key)
+        raise XmlUnwrapError("Unexpected key " + str(key) + "for attribute")
 
     k_list = list(k)
     return v[k_list.index(key)]

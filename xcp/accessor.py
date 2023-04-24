@@ -99,9 +99,10 @@ class FilesystemAccessor(Accessor):
         super(FilesystemAccessor, self).__init__(ro)
         self.location = location
 
-    def openAddress(self, address):
+    def openAddress(self, address, **kwargs):
         try:
-            filehandle = open(os.path.join(self.location, address), 'rb')
+            kwargs["mode"] = "r" if "encoding" in kwargs else "rb"
+            filehandle = open(os.path.join(self.location, address), **kwargs)
         except OSError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -165,9 +166,10 @@ class MountingAccessor(FilesystemAccessor):
             os.rmdir(self.location)
             self.location = None
 
-    def writeFile(self, in_fh, out_name):
+    def writeFile(self, in_fh, out_name, **kwargs):
         logger.info("Copying to %s" % os.path.join(self.location, out_name))
-        out_fh = open(os.path.join(self.location, out_name), "wb")
+        kwargs["mode"] = "w" if "encoding" in kwargs else "wb"
+        out_fh = open(os.path.join(self.location, out_name), **kwargs)
         return self._writeFile(in_fh, out_fh)
 
     def __del__(self):
@@ -220,9 +222,10 @@ class FileAccessor(Accessor):
         super(FileAccessor, self).__init__(ro)
         self.baseAddress = baseAddress
 
-    def openAddress(self, address):
+    def openAddress(self, address, **kwargs):
         try:
-            file = open(os.path.join(self.baseAddress, address), "rb")
+            kwargs["mode"] = "r" if "encoding" in kwargs else "rb"
+            file = open(os.path.join(self.baseAddress, address), **kwargs)
         except IOError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -240,9 +243,10 @@ class FileAccessor(Accessor):
             return False
         return file
 
-    def writeFile(self, in_fh, out_name):
+    def writeFile(self, in_fh, out_name, **kwargs):
         logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
-        out_fh = open(os.path.join(self.baseAddress, out_name), "wb" )
+        kwargs["mode"] = "w" if "encoding" in kwargs else "wb"
+        out_fh = open(os.path.join(self.baseAddress, out_name), **kwargs)
         return self._writeFile(in_fh, out_fh)
 
     def __repr__(self):
@@ -331,13 +335,14 @@ class FTPAccessor(Accessor):
             self.lastError = 500
             return False
 
-    def openAddress(self, address):
+    def openAddress(self, address, **kwargs):
         logger.debug("Opening "+address)
         self._cleanup()
         url = urllib.parse.unquote(address)
 
         self.ftp.voidcmd('TYPE I')
-        s = self.ftp.transfercmd('RETR ' + url).makefile('rb')
+        kwargs["mode"] = "r" if "encoding" in kwargs else "rb"
+        s = self.ftp.transfercmd('RETR ' + url).makefile(**kwargs)
         self.cleanup = True
         return s
 

@@ -46,7 +46,7 @@ def getElementsByTagName(el, tags, mandatory = False):
     for tag in tags:
         matching.extend(el.getElementsByTagName(tag))
     if mandatory and not matching:
-        raise XmlUnwrapError("Missing mandatory element %s" % tags[0])
+        raise XmlUnwrapError("Missing mandatory element " + tags[0])
     return matching
 
 def getStrAttribute(el, attrs, default='', mandatory=False):
@@ -58,7 +58,7 @@ def getStrAttribute(el, attrs, default='', mandatory=False):
             matching.append(val)
     if not matching:
         if mandatory:
-            raise XmlUnwrapError("Missing mandatory attribute %s" % attrs[0])
+            raise XmlUnwrapError("Missing mandatory attribute " + attrs[0])
         return default
     return matching[0]
 
@@ -67,9 +67,7 @@ def getBoolAttribute(el, attrs, default = None):
     mandatory = default is None
     # Will raise an exception if attribute is not found and default is None:
     val = getStrAttribute(el, attrs, '', mandatory).lower()  # type: ignore
-    if val == '':
-        return default
-    return val in ['yes', 'true']
+    return default if val == '' else val in ['yes', 'true']
 
 def getIntAttribute(el, attrs, default = None):
     # type:(Element, list, int | None) -> int | None
@@ -80,7 +78,7 @@ def getIntAttribute(el, attrs, default = None):
     try:
         int_val = int(val, 0)  # type: ignore  # (handled by raising XmlUnwarpError below)
     except Exception as e:
-        six.raise_from(XmlUnwrapError("Invalid integer value for %s" % attrs[0]), e)
+        six.raise_from(XmlUnwrapError("Invalid integer value for " + attrs[0]), e)
     return int_val
 
 def getMapAttribute(el, attrs, mapping, default = None):

@@ -101,7 +101,7 @@ class FilesystemAccessor(Accessor):
 
     def openAddress(self, address):
         try:
-            filehandle = open(os.path.join(self.location, address), 'r')
+            filehandle = open(os.path.join(self.location, address), 'rb')
         except OSError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -167,7 +167,7 @@ class MountingAccessor(FilesystemAccessor):
 
     def writeFile(self, in_fh, out_name):
         logger.info("Copying to %s" % os.path.join(self.location, out_name))
-        out_fh = open(os.path.join(self.location, out_name), 'w')
+        out_fh = open(os.path.join(self.location, out_name), "wb")
         return self._writeFile(in_fh, out_fh)
 
     def __del__(self):
@@ -222,7 +222,7 @@ class FileAccessor(Accessor):
 
     def openAddress(self, address):
         try:
-            file = open(os.path.join(self.baseAddress, address))
+            file = open(os.path.join(self.baseAddress, address), "rb")
         except IOError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -242,7 +242,7 @@ class FileAccessor(Accessor):
 
     def writeFile(self, in_fh, out_name):
         logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
-        out_fh = open(os.path.join(self.baseAddress, out_name), 'w')
+        out_fh = open(os.path.join(self.baseAddress, out_name), "wb" )
         return self._writeFile(in_fh, out_fh)
 
     def __repr__(self):

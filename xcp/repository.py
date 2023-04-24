@@ -297,7 +297,7 @@ class Repository(BaseRepository):
         repofile.close()
 
         # update md5sum for repo
-        self._md5.update(repofile_contents.encode())
+        self._md5.update(repofile_contents)
 
         # build xml doc object
         try:

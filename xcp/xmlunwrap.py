@@ -45,7 +45,7 @@ def getElementsByTagName(el, tags, mandatory = False):
     matching = []
     for tag in tags:
         matching.extend(el.getElementsByTagName(tag))
-    if mandatory and len(matching) == 0:
+    if mandatory and not matching:
         raise XmlUnwrapError("Missing mandatory element %s" % tags[0])
     return matching
 
@@ -56,7 +56,7 @@ def getStrAttribute(el, attrs, default='', mandatory=False):
         val = el.getAttribute(attr)
         if val != '':
             matching.append(val)
-    if len(matching) == 0:
+    if not matching:
         if mandatory:
             raise XmlUnwrapError("Missing mandatory attribute %s" % attrs[0])
         return default

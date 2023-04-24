@@ -34,7 +34,9 @@ def getText(nodelist):
     for node in nodelist.childNodes:
         if node.nodeType == node.TEXT_NODE:
             rc = rc + node.data
-    return rc.encode().strip()
+    if not isinstance(rc, str):  # Python 2 only, otherwise it would return unicode
+        rc = rc.encode()
+    return rc.strip()
 
 def getElementsByTagName(el, tags, mandatory = False):
     matching = []
@@ -47,7 +49,9 @@ def getElementsByTagName(el, tags, mandatory = False):
 def getStrAttribute(el, attrs, default = '', mandatory = False):
     matching = []
     for attr in attrs:
-        val = el.getAttribute(attr).encode()
+        val = el.getAttribute(attr)
+        if not isinstance(val, str):  # Python 2 only, otherwise it would return unicode
+            val = val.encode()
         if val != '':
             matching.append(val)
     if len(matching) == 0:

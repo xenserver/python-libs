@@ -66,7 +66,7 @@ class Accessor(object):
 
         return True
 
-    def openAddress(self, address):
+    def openAddress(self, address, mode="", **kwargs):
         """should be overloaded"""
         pass
 
@@ -94,9 +94,9 @@ class FilesystemAccessor(Accessor):
         super(FilesystemAccessor, self).__init__(ro)
         self.location = location
 
-    def openAddress(self, address):
+    def openAddress(self, address, mode="rb", **kwargs):
         try:
-            filehandle = open(os.path.join(self.location, address), 'r')
+            filehandle = open(os.path.join(self.location, address), mode, **kwargs)
         except OSError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -160,9 +160,9 @@ class MountingAccessor(FilesystemAccessor):
             os.rmdir(self.location)
             self.location = None
 
-    def writeFile(self, in_fh, out_name):
+    def writeFile(self, in_fh, out_name, mode="wb", **kwargs):
         logger.info("Copying to %s" % os.path.join(self.location, out_name))
-        out_fh = open(os.path.join(self.location, out_name), 'w')
+        out_fh = open(os.path.join(self.location, out_name), mode, **kwargs)
         return self._writeFile(in_fh, out_fh)
 
     def __del__(self):
@@ -215,9 +215,9 @@ class FileAccessor(Accessor):
         super(FileAccessor, self).__init__(ro)
         self.baseAddress = baseAddress
 
-    def openAddress(self, address):
+    def openAddress(self, address, mode="rb", **kwargs):
         try:
-            file = open(os.path.join(self.baseAddress, address))
+            file = open(os.path.join(self.baseAddress, address), mode, **kwargs)
         except IOError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -235,9 +235,9 @@ class FileAccessor(Accessor):
             return False
         return file
 
-    def writeFile(self, in_fh, out_name):
+    def writeFile(self, in_fh, out_name, mode="wb", **kwargs):
         logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
-        out_fh = open(os.path.join(self.baseAddress, out_name), 'w')
+        out_fh = open(os.path.join(self.baseAddress, out_name), mode, **kwargs)
         return self._writeFile(in_fh, out_fh)
 
     def __repr__(self):
@@ -326,13 +326,13 @@ class FTPAccessor(Accessor):
             self.lastError = 500
             return False
 
-    def openAddress(self, address):
+    def openAddress(self, address, mode="rb", **kwargs):
         logger.debug("Opening "+address)
         self._cleanup()
         url = urllib.parse.unquote(address)
 
         self.ftp.voidcmd('TYPE I')
-        s = self.ftp.transfercmd('RETR ' + url).makefile('rb')
+        s = self.ftp.transfercmd('RETR ' + url).makefile(mode, **kwargs)
         self.cleanup = True
         return s
 
@@ -368,8 +368,10 @@ class HTTPAccessor(Accessor):
 
         self.baseAddress = rebuild_url(self.url_parts)
 
-    def openAddress(self, address):
+    def openAddress(self, address, mode="", **kwargs):
+        """Open an HTTP/S URL. Note urllib must return binary as encoding may be gzip"""
         try:
+            # pylint: disable-next=consider-using-with
             urlFile = urllib.request.urlopen(os.path.join(self.baseAddress, address))
         except urllib.error.HTTPError as e:
             self.lastError = e.code

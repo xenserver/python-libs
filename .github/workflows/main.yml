@@ -3,48 +3,51 @@ name: Unit tests
 on: [push, pull_request]
 
 jobs:
-  test_py2:
-    runs-on: ubuntu-20.04
+  test:
+    strategy:
+      matrix:
+        include:
+        - python-version: '2.7'
+          os: ubuntu-20.04
+        - python-version: '3'
+          os: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up Python 2.7
-        uses: actions/setup-python@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
         with:
-          python-version: '2.7'
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
-          # FIXME: branding.py still has no permanent home
-          curl https://gist.github.com/ydirson/3c36a7e19d762cc529a6c82340894ccc/raw/5ca39f621b1feab813e171f535c1aad1bd483f1d/branding.py -O -L
-          pip install pyliblzma
           pip install -e .
-          command -v xz
 
       - name: Test
         run: |
           pytest --cov -rP
           coverage xml
-          coverage html
-          coverage html -d htmlcov-tests --include="tests/*"
-          diff-cover --html-report coverage-diff.html coverage.xml
+          coverage html -d htmlcov-${{ matrix.python-version }}
+          coverage html -d htmlcov-tests-${{ matrix.python-version }} --include="tests/*"
+          diff-cover --compare-branch=origin/master --html-report coverage-diff-${{ matrix.python-version }}.html coverage.xml
 
       - name: Pylint
         run: |
           pylint --version
           pylint --exit-zero xcp/ tests/ setup.py
           pylint --exit-zero --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" xcp/ tests/ setup.py > pylint.txt
-          diff-quality --violations=pylint --html-report pylint-diff.html pylint.txt
+          diff-quality --compare-branch=origin/master --violations=pylint --html-report pylint-diff-${{ matrix.python-version }}.html pylint.txt
 
       - uses: actions/upload-artifact@v3
         with:
           name: Coverage and pylint reports
           path: |
-            coverage-diff.html
-            pylint-diff.html
-            htmlcov
-            htmlcov-tests
+            coverage-diff-${{ matrix.python-version }}.html
+            pylint-diff-${{ matrix.python-version }}.html
+            htmlcov-${{ matrix.python-version }}
+            htmlcov-tests-${{ matrix.python-version }}

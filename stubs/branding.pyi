@@ -1,0 +1,43 @@
+"""
+python type stup for automatic type checking using mypy, prright et al.
+
+Generated from tests/branding.py using mypy's stubgen tool:
+stubgen tests/branding.py
+https://mypy.readthedocs.io/en/stable/stubgen.html?highlight=paths#automatic-stub-generation-stubgen
+"""
+BRAND_CONSOLE_URL: str
+BRAND_CONSOLE: str
+BRAND_GUEST_SHORT: str
+BRAND_GUESTS_SHORT: str
+BRAND_GUESTS: str
+BRAND_GUEST: str
+BRAND_SERVERS: str
+BRAND_SERVER: str
+BRAND_VDI: str
+COMPANY_DOMAIN: str
+COMPANY_NAME_LEGAL: str
+COMPANY_NAME: str
+COMPANY_NAME_SHORT: str
+COMPANY: str
+COMPANY_PRODUCT_BRAND: str
+COMPANY_WEBSITE: str
+COPYRIGHT_YEARS: str
+ISO_PV_TOOLS_COPYRIGHT: str
+ISO_PV_TOOLS_LABEL: str
+ISO_PV_TOOLS_PUBLISHER: str
+PLATFORM_MAJOR_VERSION: str
+PLATFORM_MICRO_VERSION: str
+PLATFORM_MINOR_VERSION: str
+PLATFORM_NAME: str
+PLATFORM_ORGANISATION: str
+PLATFORM_VERSION: str
+PLATFORM_WEBSITE: str
+PRODUCT_BRAND: str
+PRODUCT_BRAND_DASHED: str
+PRODUCT_MAJOR_VERSION: str
+PRODUCT_MICRO_VERSION: str
+PRODUCT_MINOR_VERSION: str
+PRODUCT_NAME: str
+PRODUCT_VERSION: str
+PRODUCT_VERSION_TEXT: str
+PRODUCT_VERSION_TEXT_SHORT: str

@@ -31,6 +31,7 @@ __version__ = "1.0.1"
 __author__  = "Andrew Cooper"
 
 import re
+import six
 
 VALID_COLON_MAC = re.compile(r"^([\da-fA-F]{1,2}:){5}[\da-fA-F]{1,2}$")
 VALID_DASH_MAC = re.compile(r"^([\da-fA-F]{1,2}-){5}[\da-fA-F]{1,2}$")
@@ -59,7 +60,7 @@ class MAC(object):
         self.octets = []
         self.integer = -1
 
-        if isinstance(addr, (str, unicode)):
+        if isinstance(addr, six.string_types):
 
             res = VALID_COLON_MAC.match(addr)
             if res:

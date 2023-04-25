@@ -23,7 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import md5
+from hashlib import md5
 import os.path
 import xml.dom.minidom
 import ConfigParser
@@ -246,7 +246,7 @@ class Repository(BaseRepository):
     def __init__(self, access, base, is_group = False):
         BaseRepository.__init__(self, access, base)
         self.is_group = is_group
-        self._md5 = md5.new()
+        self._md5 = md5()
         self.requires = []
         self.packages = []
 

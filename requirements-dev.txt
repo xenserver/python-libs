@@ -8,3 +8,6 @@ pytest-cov
 # dependencies also in setup.py until they can be used
 six
 future
+
+# python-2.7 only
+configparser ; python_version < "3.0"

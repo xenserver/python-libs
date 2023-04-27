@@ -1,6 +1,6 @@
 # necessary dev/test tasks
 pylint
-coverage
+coverage[toml]
 diff_cover
 mock
 pytest
@@ -11,3 +11,4 @@ six
 
 # python-2.7 only
 configparser ; python_version < "3.0"
+pyliblzma ; python_version < "3.0"

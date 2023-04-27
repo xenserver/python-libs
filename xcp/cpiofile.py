@@ -64,7 +64,7 @@ if sys.platform == 'mac':
 try:
     import grp as GRP, pwd as PWD
 except ImportError:
-    GRP = PWD = None
+    GRP = PWD = None  # type: ignore
 
 # from cpiofile import *
 __all__ = ["CpioFile", "CpioInfo", "is_cpiofile", "CpioError"]

@@ -39,7 +39,7 @@ try:
     import json
 except ImportError:
     try:
-        import simplejson as json
+        import simplejson as json  # type: ignore  # mypy sees the import above
     # The installer has no json.  In the meantime, there is a workaround
     except ImportError:
         pass

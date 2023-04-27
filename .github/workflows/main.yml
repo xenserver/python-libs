@@ -1,53 +1,80 @@
+# actions can be run locally using act and docker, on Fedora 37 also with podman, using:
+# https://github.com/nektos/act
+# sudo dnf install -y act-cli podman-docker
+# act --bind --container-daemon-socket $XDG_RUNTIME_DIR/podman/podman.sock -W .github/workflows/main.yml
+
 name: Unit tests
 
+# Checks can be skipped by adding "skip-checks: true" to a commit message,
+# or requested by adding "request-checks: true" if disabled by default for pushes:
+# https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks#skipping-and-requesting-checks-for-individual-commits
 on: [push, pull_request]
+env:
+  PYTHONWARNINGS: "ignore"
+  PIP_ROOT_USER_ACTION: "ignore"   # For local testing using act-cli
+  PIP_NO_WARN_SCRIPT_LOCATION: "0" # For local testing using act-cli
 
 jobs:
   test:
     strategy:
+      # max-parallel: 1  # See: https://github.com/xenserver/python-libs/pull/26#discussion_r1179482169
       matrix:
         include:
+        - python-version: '3.11'
+          os: ubuntu-latest
+        - python-version: '3.10'
+          os: ubuntu-latest
         - python-version: '2.7'
           os: ubuntu-20.04
-        - python-version: '3'
+        - python-version: '3.9'
           os: ubuntu-latest
+        - python-version: '3.8'
+          os: ubuntu-latest
+        - python-version: '3.7'
+          os: ubuntu-latest
+        - python-version: '3.6'
+          os: ubuntu-20.04
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Needed by diff-cover to get the changed lines: origin/master..HEAD
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Provide Pylint Summary and Report on the GitHub Action's info page
+        if: ${{ matrix.python-version == '3.10' }}
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
-          pip install -e .
+          pip install -q pylint pandas tabulate 2>&1|grep -v root ||: # Hide warning for root in local container
+          tree=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/tree/$GITHUB_REF_NAME
+          [ -n "$GITHUB_STEP_SUMMARY" ] || GITHUB_STEP_SUMMARY=pylint-summary-table.md
+          ./gen_gh_pylint_report.py xcp $GITHUB_STEP_SUMMARY $tree
 
       - name: Test
         run: |
-          pytest --cov -rP
-          coverage xml
-          coverage html -d htmlcov-${{ matrix.python-version }}
-          coverage html -d htmlcov-tests-${{ matrix.python-version }} --include="tests/*"
-          diff-cover --compare-branch=origin/master --html-report coverage-diff-${{ matrix.python-version }}.html coverage.xml
+          rm -f coverage.xml
+          pip -q install tox tox-gh-actions
+          tox --recreate
 
-      - name: Pylint
-        run: |
-          pylint --version
-          pylint --exit-zero xcp/ tests/ setup.py
-          pylint --exit-zero --msg-template="{path}:{line}: [{msg_id}({symbol}), {obj}] {msg}" xcp/ tests/ setup.py > pylint.txt
-          diff-quality --compare-branch=origin/master --violations=pylint --html-report pylint-diff-${{ matrix.python-version }}.html pylint.txt
+      - name: Upload coverage reports to Codecov
+        if: ${{ matrix.python-version == '3.11' }}
+        uses: codecov/codecov-action@v3
 
       - uses: actions/upload-artifact@v3
+        # Skip coverage upload during local actions testing using act-cli:
+        # For logging the contents of the context, see:
+        # https://docs.github.com/en/actions/learn-github-actions/contexts#example-printing-context-information-to-the-log
+        if: ${{ matrix.python-version == '3.11' && !startsWith(github.actor, 'nektos/act') }}
         with:
           name: Coverage and pylint reports
           path: |
-            coverage-diff-${{ matrix.python-version }}.html
-            pylint-diff-${{ matrix.python-version }}.html
-            htmlcov-${{ matrix.python-version }}
-            htmlcov-tests-${{ matrix.python-version }}
+            coverage.xml
+             .tox/py311-cov/log/htmlcov/
+             .tox/py311-cov/log/htmlcov-tests/
+             .tox/py311-cov/log/coverage-diff.html
+             .tox/py311-cov/log/pylint-diff.html
+             .tox/py311-cov/log/pylint.txt
+             .tox/py311-cov/log/.coverage

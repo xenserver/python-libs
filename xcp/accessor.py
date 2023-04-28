@@ -277,6 +277,11 @@ class FTPAccessor(Accessor):
         self.ftp = None
         self.baseAddress = rebuild_url(self.url_parts)
 
+    def _parse_ftp_url(self, debug_message, ftp_url):
+        logger.debug(debug_message + " " + ftp_url)
+        self._cleanup()
+        return urllib.parse.unquote(ftp_url)
+
     def _cleanup(self):
         if self.cleanup:
             # clean up after RETR
@@ -315,10 +320,7 @@ class FTPAccessor(Accessor):
 
     def access(self, address):
         try:
-            logger.debug("Testing " + address)
-            self._cleanup()
-            url = urllib.parse.unquote(address)
-
+            url = self._parse_ftp_url("Testing", address)
             if self.ftp.size(url) is not None:
                 return True
             lst = self.ftp.nlst(os.path.dirname(url))
@@ -340,10 +342,7 @@ class FTPAccessor(Accessor):
             return False
 
     def openAddress(self, address, mode="rb", **kwargs):
-        logger.debug("Opening "+address)
-        self._cleanup()
-        url = urllib.parse.unquote(address)
-
+        url = self._parse_ftp_url("Opening", address)
         self.ftp.voidcmd('TYPE I')
         s = self.ftp.transfercmd('RETR ' + url).makefile(mode, **kwargs)
         self.cleanup = True

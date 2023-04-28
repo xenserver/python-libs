@@ -286,10 +286,8 @@ class FTPAccessor(Accessor):
     def start(self):
         if self.start_count == 0:
             self.ftp = ftplib.FTP()
-            #self.ftp.set_debuglevel(1)
-            port = ftplib.FTP_PORT
-            if self.url_parts.port:
-                port = self.url_parts.port
+            port = self.url_parts.port or ftplib.FTP_PORT
+            assert self.url_parts.hostname
             self.ftp.connect(self.url_parts.hostname, port)
             username = self.url_parts.username
             password = self.url_parts.password

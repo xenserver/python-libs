@@ -29,6 +29,7 @@ import ftplib
 import os
 import tempfile
 import errno
+from abc import abstractmethod
 
 from six.moves import urllib  # pyright: ignore
 
@@ -66,9 +67,9 @@ class Accessor(object):
 
         return True
 
+    @abstractmethod
     def openAddress(self, address, mode="", **kwargs):
-        """should be overloaded"""
-        pass
+        """must be overloaded, accept mode and kwargs and return a file handle"""
 
     def canEject(self):
         return False
@@ -95,7 +96,7 @@ class FilesystemAccessor(Accessor):
         self.location = location
 
     def openAddress(self, address, mode="rb", **kwargs):
-        try:
+        try:  # pylint: disable-next=unspecified-encoding,consider-using-with
             filehandle = open(os.path.join(self.location, address), mode, **kwargs)
         except OSError as e:
             if e.errno == errno.EIO:
@@ -162,6 +163,7 @@ class MountingAccessor(FilesystemAccessor):
 
     def writeFile(self, in_fh, out_name, mode="wb", **kwargs):
         logger.info("Copying to %s" % os.path.join(self.location, out_name))
+        # pylint: disable-next=unspecified-encoding,consider-using-with
         out_fh = open(os.path.join(self.location, out_name), mode, **kwargs)
         return self._writeFile(in_fh, out_fh)
 
@@ -216,7 +218,7 @@ class FileAccessor(Accessor):
         self.baseAddress = baseAddress
 
     def openAddress(self, address, mode="rb", **kwargs):
-        try:
+        try:  # pylint: disable-next=unspecified-encoding,consider-using-with
             file = open(os.path.join(self.baseAddress, address), mode, **kwargs)
         except IOError as e:
             if e.errno == errno.EIO:
@@ -237,6 +239,7 @@ class FileAccessor(Accessor):
 
     def writeFile(self, in_fh, out_name, mode="wb", **kwargs):
         logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
+        # pylint: disable-next=unspecified-encoding,consider-using-with
         out_fh = open(os.path.join(self.baseAddress, out_name), mode, **kwargs)
         return self._writeFile(in_fh, out_fh)
 

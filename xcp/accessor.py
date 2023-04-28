@@ -96,6 +96,9 @@ class FilesystemAccessor(Accessor):
         self.location = location
 
     def openAddress(self, address, mode="rb", **kwargs):
+        # To be safe against mis-use like `openAccess(file, mode="r")` for text mode
+        # (note: the mode parameter is new), enforce "rb" unless encoding was given:
+        mode = mode if "encoding" in kwargs else "rb"
         try:  # pylint: disable-next=unspecified-encoding,consider-using-with
             filehandle = open(os.path.join(self.location, address), mode, **kwargs)
         except OSError as e:
@@ -163,6 +166,9 @@ class MountingAccessor(FilesystemAccessor):
 
     def writeFile(self, in_fh, out_name, mode="wb", **kwargs):
         logger.info("Copying to %s" % os.path.join(self.location, out_name))
+        # To be safe against mis-use like `writeFile(file, mode="w")` for text mode
+        # (note: the mode parameter is new), enforce "wb" unless encoding was given:
+        mode = mode if "encoding" in kwargs else "wb"
         # pylint: disable-next=unspecified-encoding,consider-using-with
         out_fh = open(os.path.join(self.location, out_name), mode, **kwargs)
         return self._writeFile(in_fh, out_fh)
@@ -218,6 +224,9 @@ class FileAccessor(Accessor):
         self.baseAddress = baseAddress
 
     def openAddress(self, address, mode="rb", **kwargs):
+        # To be safe against mis-use like `openAccess(file, mode="r")` for text mode
+        # (note: the mode parameter is new), enforce "rb" unless encoding was given:
+        mode = mode if "encoding" in kwargs else "rb"
         try:  # pylint: disable-next=unspecified-encoding,consider-using-with
             file = open(os.path.join(self.baseAddress, address), mode, **kwargs)
         except IOError as e:
@@ -238,6 +247,9 @@ class FileAccessor(Accessor):
         return file
 
     def writeFile(self, in_fh, out_name, mode="wb", **kwargs):
+        # To be safe against mis-use like `writeFile(file, mode="w")` for text mode
+        # (note: the mode parameter is new), enforce "wb" unless encoding was given:
+        mode = mode if "encoding" in kwargs else "wb"
         logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
         # pylint: disable-next=unspecified-encoding,consider-using-with
         out_fh = open(os.path.join(self.baseAddress, out_name), mode, **kwargs)

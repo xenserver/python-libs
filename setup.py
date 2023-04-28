@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from setuptools import setup
 
 setup(name='python-libs',
+      version='3.0.0',
       description='Common XenServer Python classes',
       packages=['xcp',
                 'xcp.net',

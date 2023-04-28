@@ -1,7 +1,7 @@
 [project]
 # https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
 name = "python-libs"
-version = "1.0.0"
+version = "3.0.0"
 description = "Common XCP-ng Python classes"
 requires-python = ">=2.7"
 license = {file = "LICENSE"}
@@ -16,7 +16,7 @@ maintainers = [
     {name = "Pau Ruiz Safont"},
     {name = "Bernhard Kaindl"},
 ]
-readme = "README"
+readme = "README.md"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Operating System :: POSIX :: Linux",

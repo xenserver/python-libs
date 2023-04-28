@@ -54,11 +54,11 @@ class Accessor(object):
         self.read_only = ro
         self.lastError = 0
 
-    def access(self, name):
+    def access(self, address):
         """ Return boolean determining where 'name' is an accessible object
         in the target. """
         try:
-            f = self.openAddress(name)
+            f = self.openAddress(address)
             if not f:
                 return False
             f.close()
@@ -315,11 +315,11 @@ class FTPAccessor(Accessor):
             self.cleanup = False
             self.ftp = None
 
-    def access(self, path):
+    def access(self, address):
         try:
-            logger.debug("Testing "+path)
+            logger.debug("Testing " + address)
             self._cleanup()
-            url = urllib.parse.unquote(path)
+            url = urllib.parse.unquote(address)
 
             if self.ftp.size(url) is not None:
                 return True

@@ -1927,4 +1927,4 @@ def is_cpiofile(name):
         return False
 
 bltn_open = open
-open = CpioFile.open
+open = CpioFile.open  # pylint: disable=redefined-builtin

@@ -96,7 +96,7 @@ class FilesystemAccessor(Accessor):
 
     def openAddress(self, address):
         try:
-            filehandle = open(os.path.join(self.location, address), 'r')
+            filehandle = open(os.path.join(self.location, address), "rb")
         except OSError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -217,7 +217,7 @@ class FileAccessor(Accessor):
 
     def openAddress(self, address):
         try:
-            file = open(os.path.join(self.baseAddress, address))
+            file = open(os.path.join(self.baseAddress, address), "rb")
         except IOError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5

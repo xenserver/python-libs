@@ -73,10 +73,9 @@ def getIntAttribute(el, attrs, default = None):
     if val == '':
         return default
     try:
-        int_val = int(val, 0)
+        return int(val, 0)
     except Exception as e:
         six.raise_from(XmlUnwrapError("Invalid integer value for %s" % attrs[0]), e)
-    return int_val
 
 def getMapAttribute(el, attrs, mapping, default = None):
     mandatory = (default == None)

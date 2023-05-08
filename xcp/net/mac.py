@@ -61,27 +61,25 @@ class MAC(object):
         self.octets = []
         self.integer = -1
 
-        if isinstance(addr, six.string_types):
-
-            res = VALID_COLON_MAC.match(addr)
-            if res:
-                self._set_from_str_octets(addr.split(":"))
-                return
-
-            res = VALID_DASH_MAC.match(addr)
-            if res:
-                self._set_from_str_octets(addr.split("-"))
-                return
-
-            res = VALID_DOTQUAD_MAC.match(addr)
-            if res:
-                self._set_from_str_quads(addr.split("."))
-                return
-
-            raise ValueError("Unrecognised MAC address '%s'" % addr)
-
-        else:
+        if not isinstance(addr, six.string_types):
             raise TypeError("String expected")
+
+        res = VALID_COLON_MAC.match(addr)
+        if res:
+            self._set_from_str_octets(addr.split(":"))
+            return
+
+        res = VALID_DASH_MAC.match(addr)
+        if res:
+            self._set_from_str_octets(addr.split("-"))
+            return
+
+        res = VALID_DOTQUAD_MAC.match(addr)
+        if res:
+            self._set_from_str_quads(addr.split("."))
+            return
+
+        raise ValueError("Unrecognised MAC address '%s'" % addr)
 
 
     def _set_from_str_octets(self, octets):

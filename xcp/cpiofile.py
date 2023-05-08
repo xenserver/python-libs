@@ -64,7 +64,7 @@ if sys.platform == 'mac':
 try:
     import grp as GRP, pwd as PWD
 except ImportError:
-    GRP = PWD = None
+    GRP = PWD = None  # type: ignore[assignment] # pragma: no cover
 
 # from cpiofile import *
 __all__ = ["CpioFile", "CpioInfo", "is_cpiofile", "CpioError"]
@@ -1927,4 +1927,4 @@ def is_cpiofile(name):
         return False
 
 bltn_open = open
-open = CpioFile.open
+open = CpioFile.open  # pylint: disable=redefined-builtin

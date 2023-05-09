@@ -99,6 +99,15 @@ class Version(object):
     def __eq__(self, v):
         return self.ver_cmp(self.ver, v.ver) == 0
 
+    # The Python3 datamodel requires to implement __hash__ when __eq__
+    # is implemented:
+    # https://docs.python.org/3/reference/datamodel.html#object.__hash__
+    # Example:https://github.com/swagger-api/swagger-codegen/issues/6475
+    # Python2 pylint --py3k warns about it, and Pylint3 with out pylintrc
+    # now too:
+    def __hash__(self):  # type:() -> int
+        return hash(str(self.ver))
+
     def __ne__(self, v):
         return self.ver_cmp(self.ver, v.ver) != 0
 

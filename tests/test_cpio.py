@@ -44,8 +44,10 @@ class TestCpio(unittest.TestCase):
         os.utime('archive/data', (0, 0))
         os.utime('archive', (0, 0))
 
-        check_call(
-            "find archive | cpio --reproducible -o -H newc > archive.cpio")
+        try:
+            check_call("find archive | cpio --reproducible -o -H newc > archive.cpio")
+        except:
+            raise unittest.SkipTest("cpio tool not available")
         check_call("gzip -c < archive.cpio > archive.cpio.gz")
         check_call("bzip2 -c < archive.cpio > archive.cpio.bz2")
         try:

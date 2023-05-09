@@ -5,7 +5,8 @@
 
 # Python code to execute, usually for sys.path manipulation such as
 # pygtk.require().
-#init-hook=
+# For absolute sys.path, use this for getting our stubs path dynamically:
+init-hook="from pylint.config import find_pylintrc; import os, sys; sys.path.append(os.path.dirname(find_pylintrc()) + '/stubs')"
 
 # Profiled execution.
 profile=no
@@ -44,7 +45,17 @@ load-plugins=
 # W0212 - Accessing protected member
 # W0141 - Use of builtin functions
 
-disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141
+#
+# For now, priorize Python3 mirgration as the use of pylint (e.g. enconding warnings).
+#
+disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141,
+    bad-option-value,           # Skip complaining about suppressions for older option values
+    unrecognized-option,        # Skip complaining on pylintrc options only in pylint2/pylint3
+    unknown-option-value,       # Skip complaining about checkers only in pylint2/pylint3
+    useless-object-inheritance, # "object" is not obsolete for supporting Python2
+    consider-using-f-string,    # Python3-only feature, need to migrate everything first
+    consider-using-with,        # Only for new code, move to Python3 is more important
+    logging-not-lazy            # Debug-Logging is not used in "hot" code paths here
 
 
 [REPORTS]

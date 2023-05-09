@@ -52,9 +52,9 @@ import re
 from xcp.logger import LOG
 from xcp.net.ifrename.macpci import MACPCI
 
-VALID_CUR_STATE_KNAME = re.compile("^(?:eth[\d]+|side-[\d]+-eth[\d]+)$")
-VALID_ETH_NAME = re.compile("^eth([\d])+$")
-VALID_IBFT_NAME = re.compile("^ibft([\d])+$")
+VALID_CUR_STATE_KNAME = re.compile(r"^(?:eth[\d]+|side-[\d]+-eth[\d]+)$")
+VALID_ETH_NAME = re.compile(r"^eth([\d])+$")
+VALID_IBFT_NAME = re.compile(r"^ibft([\d])+$")
 
 # util needs to import VALID_ETH_NAME
 from xcp.net.ifrename import util
@@ -289,9 +289,10 @@ def rename_logic( static_rules,
 
             # Check that the function still has the same number of nics
             if len(lastnics) != len(newnics):
-                LOG.warn("multi-nic function %s had %d nics but now has %d.  "
-                         "Defering all until later for renaming"
-                         % (fn, len(lastnics), len(newnics)))
+                LOG.warning(
+                    "multi-nic function %s had %d nics but now has %d.  "
+                    "Defering all until later for renaming",
+                    fn, len(lastnics), len(newnics))
                 continue
 
             # Check that all nics are still pending a rename

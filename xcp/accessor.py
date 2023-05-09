@@ -25,17 +25,12 @@
 
 """accessor - provide common interface to access methods"""
 
-# pylint: disable=wrong-import-position,wrong-import-order
-from future import standard_library
-standard_library.install_aliases()
-
 import ftplib
 import os
 import tempfile
-import urllib.request           # pylint: disable=import-error
-import urllib.error             # pylint: disable=import-error
-import urllib.parse             # pylint: disable=import-error
 import errno
+
+from six.moves import urllib  # pyright: ignore
 
 import xcp.mount as mount
 import xcp.logger as logger
@@ -101,7 +96,7 @@ class FilesystemAccessor(Accessor):
 
     def openAddress(self, address):
         try:
-            filehandle = open(os.path.join(self.location, address), 'r')
+            filehandle = open(os.path.join(self.location, address), "rb")
         except OSError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -222,7 +217,7 @@ class FileAccessor(Accessor):
 
     def openAddress(self, address):
         try:
-            file = open(os.path.join(self.baseAddress, address))
+            file = open(os.path.join(self.baseAddress, address), "rb")
         except IOError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5

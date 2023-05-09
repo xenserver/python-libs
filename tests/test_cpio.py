@@ -14,11 +14,11 @@ def writeRandomFile(fn, size, start=b'', add=b'a'):
     with open(fn, 'wb') as f:
         m = md5()
         m.update(start)
-        assert(len(add) != 0)
+        assert add
         while size > 0:
             d = m.digest()
             if size < len(d):
-                d=d[:size]
+                d = d[:size]
             f.write(d)
             size -= len(d)
             m.update(add)
@@ -44,8 +44,10 @@ class TestCpio(unittest.TestCase):
         os.utime('archive/data', (0, 0))
         os.utime('archive', (0, 0))
 
-        check_call(
-            "find archive | cpio --reproducible -o -H newc > archive.cpio")
+        try:
+            check_call("find archive | cpio --reproducible -o -H newc > archive.cpio")
+        except:
+            raise unittest.SkipTest("cpio tool not available")
         check_call("gzip -c < archive.cpio > archive.cpio.gz")
         check_call("bzip2 -c < archive.cpio > archive.cpio.bz2")
         try:

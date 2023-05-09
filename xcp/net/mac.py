@@ -31,11 +31,13 @@ __version__ = "1.0.1"
 __author__  = "Andrew Cooper"
 
 import re
+import six
 
 VALID_COLON_MAC = re.compile(r"^([\da-fA-F]{1,2}:){5}[\da-fA-F]{1,2}$")
 VALID_DASH_MAC = re.compile(r"^([\da-fA-F]{1,2}-){5}[\da-fA-F]{1,2}$")
 VALID_DOTQUAD_MAC = re.compile(r"^([\da-fA-F]{1,4}\.){2}[\da-fA-F]{1,4}$")
 
+@six.python_2_unicode_compatible
 class MAC(object):
     """
     Mac address object for manipulation and comparison
@@ -59,27 +61,25 @@ class MAC(object):
         self.octets = []
         self.integer = -1
 
-        if isinstance(addr, (str, unicode)):
-
-            res = VALID_COLON_MAC.match(addr)
-            if res:
-                self._set_from_str_octets(addr.split(":"))
-                return
-
-            res = VALID_DASH_MAC.match(addr)
-            if res:
-                self._set_from_str_octets(addr.split("-"))
-                return
-
-            res = VALID_DOTQUAD_MAC.match(addr)
-            if res:
-                self._set_from_str_quads(addr.split("."))
-                return
-
-            raise ValueError("Unrecognised MAC address '%s'" % addr)
-
-        else:
+        if not isinstance(addr, six.string_types):
             raise TypeError("String expected")
+
+        res = VALID_COLON_MAC.match(addr)
+        if res:
+            self._set_from_str_octets(addr.split(":"))
+            return
+
+        res = VALID_DASH_MAC.match(addr)
+        if res:
+            self._set_from_str_octets(addr.split("-"))
+            return
+
+        res = VALID_DOTQUAD_MAC.match(addr)
+        if res:
+            self._set_from_str_quads(addr.split("."))
+            return
+
+        raise ValueError("Unrecognised MAC address '%s'" % addr)
 
 
     def _set_from_str_octets(self, octets):
@@ -88,6 +88,8 @@ class MAC(object):
             raise ValueError("Expected 6 octets, got %d" % len(octets))
 
         self.octets = [ int(i, 16) for i in octets ]
+        # See:https://diveintopython3.net/porting-code-to-python-3-with-2to3.html#xrange
+        # False positive from pylint --py3k: pylint: disable=range-builtin-not-iterating
         self.integer = sum(t[0] << t[1] for t in
                            zip(self.octets, range(40, -1, -8)))
 
@@ -100,6 +102,7 @@ class MAC(object):
         for quad in ( int(i, 16) for i in quads ):
             self.octets.extend([(quad >> 8) & 0xff, quad & 0xff])
 
+        # False positive from pylint --py3k: pylint: disable=range-builtin-not-iterating
         self.integer = sum(t[0] << t[1] for t in
                            zip(self.octets, range(40, -1, -8)))
 
@@ -122,9 +125,6 @@ class MAC(object):
 
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
-
-    def __unicode__(self):
         return ':'.join([ "%0.2x" % x for x in self.octets])
 
     def __repr__(self):

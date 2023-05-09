@@ -518,6 +518,7 @@ class TestUseCases(unittest.TestCase):
 
 
 class TestInputSanitisation(unittest.TestCase):
+    # pylint: disable=no-member
 
     def setUp(self):
         """

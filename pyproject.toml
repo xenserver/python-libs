@@ -1,0 +1,153 @@
+[project]
+# https://packaging.python.org/en/latest/specifications/declaring-project-metadata/
+name = "python-libs"
+dynamic = ["version"]
+description = "Common Xenserver Python classes"
+requires-python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
+license = {file = "LICENSE"}
+keywords = ["xenserver", "xen-project", "libraries"]
+authors = [
+    {name = "Simon Rowe"},
+    {name = "Andrew Cooper"},
+    {name = "Yann Dirson"},
+]
+maintainers = [
+    {name = "Ross Lagerwall"},
+    {name = "Pau Ruiz Safont"},
+    {name = "Bernhard Kaindl"},
+]
+readme = "README.md"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: System :: Hardware",
+    "Topic :: System :: Installation/Setup",
+    "Topic :: System :: Networking",
+    "Topic :: System :: Systems Administration",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+dependencies = [
+    # Info: xcp imports branding, but branding has no distribution, so we can't list it.
+    # A stub for testing is in ./stubs, which we configure to be in PYTHONPATH by pytest.
+    "six",
+    "configparser; python_version < '3.0'",
+    "pyliblzma; python_version  < '3.0'"
+]
+
+[project.optional-dependencies]
+test = [
+    "mock",
+    "pytest",
+    "pytest-cov",
+    "pytest_httpserver; python_version >= '3.7'",
+    "pytest-localftpserver; python_version >= '3.7'",
+    "pytest-localftpserver==0.5.1; python_version <= '3.6'",
+    "typing_extensions"
+]
+coverage = [
+    "coverage[toml]",
+    "diff_cover"
+]
+
+[project.urls]
+homepage = "https://github.com/xenserver/python-libs/"
+repository = "https://github.com/xenserver/python-libs/"
+
+[build-system]
+requires = ["setuptools>=42", "setuptools_scm[toml]"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["xcp", "xcp.net", "xcp.net.ifrename"]
+
+[tool.mypy]
+pretty = true
+show_error_context = true
+error_summary = true
+files = ["xcp", "tests/test_*.py", "stubs"]
+python_version = "3.10"
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+warn_unused_configs = true
+disallow_any_unimported = true
+disallow_any_explicit = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+show_error_codes = true
+strict_equality = true
+# Check the contents of untyped functions in all modules by default:
+check_untyped_defs = true
+
+# xcp.cmd is to be fixed in PR #22:
+[[tool.mypy.overrides]]
+module = ["xcp.cmd"]
+disable_error_code = ["operator", "comparison-overlap"]
+
+# xcp.accessor is to be fixed with #24:
+[[tool.mypy.overrides]]
+module = ["xcp.accessor"]
+disable_error_code = "union-attr"
+
+# To be fixed with #24:
+[[tool.mypy.overrides]]
+module = ["xcp.net.biosdevname", "xcp.net.ifrename.logic"]
+disable_error_code = ["var-annotated", "no-any-return"]
+
+# xcp.net.ip should be fixed in PR #22, but the ip output parser works anyway:
+[[tool.mypy.overrides]]
+module = ["xcp.net.ip"]
+disable_error_code = ["arg-type", "comparison-overlap"]
+
+# The blame list of modules with various errors/warnings in their untyped defs,
+# it shuts up 65 mypy errors, most are in cpiofile:
+[[tool.mypy.overrides]]
+module = [
+    "xcp.pci",        # xcp.pci should be fixed by PR #22
+    "xcp.cpiofile",
+    "xcp.repository",
+    "xcp.bootloader",
+]
+check_untyped_defs = false # enable to see the blame list
+disable_error_code = ["var-annotated", "unreachable"]
+
+# Most of these should be easily fixable by adding type annotations as comments(PEP484):
+
+[[tool.mypy.overrides]]
+module = ["tests.test_pci"]
+disable_error_code = ["no-any-return"]
+
+[[tool.mypy.overrides]]
+module = ["tests.test_mac"]
+disable_error_code = ["var-annotated"]
+
+[[tool.mypy.overrides]]
+module = ["tests.test_ifrename_logic"]
+disable_error_code = ["attr-defined", "no-any-return"]
+
+[[tool.mypy.overrides]]
+module = ["tests.test_bootloader"]
+disable_error_code = ["no-any-return", "union-attr"]
+
+[[tool.mypy.overrides]]
+module = ["tests.test_ifrename_logic"]
+disable_error_code = ["attr-defined", "no-any-return"]
+
+# Due to special cases for unicode handline in Python2 which are not reached by Python3:
+[[tool.mypy.overrides]]
+module = "xcp.xmlunwrap"
+warn_unreachable = false
+
+[tool.coverage.run]
+# The coverage-comment-action needs a .converage file with relative path names:
+# https://github.com/py-cov-action/python-coverage-comment-action#setup
+relative_files = true

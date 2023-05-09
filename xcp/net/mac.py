@@ -88,6 +88,8 @@ class MAC(object):
             raise ValueError("Expected 6 octets, got %d" % len(octets))
 
         self.octets = [ int(i, 16) for i in octets ]
+        # See:https://diveintopython3.net/porting-code-to-python-3-with-2to3.html#xrange
+        # False positive from pylint --py3k: pylint: disable=range-builtin-not-iterating
         self.integer = sum(t[0] << t[1] for t in
                            zip(self.octets, range(40, -1, -8)))
 
@@ -100,6 +102,7 @@ class MAC(object):
         for quad in ( int(i, 16) for i in quads ):
             self.octets.extend([(quad >> 8) & 0xff, quad & 0xff])
 
+        # False positive from pylint --py3k: pylint: disable=range-builtin-not-iterating
         self.integer = sum(t[0] << t[1] for t in
                            zip(self.octets, range(40, -1, -8)))
 

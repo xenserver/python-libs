@@ -70,13 +70,22 @@ jobs:
         if: ${{ matrix.python-version == 2.7 }}
         run: tox --workdir .github/workflows/.tox --recreate -e py38-covcombine
 
-      - name: Upload coverage reports to Codecov
+      - name: Upload the Python 2.7 coverage report to Codecov
+        if: ${{ matrix.python-version == 2.7 }}
+        uses: codecov/codecov-action@v3
+        with:
+          directory: .github/workflows/.tox/py27-cov/log
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true
+          flags: Python-2.7
+          verbose: true
+
+      - name: Upload the Python 3.8 coverage report to Codecov
         if: ${{ matrix.python-version == 2.7 }}
         uses: codecov/codecov-action@v3
         with:
           directory: .github/workflows/.tox/py38-covcombine/log
           env_vars: OS,PYTHON
           fail_ci_if_error: true
-          flags: unittest
-          name: py27-py38-combined
+          flags: Python-3.8
           verbose: true

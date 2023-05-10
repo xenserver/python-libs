@@ -26,6 +26,8 @@ import subprocess
 import re
 import six
 
+from .utf8mode import utf8open, popen_textmode
+
 _SBDF = (r"(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
          r"     (?P<bus>     [\da-fA-F]{2}):"   # Bus
          r"     (?P<device>  [\da-fA-F]{2})\."  # Device
@@ -176,7 +178,7 @@ class PCI(object):
 
 
 class PCIIds(object):
-    def __init__(self, fn):
+    def __init__(self, fn):  # sourcery skip: ensure-file-closed, low-code-quality
         self.vendor_dict = {}
         self.sub_dict = {}
         self.main_dict = {}
@@ -185,7 +187,7 @@ class PCIIds(object):
         vendor = None
         cls = None
 
-        fh = open(fn)
+        fh = utf8open(fn)
         for l in fh:
             line = l.rstrip()
             if line == '' or line.startswith('#'):
@@ -254,9 +256,9 @@ class PCIIds(object):
 class PCIDevices(object):
     def __init__(self):
         self.devs = {}
-
         cmd = subprocess.Popen(['lspci', '-mn'], bufsize = 1,
-                               stdout = subprocess.PIPE)
+                               stdout = subprocess.PIPE, **popen_textmode)
+        assert cmd.stdout  # Calms static analysis tools
         for l in cmd.stdout:
             line = l.rstrip()
             el = [x for x in line.replace('"', '').split() if not x.startswith('-')]

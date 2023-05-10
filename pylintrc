@@ -53,6 +53,7 @@ disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141,
     unrecognized-option,        # Skip complaining on pylintrc options only in pylint2/pylint3
     unknown-option-value,       # Skip complaining about checkers only in pylint2/pylint3
     useless-object-inheritance, # "object" is not obsolete for supporting Python2
+    super-with-arguments,       # super() with arguments is a Python3-only feature
     consider-using-f-string,    # Python3-only feature, need to migrate everything first
     consider-using-with,        # Only for new code, move to Python3 is more important
     logging-not-lazy            # Debug-Logging is not used in "hot" code paths here
@@ -224,7 +225,10 @@ max-locals=100
 max-returns=100
 
 # Maximum number of branch for function / method body
-max-branchs=100
+#
+# The default is 12, we need 14 for xcp.pci.PCIIds.read():
+#
+max-branches=14
 
 # Maximum number of statements in function / method body
 max-statements=100

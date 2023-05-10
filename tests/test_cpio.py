@@ -1,5 +1,6 @@
 from __future__ import print_function
 from hashlib import md5
+import lzma
 import os
 import sys
 import shutil
@@ -7,6 +8,7 @@ import subprocess
 import unittest
 import warnings
 
+import xcp.cpiofile
 from xcp.cpiofile import CpioFile, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
 
 def writeRandomFile(fn, size, start=b'', add=b'a'):
@@ -132,6 +134,13 @@ class TestCpio(unittest.TestCase):
         print('Running test for XZ')
         self.doArchive('archive.cpio.xz', 'xz')
 
+    def test_cover_xzopen_pass_fileobj(self):
+        """Cover CpioFile.xzopen() not supporting receiving a fileobj argument"""
+        class MockCpioFile(CpioFile):
+            def __init__(self):  # pylint: disable=super-init-not-called
+                pass
+        with self.assertRaises(xcp.cpiofile.CompressionError):
+            MockCpioFile.xzopen(name="", mode="r", fileobj=lzma.LZMAFile("/dev/null"))
     # CpioFileCompat testing
 
     def archiveExtractCompat(self, fn, comp):

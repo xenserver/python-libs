@@ -69,7 +69,9 @@ class TestCpio(unittest.TestCase):
         found = False
         for f in arc:
             if f.isfile():
-                data = arc.extractfile(f).read()
+                fileobject = arc.extractfile(f)
+                assert fileobject  # to calm static analysis tools: pytype and pyright
+                data = fileobject.read()
                 self.assertEqual(len(data), f.size)
                 self.assertEqual(self.md5data, md5(data).hexdigest())
                 found = True
@@ -83,7 +85,7 @@ class TestCpio(unittest.TestCase):
         check_call("diff -rq archive2 archive")
         arc.close()
 
-    def archiveCreate(self, fn, fmt='w'):
+    def archiveCreate(self, fn, fmt='w'):  # sourcery skip: assign-if-exp
         if os.path.exists(fn):
             os.unlink(fn)
         arc = CpioFile.open(fn, fmt)

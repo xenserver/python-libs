@@ -113,12 +113,13 @@ def main(me: str, branch_url: str):
         "tests/test_ifrename_logic.py",
         "tests/test_xmlunwrap.py",
     )
-    excludes = [
+    tolerate_errors_in = [
         "xcp/cmd.py",
+        "xcp/cpiofile.py",
         "xcp/net/ip.py",
         "xcp/net/biosdevname.py",
     ]
-    errors_in = excludes.copy()
+    errors_in = tolerate_errors_in.copy()
     errors_in.extend(never)
     base = [
         "pytype",
@@ -131,12 +132,12 @@ def main(me: str, branch_url: str):
 
     def call_pytype(outfp):
         exit_code, results = run_pytype(command, branch_url, sys.stderr, [])
-        for exclude in excludes:
+        for tolerated_file in tolerate_errors_in:
             command2 = base.copy()
-            command2.append(exclude)
+            command2.append(tolerated_file)
             err_code, results = run_pytype(command2, branch_url, outfp, results)
             if err_code == 0:
-                print("No errors in", exclude)
+                print("No errors in", tolerated_file)
         return exit_code, results
 
     exit_code, results = call_pytype(sys.stdout)

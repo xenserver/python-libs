@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # cpiofile.py
 #-------------------------------------------------------------------
 
-# Copyright (C) 2002 Lars Gust‰bel <lars@gustaebel.de>
+# Copyright (C) 2002 Lars Gust√§bel <lars@gustaebel.de>
 # Copyright (c) 2013, Citrix Inc.
 # All rights reserved.
 #
@@ -31,13 +31,13 @@
 
 """Read from and write to cpio format archives.
 
-   Derived from Lars Gust‰bel's tarfile.py
+   Derived from Lars Gust√§bel's tarfile.py
 """
 from __future__ import print_function
 
 __version__ = "0.1"
 __author__  = "Simon Rowe"
-__credits__ = "Lars Gust‰bel, Gustavo Niemeyer, Niels Gust‰bel, Richard Townsend."
+__credits__ = "Lars Gust√§bel, Gustavo Niemeyer, Niels Gust√§bel, Richard Townsend."
 
 #---------
 # Imports

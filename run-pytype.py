@@ -115,6 +115,7 @@ def main(me: str, branch_url: str):
     )
     excludes = [
         "xcp/cmd.py",
+        "xcp/cpiofile.py",
         "xcp/net/ip.py",
         "xcp/net/biosdevname.py",
     ]

@@ -42,6 +42,7 @@ __credits__ = "Lars Gustäbel, Gustavo Niemeyer, Niels Gustäbel, Richard Townse
 #---------
 # Imports
 #---------
+import bz2
 import sys
 import os
 import shutil
@@ -51,6 +52,7 @@ import time
 import struct
 import copy
 import io
+from typing import cast
 
 import six
 
@@ -319,7 +321,7 @@ class _Stream(object):
             self.crc = self.zlib.crc32(s, self.crc)
         self.pos += len(s)
         if self.comptype != "cpio":
-            s = self.cmp.compress(s)
+            s = cast(bz2.BZ2Compressor, self.cmp).compress(s)
         self.__write(s)
 
     def __write(self, s):
@@ -339,7 +341,7 @@ class _Stream(object):
             return
 
         if self.mode == "w" and self.comptype != "cpio":
-            self.buf += self.cmp.flush()
+            self.buf += cast(bz2.BZ2Compressor, self.cmp).flush()
 
         if self.mode == "w" and self.buf:
             self.fileobj.write(self.buf)
@@ -438,7 +440,7 @@ class _Stream(object):
             buf = self.__read(self.bufsize)
             if not buf:
                 break
-            buf = self.cmp.decompress(buf)
+            buf = cast(bz2.BZ2Decompressor, self.cmp).decompress(buf)
             t.append(buf)
             c += len(buf)
         t = b"".join(t)
@@ -1596,7 +1598,7 @@ class CpioFile(six.Iterator):
             source = self.extractfile(extractinfo)
             target = bltn_open(targetpath, "wb")
             copyfileobj(source, target)
-            source.close()
+            cast(ExFileObject, source).close()
             target.close()
 
     def makefifo(self, cpioinfo, targetpath):
@@ -1904,7 +1906,9 @@ class CpioFileCompat(object):
     def getinfo(self, name):
         return self.cpiofile.getmember(name)
     def read(self, name):
-        return self.cpiofile.extractfile(self.cpiofile.getmember(name)).read()
+        cpioinfo = self.cpiofile.getmember(name)
+        assert cpioinfo
+        return cast(ExFileObject, self.cpiofile.extractfile(cpioinfo)).read()
     def write(self, filename, arcname=None, compress_type=None):
         self.cpiofile.add(filename, arcname)
     # deleted writestr method

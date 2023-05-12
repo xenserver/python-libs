@@ -1091,11 +1091,8 @@ class CpioFile(six.Iterator):
         except (ImportError, AttributeError):
             raise CompressionError("gzip module is not available")
 
-        if fileobj is None:
-            fileobj = bltn_open(name, mode + "b")
-
         try:
-            t = cls.cpioopen(name, mode, gzip.GzipFile(name, mode, compresslevel, fileobj))
+            t = cls.cpioopen(name, mode, gzip.GzipFile(name, mode + "b", compresslevel, fileobj))
         except IOError:
             raise ReadError("not a gzip file")
         t._extfileobj = False

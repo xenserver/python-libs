@@ -177,6 +177,4 @@ class TestCpio(unittest.TestCase):
         self.doArchiveCompat('archive.cpio', '')
 
     def test_compat_gz(self):
-        # FIXME: this test exhibits "unclosed file" warnings when run
-        # under `-Wd`
         self.doArchiveCompat('archive.cpio.gz', 'gz')

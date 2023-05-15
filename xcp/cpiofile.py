@@ -1142,10 +1142,12 @@ class CpioFile(six.Iterator):
 
         if fileobj is not None:
             raise CompressionError("passing fileobj not implemented for LZMA")
-        else:
-            # FIXME: not compatible with python3 API
-            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, 'dict_size': 20 })
-
+        kwargs = {}
+        if sys.version_info < (3, 0):
+            kwargs["options"] = {"level": compresslevel}
+        elif "w" in mode:
+            kwargs["preset"] = compresslevel
+        fileobj = lzma.LZMAFile(name, mode, **kwargs)
         try:
             t = cls.cpioopen(name, mode, fileobj)
         except IOError:
@@ -1158,7 +1160,7 @@ class CpioFile(six.Iterator):
         "cpio": "cpioopen",   # uncompressed cpio
         "gz":  "gzopen",    # gzip compressed cpio
         "bz2": "bz2open",   # bzip2 compressed cpio
-        "xz":  "xzopen "    # xz compressed cpio
+        "xz":  "xzopen",  # xz compressed cpio
     }
 
     #--------------------------------------------------------------------------

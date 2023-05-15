@@ -255,8 +255,12 @@ class PCIDevices(object):
     def __init__(self):
         self.devs = {}
 
-        cmd = subprocess.Popen(['lspci', '-mn'], bufsize = 1,
-                               stdout = subprocess.PIPE)
+        cmd = subprocess.Popen(
+            ["lspci", "-mn"],
+            bufsize=1,
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+        )
         for l in cmd.stdout:
             line = l.rstrip()
             el = [x for x in line.replace('"', '').split() if not x.startswith('-')]

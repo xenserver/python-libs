@@ -46,6 +46,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "mock",
+    "pyfakefs",
     "pytest",
     "pytest-cov",
     "pytest_httpserver; python_version >= '3.7'",

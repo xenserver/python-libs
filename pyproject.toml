@@ -123,10 +123,6 @@ disable_error_code = ["var-annotated", "unreachable"]
 # Most of these should be easily fixable by adding type annotations as comments(PEP484):
 
 [[tool.mypy.overrides]]
-module = ["tests.test_pci"]
-disable_error_code = ["no-any-return"]
-
-[[tool.mypy.overrides]]
 module = ["tests.test_mac"]
 disable_error_code = ["var-annotated"]
 

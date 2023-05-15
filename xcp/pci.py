@@ -271,6 +271,7 @@ class PCIDevices(object):
         cmd.wait()
 
     def findByClass(self, cls, subcls = None):
+        # type: (str|list[str], str|None) -> list[dict[str, str]]
         """ return all devices that match either of:
 
         	class, subclass

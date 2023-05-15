@@ -66,7 +66,7 @@ class TestPCIIds(unittest.TestCase):
                 PCIIds.read()
         exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
 
-    def tests_videoclass(self):
+    def test_videoclass_by_mock_calls(self):
         with patch("xcp.pci.os.path.exists") as exists_mock, \
              patch("xcp.pci.open") as open_mock, \
              open("tests/data/pci.ids") as fake_data:
@@ -75,8 +75,11 @@ class TestPCIIds(unittest.TestCase):
             ids = PCIIds.read()
         exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
         open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
-        video_class = ids.lookupClass('Display controller')
-        self.assertEqual(video_class, ['03'])
+        self.assert_videoclass_devices(ids, self.mock_lspci_using_open_testfile())
+
+    @classmethod
+    def mock_lspci_using_open_testfile(cls):
+        """Mock xcp.pci.PCIDevices.Popen() using open(tests/data/lspci-mn)"""
 
         with patch("xcp.pci.subprocess.Popen") as popen_mock, \
              open("tests/data/lspci-mn") as fake_data:
@@ -84,6 +87,12 @@ class TestPCIIds(unittest.TestCase):
             devs = PCIDevices()
         popen_mock.assert_called_once_with(['lspci', '-mn'], bufsize = 1,
                                            stdout = subprocess.PIPE)
+        return devs
+
+    def assert_videoclass_devices(self, ids, devs):  # type: (PCIIds, PCIDevices) -> None
+        """Verification function for checking the otuput of PCIDevices.findByClass()"""
+        video_class = ids.lookupClass('Display controller')
+        self.assertEqual(video_class, ["03"])
         sorted_devices = sorted(devs.findByClass(video_class),
                                 key=lambda x: x['id'])
         self.assertEqual(len(sorted_devices), 2)

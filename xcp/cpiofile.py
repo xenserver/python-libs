@@ -572,27 +572,6 @@ class _BZ2Proxy(_CMPProxy):
 
 # class _BZ2Proxy
 
-class _XZProxy(_CMPProxy):
-    """Small proxy class that enables external file object
-       support for "r:xz" and "w:xz" modes.
-    """
-
-    def __init__(self, fileobj, mode):
-        _CMPProxy.__init__(self, fileobj, mode)
-        self.init()
-
-    def init(self):
-        import lzma
-        self.pos = 0
-        if self.mode == "r":
-            self.cmpobj = lzma.BZ2Decompressor()
-            self.fileobj.seek(0)
-            self.buf = b""
-        else:
-            self.cmpobj = lzma.BZ2Compressor()
-
-# class _XZProxy
-
 
 #------------------------
 # Extraction file object
@@ -1162,11 +1141,13 @@ class CpioFile(six.Iterator):
             raise CompressionError("lzma module is not available")
 
         if fileobj is not None:
-            fileobj = _XZProxy(fileobj, mode)
-        else:
-            # FIXME: not compatible with python3 API
-            fileobj = lzma.LZMAFile(name, mode, options={'level': compresslevel, 'dict_size': 20 })
-
+            raise CompressionError("passing fileobj not implemented for LZMA")
+        kwargs = {}
+        if sys.version_info < (3, 0):
+            kwargs["options"] = {"level": compresslevel}
+        elif "w" in mode:
+            kwargs["preset"] = compresslevel
+        fileobj = lzma.LZMAFile(name, mode, **kwargs)
         try:
             t = cls.cpioopen(name, mode, fileobj)
         except IOError:
@@ -1179,7 +1160,7 @@ class CpioFile(six.Iterator):
         "cpio": "cpioopen",   # uncompressed cpio
         "gz":  "gzopen",    # gzip compressed cpio
         "bz2": "bz2open",   # bzip2 compressed cpio
-        "xz":  "xzopen "    # xz compressed cpio
+        "xz":  "xzopen",  # xz compressed cpio
     }
 
     #--------------------------------------------------------------------------

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Simulate lspci -nm for tests.test_pci.test_videoclass_without_mock():
+if [ "$1" = "-mn" ]; then
+	PATH=/usr/bin:/bin
+	cat tests/data/lspci-mn
+fi

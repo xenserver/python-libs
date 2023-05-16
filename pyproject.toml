@@ -46,6 +46,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "mock",
+    "pyfakefs",
     "pytest",
     "pytest-cov",
     "pytest_httpserver; python_version >= '3.7'",
@@ -121,10 +122,6 @@ check_untyped_defs = false # enable to see the blame list
 disable_error_code = ["var-annotated", "unreachable"]
 
 # Most of these should be easily fixable by adding type annotations as comments(PEP484):
-
-[[tool.mypy.overrides]]
-module = ["tests.test_pci"]
-disable_error_code = ["no-any-return"]
 
 [[tool.mypy.overrides]]
 module = ["tests.test_mac"]

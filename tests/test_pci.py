@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=unspecified-encoding  # we pass encoding using kwargs where needed
-
-
-import subprocess
+import sys
 import unittest
 from os import environ
 
-import pyfakefs.fake_filesystem_unittest  # type: ignore[import]
-from mock import patch, Mock
+import pyfakefs.fake_filesystem_unittest  # type: ignore[import]  # uses pyfakefs
+import pytest  # type: ignore[import]
 
-from xcp.compat import open_utf8
-from xcp.pci import PCI, PCIIds, PCIDevices
+if sys.version_info >= (3,6):
+    import pytest_subprocess  # type: ignore[import] # pylint: disable=unused-import
+
+from mock import Mock, patch
+
+from xcp.pci import PCI, PCIDevices, PCIIds
+
 
 class TestInvalid(unittest.TestCase):
 
@@ -66,55 +68,7 @@ class TestValid(unittest.TestCase):
         self.assertEqual(PCI("0000:00:00.0"), PCI("00:00.0"))
 
 
-class TestPCIIds(unittest.TestCase):
-    def tests_nodb(self):
-        with patch("xcp.pci.os.path.exists") as exists_mock:
-            exists_mock.return_value = False
-            with self.assertRaises(Exception):
-                PCIIds.read()
-        exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
-
-    def test_videoclass_without_mock(self):
-        """
-        Verifies that xcp.pci uses the open() and Popen() correctly across versions.
-        Tests PCIIds.read() and PCIDevices() without mock for verifying compatibility
-        with all Python versions.
-        (The old test using moc could not detect a missing step in the Py3 migration)
-        """
-        with pyfakefs.fake_filesystem_unittest.Patcher() as p:
-            assert p.fs
-            p.fs.add_real_file("tests/data/pci.ids", target_path="/usr/share/hwdata/pci.ids")
-            ids = PCIIds.read()
-        saved_PATH = environ["PATH"]
-        environ["PATH"] = "tests/data"  # Let PCIDevices() call Popen("tests/data/lspci")
-        self.assert_videoclass_devices(ids, PCIDevices())
-        environ["PATH"] = saved_PATH
-
-    def test_videoclass_by_mock_calls(self):
-        with patch("xcp.pci.os.path.exists") as exists_mock, \
-             patch("xcp.pci.utf8open") as open_mock, \
-             open("tests/data/pci.ids", **open_utf8) as fake_data:  # type: ignore[call-overload]
-            exists_mock.return_value = True
-            open_mock.return_value.__iter__ = Mock(return_value=iter(fake_data))
-            ids = PCIIds.read()
-        exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
-        open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
-        self.assert_videoclass_devices(ids, self.mock_lspci_using_open_testfile())
-
-    @classmethod
-    def mock_lspci_using_open_testfile(cls):
-        """Mock xcp.pci.PCIDevices.Popen() using open(tests/data/lspci-mn)"""
-        # Note: Mocks Popen using open, which is wrong, but mocking using Popen is
-        # not supported by mock, so the utility of this test is limited - may be removed
-        with patch("xcp.pci.subprocess.Popen") as popen_mock, \
-             open("tests/data/lspci-mn") as fake_data:
-            popen_mock.return_value.stdout.__iter__ = Mock(return_value=iter(fake_data))
-            devs = PCIDevices()
-        popen_mock.assert_called_once_with(
-            ["lspci", "-mn"], bufsize=1, stdout=subprocess.PIPE, universal_newlines=True
-        )
-        return devs
-
+class PciVideoClassTestCase(unittest.TestCase):
     def assert_videoclass_devices(self, ids, devs):  # type: (PCIIds, PCIDevices) -> None
         """Verification function for checking the otuput of PCIDevices.findByClass()"""
         video_class = ids.lookupClass('Display controller')
@@ -167,3 +121,59 @@ class TestPCIIds(unittest.TestCase):
             )
 
         self.assertEqual(len(devs.findRelatedFunctions('00:18.1')), 7)
+
+
+class TestPCIIdsFailure(unittest.TestCase):
+    def tests_nodb(self):
+        with patch("xcp.pci.os.path.exists") as exists_mock:
+            exists_mock.return_value = False
+            with self.assertRaises(Exception):
+                PCIIds.read()
+        exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
+
+
+class TestPCIIds(PciVideoClassTestCase):
+    def test_videoclass_without_mock(self):
+        """
+        Verifies that xcp.pci uses the open() and Popen() correctly across versions.
+        Tests PCIIds.read() and PCIDevices() without mock for verifying compatibility
+        with all Python versions.
+        (The old test using moc could not detect a missing step in the Py3 migration)
+        """
+        with pyfakefs.fake_filesystem_unittest.Patcher() as p:
+            assert p.fs
+            p.fs.add_real_file("tests/data/pci.ids", target_path="/usr/share/hwdata/pci.ids")
+            ids = PCIIds.read()
+        saved_PATH = environ["PATH"]
+        environ["PATH"] = "tests/data"  # Let PCIDevices() call Popen("tests/data/lspci")
+        self.assert_videoclass_devices(ids, PCIDevices())
+        environ["PATH"] = saved_PATH
+
+if sys.version_info >= (3, 0):
+    @pytest.fixture()
+    def pytest_popen_fixture(request, fp):
+        """PyTest fixture for use by FTPAccessorTestCase to get the ftpserver object"""
+        request.cls.fp = fp
+
+
+@pytest.mark.skipif(sys.version_info < (3, 0), reason="pytest-subprocess is not compatible for 2.7")
+@pytest.mark.usefixtures("pytest_popen_fixture")
+class TestPCIIdsPytestSubprocessMock(PciVideoClassTestCase):
+    fp = None
+
+    def test_videoclass_by_mock_calls(self):
+        with patch("xcp.pci.os.path.exists") as exists_mock, patch(
+            "xcp.pci.utf8open"
+        ) as open_mock, open("tests/data/pci.ids", encoding="utf-8") as fake_data:
+            exists_mock.return_value = True
+            open_mock.return_value.__iter__ = Mock(return_value=iter(fake_data))
+            ids = PCIIds.read()
+        exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
+        open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
+        self.assert_videoclass_devices(ids, self.mock_lspci_using_open_testfile())
+
+    def mock_lspci_using_open_testfile(self):
+        """Mock xcp.pci.PCIDevices.Popen() using open(tests/data/lspci-mn)"""
+        with open("tests/data/lspci-mn", "rb") as fake_data:
+            self.fp.register_subprocess(["lspci", "-mn"], stdout=fake_data.read())  # type: ignore
+        return PCIDevices()

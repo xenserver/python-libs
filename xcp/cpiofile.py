@@ -31,6 +31,9 @@
 
 """Read from and write to cpio format archives.
 
+   Of course: Only platforms with filesystems supporting hardlinks
+   support extracting cpio files containing hardlinks, but Dom0 does.
+
    Derived from Lars Gustäbel's tarfile.py
 """
 from __future__ import print_function
@@ -712,12 +715,11 @@ class ExFileObject(object):
         self.position += len(buf)
         return buf
 
-    # FIXME no universal-newlines, a TextIOWrapper would help but hey
-    # we're not using cpio archives on non-unices, right ?
     def readline(self, size=-1):
         """Read one entire line from the file. If size is present
            and non-negative, return a string with at most that
            size, which may be an incomplete line.
+           Lines are split by \n, CR is not automatically removed.
         """
         if self.closed:
             raise ValueError("I/O operation on closed file")
@@ -1584,7 +1586,6 @@ class CpioFile(six.Iterator):
         else:
             if cpioinfo.ino in self.inodes:
                 # actual file exists, create link
-                # FIXME handle platforms that don't support hardlinks
                 os.link(os.path.join(cpioinfo._link_path,
                                      six.ensure_text(self.inodes[cpioinfo.ino][0])), targetpath)
             else:
@@ -1625,7 +1626,6 @@ class CpioFile(six.Iterator):
                  os.makedev(cpioinfo.devmajor, cpioinfo.devminor))
 
     def makesymlink(self, cpioinfo, targetpath):
-        # FIXME handle platforms that don't support symlinks
         os.symlink(cpioinfo.linkname, targetpath)
 
     def makelink(self, cpioinfo, targetpath):

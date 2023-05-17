@@ -116,18 +116,34 @@ class TestPCIIds(unittest.TestCase):
         self.assertEqual(video_class, ["03"])
         sorted_devices = sorted(devs.findByClass(video_class),
                                 key=lambda x: x['id'])
-        self.assertEqual(len(sorted_devices), 2)
 
+        # Assert devs.findByClass() finding 3 GPUs from tests/data/lspci-mn in our mocked PCIIds DB:
+        self.assertEqual(len(sorted_devices), 3)
+
+        # For each of the found devices, assert these expected values:
         for (video_dev,
              num_functions,
              vendor,
              device,
         ) in zip(sorted_devices,
-                 (1, 5),
-                 ("Advanced Micro Devices, Inc. [AMD/ATI]",
-                  "Advanced Micro Devices, Inc. [AMD/ATI]"),
-                 ("Navi 14 [Radeon RX 5500/5500M / Pro 5500M]",
-                  "Renoir"),
+            # 1: Number of other PCI device functions shown by mocked lspci in this PCI slot:
+            (
+                1,
+                0,
+                5,
+            ),
+            # 2: GPU Vendor
+            (
+                "Advanced Micro Devices, Inc. [AMD/ATI]",
+                "Advanced Micro Devices, Inc. [AMD/ATI]",
+                "Advanced Micro Devices, Inc. [AMD/ATI]",
+            ),
+            # 3: GPU Device name
+            (
+                "Navi 14 [Radeon RX 5500/5500M / Pro 5500M]",
+                "Hawaii XT / Grenada XT [Radeon R9 290X/390X]",
+                "Renoir",
+            ),
         ):
             self.assertEqual(len(devs.findRelatedFunctions(video_dev['id'])), num_functions)
             self.assertEqual(ids.findVendor(video_dev['vendor']), vendor)

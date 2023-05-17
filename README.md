@@ -172,17 +172,7 @@ Special open TODOs:
 -------------------
 
 Charset encoding/string handling:
-* With Python3, `read()` on files `open()`ed without specifying binary mode will attempt
-  to decode the data into the Python3 Unicode string type, which will fail for all
-  binary data. Thus all `open()` calls which might open binary files have to be converted
-  to binary mode by default unless the caller is sure he is opening an ASCII file,
-  even then, enabling an error handle to handle decoding errors is recommended.
-* With Python3, the `stdin`, `stdout` and `stderr` pipes for `Popen()` default to
-  `bytes`(binary mode.) Binary mode is much safer because it foregoes the encode/decode. The existing users need to be able to enable text mode (when safe, it will attempt
-  to decode and encode!) or preferably be able to use bytes (which is the type behind Python2 strings too) instead. See these PRs for details:
-  * https://github.com/xenserver/python-libs/pull/22
-  * https://github.com/xenserver/python-libs/pull/23
-  * https://github.com/xenserver/python-libs/pull/24
+  See [README-Unicode.md](README-Unicode.md) for details:
   * What's more: When code is called from a xapi plugin (such as ACK), when such code
     attempts to read text files like the `pciids` file, and there is a Unicode char
     it int, and the locale is not set up to be UTF-8 (because xapi plugins are started

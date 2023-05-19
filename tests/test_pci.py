@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# pylint: disable=unspecified-encoding  # we pass encoding using kwargs where needed
+
+
 import subprocess
 import unittest
 from os import environ
@@ -5,6 +9,7 @@ from os import environ
 import pyfakefs.fake_filesystem_unittest  # type: ignore[import]
 from mock import patch, Mock
 
+from xcp.compat import open_utf8
 from xcp.pci import PCI, PCIIds, PCIDevices
 
 class TestInvalid(unittest.TestCase):
@@ -87,8 +92,8 @@ class TestPCIIds(unittest.TestCase):
 
     def test_videoclass_by_mock_calls(self):
         with patch("xcp.pci.os.path.exists") as exists_mock, \
-             patch("xcp.pci.open") as open_mock, \
-             open("tests/data/pci.ids") as fake_data:
+             patch("xcp.pci.utf8open") as open_mock, \
+             open("tests/data/pci.ids", **open_utf8) as fake_data:  # type: ignore[call-overload]
             exists_mock.return_value = True
             open_mock.return_value.__iter__ = Mock(return_value=iter(fake_data))
             ids = PCIIds.read()
@@ -125,6 +130,7 @@ class TestPCIIds(unittest.TestCase):
              num_functions,
              vendor,
              device,
+             subdevice,
         ) in zip(sorted_devices,
             # 1: Number of other PCI device functions shown by mocked lspci in this PCI slot:
             (
@@ -144,9 +150,20 @@ class TestPCIIds(unittest.TestCase):
                 "Hawaii XT / Grenada XT [Radeon R9 290X/390X]",
                 "Renoir",
             ),
+            # 4: GPU Subdevice name
+            (
+                None,
+                "R9 290X IceQ X² Ultra Turbo Overdrive³ USB 3.2 SuperSpeed Edition",
+                None,
+            ),
         ):
             self.assertEqual(len(devs.findRelatedFunctions(video_dev['id'])), num_functions)
             self.assertEqual(ids.findVendor(video_dev['vendor']), vendor)
             self.assertEqual(ids.findDevice(video_dev['vendor'], video_dev['device']), device)
+            # Expect that we can lookup the subdevice and get the name of the subdevice, if found:
+            self.assertEqual(
+                ids.findSubdevice(video_dev["subvendor"], video_dev["subdevice"]),
+                subdevice,
+            )
 
         self.assertEqual(len(devs.findRelatedFunctions('00:18.1')), 7)

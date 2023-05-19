@@ -1,5 +1,7 @@
 import unittest
+from typing import cast, Type
 
+import six
 from mock import patch, Mock, DEFAULT, mock_open
 
 from xcp.cmd import OutputCache
@@ -33,14 +35,37 @@ class TestCache(unittest.TestCase):
 
     def test_fileContents_mock_string(self):
         expected = open_utf8.copy()
-        expected["mode"] = "t"
-        self.check_fileContents("line1\nline2\n", mode="t", expected_kwargs=expected)
+        expected["mode"] = "r"
+        self.check_fileContents("line1\nline2\n", mode="r", expected_kwargs=expected)
 
     def test_fileContents_mock_binary(self):
-        self.check_fileContents(b"line1\nline2\n", "b")
+        self.check_fileContents(b"line1\nline2\n", "rb")
 
     def test_fileContents_mock_mode_b(self):
-        self.check_fileContents(b"line1\nline2\n", mode="b", expected_kwargs={"mode": "b"})
+        self.check_fileContents(b"line1\nline2\n", mode="rb", expected_kwargs={"mode": "rb"})
+
+    def test_fileContents_FileNotFound(self):
+        try:
+            FileNotFound = FileNotFoundError
+        except NameError:
+            FileNotFound = cast(Type["FileNotFoundError"], IOError)
+        self.assertRaises(FileNotFound, self.c.fileContents, "You-dont-exist-to-me!.txt", mode="r")
+
+    def test_fileContents_pciids_bytes(self):
+        bytes_call_1 = self.c.fileContents("tests/data/pci.ids", "rb")
+        bytes_cached = self.c.fileContents("tests/data/pci.ids", mode="rb")
+        self.assertIsInstance(bytes_call_1, bytes)
+        self.assertIsInstance(bytes_cached, bytes)
+        self.assertGreater(len(bytes_cached), 788)
+        self.assertEqual(bytes_call_1, bytes_cached)
+
+    def test_fileContents_pciids_binstr(self):
+        contents_bytes = self.c.fileContents("tests/data/pci.ids", mode="rb")
+        contents_string = self.c.fileContents("tests/data/pci.ids", mode="r")
+        self.assertIsInstance(contents_bytes, bytes)
+        self.assertIsInstance(contents_string, str)
+        self.assertEqual(contents_bytes, six.ensure_binary(contents_string))
+        self.assertEqual(contents_string, six.ensure_str(contents_bytes))
 
     def test_runCmd(self):
         output_data = "line1\nline2\n"

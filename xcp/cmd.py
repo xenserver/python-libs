@@ -63,10 +63,10 @@ class OutputCache(object):
         self.cache = {}
 
     def fileContents(self, fn, *args, **kwargs):
-        mode = open_defaults_for_utf8_text(args, kwargs)
-        key = 'file:' + fn
+        mode, other_kwargs = open_defaults_for_utf8_text(args, kwargs)
+        key = "file:" + fn + "," + mode + (str(other_kwargs) if other_kwargs else "")
         if key not in self.cache:
-            logger.debug("Opening " + fn)
+            logger.debug("Opening " + key)
             # pylint: disable=unspecified-encoding
             with open(fn, *args, **kwargs) as f:
                 self.cache[key] = f.read() if "b" in mode else "".join(f.readlines())

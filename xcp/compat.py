@@ -22,13 +22,13 @@ else:
 
 def open_defaults_for_utf8_text(args, kwargs):
     """Setup keyword arguments for UTF-8 text mode with codec error handler to replace chars"""
-
-    mode = kwargs.get("mode", "")
+    other_kwargs = kwargs.copy()
+    mode = other_kwargs.pop("mode", "")
     if args:
         mode = args[0]
     if not mode or not isinstance(mode, str):
-        raise ValueError("The mode argument is required! r|t for text, b for binary")
+        raise ValueError("The mode argument is required! r for text, rb for binary")
     if sys.version_info >= (3, 0) and "b" not in mode:
         kwargs.setdefault("encoding", "utf-8")
         kwargs.setdefault("errors", "replace")
-    return mode
+    return mode, other_kwargs

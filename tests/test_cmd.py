@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+# sourcery skip: extract-duplicate-method,no-loop-in-tests
 import unittest
 from typing import cast, Type
 
 import six
 from mock import patch, Mock, DEFAULT, mock_open
 
-from xcp.cmd import OutputCache
+from xcp.cmd import OutputCache, runCmd
 from xcp.compat import open_utf8
 
 class TestCache(unittest.TestCase):
@@ -81,12 +83,71 @@ class TestCache(unittest.TestCase):
             communicate_mock.side_effect = communicate_side_effect
 
             # uncached runCmd
-            data = self.c.runCmd(['ls', '/tmp'], True)
+            data = self.c.runCmd(["ls", "/tmp"], True, mode="t")
             popen_mock.assert_called_once()
             self.assertEqual(data, (42, output_data))
 
             # rerun as cached
             popen_mock.reset_mock()
-            data = self.c.runCmd(['ls', '/tmp'], True)
+            data = self.c.runCmd(["ls", "/tmp"], True, mode="t")
             popen_mock.assert_not_called()
             self.assertEqual(data, (42, output_data))
+
+            # run a binary read and expect a cache miss
+            popen_mock.reset_mock()
+            data = self.c.runCmd(["ls", "/tmp"], True, mode="b")
+            popen_mock.assert_called_once()
+            self.assertEqual(data, (42, output_data))
+
+            # rerun as cached
+            popen_mock.reset_mock()
+            data = self.c.runCmd(["ls", "/tmp"], True, mode="b")
+            popen_mock.assert_not_called()
+            self.assertEqual(data, (42, output_data))
+
+            # Call cached function with no output
+            popen_mock.reset_mock()
+            self.assertEqual(self.c.runCmd(["ls", "/"]), 42)
+            popen_mock.assert_called_once()
+
+            # rerun as cached
+            popen_mock.reset_mock()
+            self.assertEqual(self.c.runCmd(["ls", "/"]), 42)
+            popen_mock.assert_not_called()
+
+            # Call uncached function with no output
+            popen_mock.reset_mock()
+            self.assertEqual(runCmd(["ls", "/"]), 42)
+            popen_mock.assert_called_once()
+
+    def test_nocache_runCmd_unicode_out(self):
+        stdin = "✋➔Hello 🔛 uncached stdout ✅ World(🗺)"
+        return_values = runCmd(["cat"], True, False, inputtext=stdin)
+        self.assertEqual(return_values, (0, stdin))
+
+    def test_nocache_runCmd_binary_err(self):
+        stdin = b"Run uncached with a malformed non-UTF-8 char \xb2 in a bytes type!"
+        return_values = runCmd("cat >&2", False, True, inputtext=stdin)
+        self.assertEqual(return_values, (0, stdin))
+
+    def test_runCmd_cat_unicode_stdout(self):
+        stdin = "✋➔Hello 🔛 stdout ✅ World(🗺)‼"
+        for _ in [1, 2]:  # 1st for running, 2nd for using the cache
+            return_values = self.c.runCmd(["cat"], True, False, inputtext=stdin)
+            self.assertEqual(return_values, (0, stdin))
+
+    def test_runCmd_cat_unicode_stderr(self):
+        stdin = "✋➔Hello 🔛 stderr ❎ World(🗺)‼"
+        for _ in [1, 2]:  # 1st for running, 2nd for using the cache
+            return_values = self.c.runCmd("cat >&2", False, True, stdin, mode="t")
+            self.assertEqual(return_values, (0, stdin))
+
+    def test_runCmd_42_not_a_valid_command(self):
+        self.assertRaises(TypeError, self.c.runCmd, 42)
+
+    def test_runCmd_cat_binary(self):
+        stdin = b"\x80\x91\xaa\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xcc\xdd\xee\xff"
+        self.assertRaises(UnicodeDecodeError, stdin.decode)
+        for _ in [1, 2]:  # rerun as cached
+            return_values = self.c.runCmd("cat >&2", False, True, inputtext=stdin)
+            self.assertEqual(return_values, (0, stdin))

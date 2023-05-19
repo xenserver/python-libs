@@ -24,27 +24,55 @@
 """Command processing"""
 
 import subprocess
+import sys
 
 from xcp import logger
 from xcp.compat import open_defaults_for_utf8_text
 
+def _encode_command_to_bytes(command):
+    # When the locale not an UTF-8 locale, Python3.6 Popen can't deal with ord() >= 128
+    # when the command contains strings, not bytes. Therefore, convert any strings to bytes:
+    if sys.version_info >= (3, 0) and not isinstance(command, bytes):
+        if isinstance(command, str):  # Encode str because Python 3.6 uses fsencode("ascii")
+            return command.encode()  #  if it has been started without an UTF-8 locale set.
+        if not hasattr(command, "__iter__") and not hasattr(command, "__getitem__"):
+            raise TypeError("command must be str, bytes or an iterable/sequence")
+        command = list(command)  # Get a copy of the iterable or sequence as list
+        for idx, arg in enumerate(command):
+            if isinstance(arg, str):  # and encode() any strings in it to bytes, because
+                command[idx] = arg.encode()  # Python 3.6 could fail in fsencode("ascii")
+    return command
 
-def runCmd(command, with_stdout = False, with_stderr = False, inputtext = None):
-    cmd = subprocess.Popen(command, bufsize=1,
+def runCmd(command, with_stdout=False, with_stderr=False, inputtext=None, **kwargs):
+    # sourcery skip: assign-if-exp, hoist-repeated-if-condition, reintroduce-else
+
+    if inputtext is not None:
+        kwargs["mode"] = "t" if isinstance(inputtext, str) else "b"
+    if with_stdout or with_stderr:
+        open_defaults_for_utf8_text(None, kwargs)
+    kwargs.pop("mode", "")
+
+    command = _encode_command_to_bytes(command)
+
+    # bufsize=1 means buffered in 2.7, but means line buffered in Py3 (not valid in binary mode)
+    # bufsize=-1 is the equivalent of bufsize=1 in Python >= 3.3.1
+
+    # pylint: disable-next=unexpected-keyword-arg
+    cmd = subprocess.Popen(command, bufsize=(1 if sys.version_info < (3, 3) else -1),
                            stdin=(inputtext and subprocess.PIPE or None),
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE,
-                           shell=isinstance(command, str))
-
+                           shell=not isinstance(command, list),
+                           **kwargs)
     (out, err) = cmd.communicate(inputtext)
     rv = cmd.returncode
 
     l = "ran %s; rc %d" % (str(command), rv)
-    if inputtext:
+    if inputtext and isinstance(inputtext, str):
         l += " with input %s" % inputtext
-    if out != "":
+    if out != "" and isinstance(out, str):
         l += "\nSTANDARD OUT:\n" + out
-    if err != "":
+    if err != "" and isinstance(err, str):
         l += "\nSTANDARD ERROR:\n" + err
 
     for line in l.split('\n'):
@@ -52,9 +80,9 @@ def runCmd(command, with_stdout = False, with_stderr = False, inputtext = None):
 
     if with_stdout and with_stderr:
         return rv, out, err
-    elif with_stdout:
+    if with_stdout:
         return rv, out
-    elif with_stderr:
+    if with_stderr:
         return rv, err
     return rv
 
@@ -72,14 +100,15 @@ class OutputCache(object):
                 self.cache[key] = f.read() if "b" in mode else "".join(f.readlines())
         return self.cache[key]
 
-    def runCmd(self, command, with_stdout = False, with_stderr = False, inputtext = None):
-        key = str(command) + str(inputtext)
+    def runCmd(self, command, with_stdout=False, with_stderr=False, inputtext=None, **kwargs):
+        key = str(command) + str(kwargs.get("mode")) + str(inputtext)
         rckey = 'cmd.rc:' + key
         outkey = 'cmd.out:' + key
         errkey = 'cmd.err:' + key
         if rckey not in self.cache:
-            (self.cache[rckey], self.cache[outkey], self.cache[errkey]) = \
-                                runCmd(command, True, True, inputtext)
+            self.cache[rckey], self.cache[outkey], self.cache[errkey] = runCmd(  # pyright: ignore
+                command, True, True, inputtext, **kwargs
+            )
         if with_stdout and with_stderr:
             return self.cache[rckey], self.cache[outkey], self.cache[errkey]
         elif with_stdout:

@@ -63,14 +63,13 @@ class OutputCache(object):
         self.cache = {}
 
     def fileContents(self, fn, *args, **kwargs):
-        open_defaults_for_utf8_text(args, kwargs)
+        mode = open_defaults_for_utf8_text(args, kwargs)
         key = 'file:' + fn
         if key not in self.cache:
             logger.debug("Opening " + fn)
             # pylint: disable=unspecified-encoding
-            f = open(fn, **kwargs)
-            self.cache[key] = ''.join(f.readlines())
-            f.close()
+            with open(fn, *args, **kwargs) as f:
+                self.cache[key] = f.read() if "b" in mode else "".join(f.readlines())
         return self.cache[key]
 
     def runCmd(self, command, with_stdout = False, with_stderr = False, inputtext = None):

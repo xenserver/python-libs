@@ -13,6 +13,7 @@ class TestCache(unittest.TestCase):
         expected_kwargs = kwargs.pop("expected_kwargs", {})
         with patch("xcp.cmd.open", mock_open(read_data=read_data)) as open_mock:
             # uncached fileContents
+            self.c.clearCache()
             data = self.c.fileContents("/tmp/foo", *args, **kwargs)
             open_mock.assert_called_once_with("/tmp/foo", *args, **expected_kwargs)
             self.assertEqual(data, read_data)
@@ -34,6 +35,12 @@ class TestCache(unittest.TestCase):
         expected = open_utf8.copy()
         expected["mode"] = "t"
         self.check_fileContents("line1\nline2\n", mode="t", expected_kwargs=expected)
+
+    def test_fileContents_mock_binary(self):
+        self.check_fileContents(b"line1\nline2\n", "b")
+
+    def test_fileContents_mock_mode_b(self):
+        self.check_fileContents(b"line1\nline2\n", mode="b", expected_kwargs={"mode": "b"})
 
     def test_runCmd(self):
         output_data = "line1\nline2\n"

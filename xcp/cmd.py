@@ -105,16 +105,27 @@ class OutputCache(object):
         rckey = 'cmd.rc:' + key
         outkey = 'cmd.out:' + key
         errkey = 'cmd.err:' + key
-        if rckey not in self.cache:
-            self.cache[rckey], self.cache[outkey], self.cache[errkey] = runCmd(  # pyright: ignore
-                command, True, True, inputtext, **kwargs
-            )
+        cache = self.cache
         if with_stdout and with_stderr:
+            if rckey not in cache:
+                cache[rckey], cache[outkey], cache[errkey] = runCmd(  # pyright: ignore
+                   command, True, True, inputtext, **kwargs
+                )
             return self.cache[rckey], self.cache[outkey], self.cache[errkey]
-        elif with_stdout:
+        if with_stdout:
+            if rckey not in cache:
+                cache[rckey], cache[outkey] = runCmd(  # pyright: ignore
+                   command, True, False, inputtext, **kwargs
+                )
             return self.cache[rckey], self.cache[outkey]
-        elif with_stderr:
+        if with_stderr:
+            if rckey not in cache:
+                cache[rckey], cache[errkey] = runCmd(  # pyright: ignore
+                   command, False, True, inputtext, **kwargs
+                )
             return self.cache[rckey], self.cache[errkey]
+        if rckey not in cache:
+            cache[rckey] = runCmd(command, False, False, inputtext, **kwargs)
         return self.cache[rckey]
 
     def clearCache(self):

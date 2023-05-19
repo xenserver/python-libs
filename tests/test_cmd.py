@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-# sourcery skip: extract-duplicate-method,no-loop-in-tests
+# sourcery skip: extract-duplicate-method,no-conditionals-in-tests,no-loop-in-tests
+import sys
 import unittest
 from typing import cast, Type
 
@@ -159,3 +160,19 @@ class TestCache(unittest.TestCase):
         for _ in [1, 2]:  # rerun as cached
             return_values = self.c.runCmd("cat >&2", False, True, inputtext=stdin)
             self.assertEqual(return_values, (0, stdin))
+
+    def test_runCmd_echo_stdout_list(self):
+        text = "✋➔Hello 🔛 stdout ✅ World(🗺) with a Unicode string in the cmd list"
+        kwargs = {}
+        if sys.version_info >= (3, 0):
+            kwargs["mode"] = "t"
+        return_values = self.c.runCmd(["echo", "-n", text], with_stdout=True, **kwargs)
+        self.assertEqual(return_values, (0, text))
+
+    def test_runCmd_echo_stdout_shell(self):
+        text = "✋➔Hello 🔛 stdout ✅ World(🗺) with a Unicode string as the command"
+        kwargs = {}
+        if sys.version_info >= (3, 0):
+            kwargs["mode"] = "t"
+        return_values = self.c.runCmd("echo -n '" + text + "'", with_stdout=True, **kwargs)
+        self.assertEqual(return_values, (0, text))

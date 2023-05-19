@@ -130,6 +130,14 @@ class TestCache(unittest.TestCase):
         return_values = runCmd("cat >&2", False, True, inputtext=stdin)
         self.assertEqual(return_values, (0, stdin))
 
+    def test_runCmd_tee_unicode_outerr(self):
+        stdin = "✋➔Hello World(🗺)‼"
+        for _ in [1, 2]:  # 1st for running, 2nd for using the cache
+            return_values = self.c.runCmd(
+                "bash -c 'tee /dev/stderr'", True, True, inputtext=stdin
+            )
+            self.assertEqual(return_values, (0, stdin, stdin))
+
     def test_runCmd_cat_unicode_stdout(self):
         stdin = "✋➔Hello 🔛 stdout ✅ World(🗺)‼"
         for _ in [1, 2]:  # 1st for running, 2nd for using the cache

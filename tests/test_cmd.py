@@ -13,25 +13,27 @@ class TestCache(unittest.TestCase):
         expected_kwargs = kwargs.pop("expected_kwargs", {})
         with patch("xcp.cmd.open", mock_open(read_data=read_data)) as open_mock:
             # uncached fileContents
-            data = self.c.fileContents('/tmp/foo')
+            data = self.c.fileContents("/tmp/foo", *args, **kwargs)
             open_mock.assert_called_once_with("/tmp/foo", *args, **expected_kwargs)
             self.assertEqual(data, read_data)
 
             # rerun as cached
             open_mock.reset_mock()
-            data = self.c.fileContents('/tmp/foo')
+            data = self.c.fileContents("/tmp/foo", *args, **kwargs)
             open_mock.assert_not_called()
             self.assertEqual(data, read_data)
 
             # rerun after clearing cache
             open_mock.reset_mock()
             self.c.clearCache()
-            data = self.c.fileContents('/tmp/foo')
+            data = self.c.fileContents("/tmp/foo", *args, **kwargs)
             open_mock.assert_called_once_with("/tmp/foo", *args, **expected_kwargs)
             self.assertEqual(data, read_data)
 
     def test_fileContents_mock_string(self):
-        self.check_fileContents("line1\nline2\n", expected_kwargs=open_utf8)
+        expected = open_utf8.copy()
+        expected["mode"] = "t"
+        self.check_fileContents("line1\nline2\n", mode="t", expected_kwargs=expected)
 
     def test_runCmd(self):
         output_data = "line1\nline2\n"

@@ -25,7 +25,9 @@
 
 import subprocess
 
-import xcp.logger as logger
+from xcp import logger
+from xcp.compat import open_defaults_for_utf8_text
+
 
 def runCmd(command, with_stdout = False, with_stderr = False, inputtext = None):
     cmd = subprocess.Popen(command, bufsize=1,
@@ -60,11 +62,13 @@ class OutputCache(object):
     def __init__(self):
         self.cache = {}
 
-    def fileContents(self, fn):
+    def fileContents(self, fn, *args, **kwargs):
+        open_defaults_for_utf8_text(args, kwargs)
         key = 'file:' + fn
         if key not in self.cache:
             logger.debug("Opening " + fn)
-            f = open(fn)
+            # pylint: disable=unspecified-encoding
+            f = open(fn, **kwargs)
             self.cache[key] = ''.join(f.readlines())
             f.close()
         return self.cache[key]

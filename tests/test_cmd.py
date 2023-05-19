@@ -3,16 +3,18 @@ import unittest
 from mock import patch, Mock, DEFAULT, mock_open
 
 from xcp.cmd import OutputCache
+from xcp.compat import open_utf8
 
 class TestCache(unittest.TestCase):
     def setUp(self):
         self.c = OutputCache()
 
-    def check_fileContents(self, read_data):
+    def check_fileContents(self, read_data, *args, **kwargs):
+        expected_kwargs = kwargs.pop("expected_kwargs", {})
         with patch("xcp.cmd.open", mock_open(read_data=read_data)) as open_mock:
             # uncached fileContents
             data = self.c.fileContents('/tmp/foo')
-            open_mock.assert_called_once_with("/tmp/foo")
+            open_mock.assert_called_once_with("/tmp/foo", *args, **expected_kwargs)
             self.assertEqual(data, read_data)
 
             # rerun as cached
@@ -25,11 +27,11 @@ class TestCache(unittest.TestCase):
             open_mock.reset_mock()
             self.c.clearCache()
             data = self.c.fileContents('/tmp/foo')
-            open_mock.assert_called_once_with("/tmp/foo")
+            open_mock.assert_called_once_with("/tmp/foo", *args, **expected_kwargs)
             self.assertEqual(data, read_data)
 
     def test_fileContents_mock_string(self):
-        self.check_fileContents("line1\nline2\n")
+        self.check_fileContents("line1\nline2\n", expected_kwargs=open_utf8)
 
     def test_runCmd(self):
         output_data = "line1\nline2\n"

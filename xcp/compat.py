@@ -1,4 +1,4 @@
-"""Helper module for providing common defaults on how to enable UTF-8 I/O in Py3.6 and newer"""
+"""Helper module for setting up binary or UTF-8 I/O for Popen and open in Python 3.6 and newer"""
 # See README-Unicode.md for Details
 import sys
 
@@ -19,3 +19,11 @@ else:
     # Python2.7: None of the above is either supported or relevant (strings are bytes):
     open_utf8 = {}
     utf8open = open
+
+def open_defaults_for_utf8_text(args, kwargs):
+    """Setup keyword arguments for UTF-8 text mode with codec error handler to replace chars"""
+
+    mode = kwargs.get("mode", "")
+    if sys.version_info >= (3, 0) and "b" not in mode:
+        kwargs.setdefault("encoding", "utf-8")
+        kwargs.setdefault("errors", "replace")

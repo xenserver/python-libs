@@ -53,7 +53,8 @@ def ip_link_set_name(src_name, dst_name):
     LOG.debug("Attempting rename %s -> %s" % (src_name, dst_name))
 
     # Is the interface currently up?
-    link_show = Popen(["ip", "link", "show", src_name], stdout = PIPE)
+    link_show = Popen(["ip", "link", "show", src_name], stdout = PIPE, universal_newlines=True)
+
     stdout, _ = link_show.communicate()
 
     if link_show.returncode != 0:
@@ -66,7 +67,7 @@ def ip_link_set_name(src_name, dst_name):
 
     # If it is up, bring it down for the rename
     if isup:
-        link_down = Popen(["ip", "link", "set", src_name, "down"])
+        link_down = Popen(["ip", "link", "set", src_name, "down"], universal_newlines=True)
         link_down.wait()
 
         if link_down.returncode != 0:
@@ -75,7 +76,7 @@ def ip_link_set_name(src_name, dst_name):
             return
 
     # Perform the rename
-    link_rename = Popen(["ip", "link", "set", src_name, "name", dst_name])
+    link_rename = Popen(["ip", "link", "set", src_name, "name", dst_name], universal_newlines=True)
     link_rename.wait()
 
     if link_rename.returncode != 0:
@@ -91,7 +92,7 @@ def ip_link_set_name(src_name, dst_name):
         # its final name.  However, i cant think of a non-hacky way of doing
         # this with the current implementation
 
-        link_up = Popen(["ip", "link", "set", dst_name, "up"])
+        link_up = Popen(["ip", "link", "set", dst_name, "up"], universal_newlines=True)
         link_up.wait()
 
         if link_up.returncode != 0:

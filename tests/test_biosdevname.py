@@ -1,4 +1,6 @@
 import unittest
+from subprocess import PIPE
+
 from mock import patch, Mock
 
 from xcp.net.biosdevname import has_ppn_quirks, all_devices_all_names
@@ -26,7 +28,9 @@ class TestQuirks(unittest.TestCase):
 
 class TestDeviceNames(unittest.TestCase):
     def test(self):
+        # sourcery skip: extract-method, inline-immediately-returned-variable, path-read
         with patch("xcp.net.biosdevname.Popen") as popen_mock:
+            # pylint: disable=unspecified-encoding
             with open("tests/data/physical.biosdevname") as f:
                 fake_output_1 = f.read()
             with open("tests/data/all_ethN.biosdevname") as f:
@@ -43,6 +47,9 @@ class TestDeviceNames(unittest.TestCase):
         calls = popen_mock.call_args_list
         self.assertEqual(calls[0].args[0], ['/sbin/biosdevname', '--policy', 'physical', '-d'])
         self.assertEqual(calls[1].args[0], ['/sbin/biosdevname', '--policy', 'all_ethN', '-d'])
+        popen_kwargs = {"stdout": PIPE, "stderr": PIPE, "universal_newlines": True}
+        self.assertEqual(calls[0].kwargs, popen_kwargs)
+        self.assertEqual(calls[1].kwargs, popen_kwargs)
 
         self.assertEqual(devices['eth0']['BIOS device'],
                          {'all_ethN': 'eth0', 'physical': 'em1'})

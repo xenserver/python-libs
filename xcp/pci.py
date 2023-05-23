@@ -26,6 +26,8 @@ import subprocess
 import re
 import six
 
+from .compat import utf8open
+
 _SBDF = (r"(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
          r"     (?P<bus>     [\da-fA-F]{2}):"   # Bus
          r"     (?P<device>  [\da-fA-F]{2})\."  # Device
@@ -185,7 +187,7 @@ class PCIIds(object):
         vendor = None
         cls = None
 
-        fh = open(fn)
+        fh = utf8open(fn)
         for l in fh:
             line = l.rstrip()
             if line == '' or line.startswith('#'):

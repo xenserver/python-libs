@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# pylint: disable=unspecified-encoding  # we pass encoding using kwargs where needed
+
+
 import subprocess
 import unittest
 from os import environ
@@ -5,6 +9,7 @@ from os import environ
 import pyfakefs.fake_filesystem_unittest  # type: ignore[import]
 from mock import patch, Mock
 
+from xcp.compat import open_utf8
 from xcp.pci import PCI, PCIIds, PCIDevices
 
 class TestInvalid(unittest.TestCase):
@@ -87,8 +92,8 @@ class TestPCIIds(unittest.TestCase):
 
     def test_videoclass_by_mock_calls(self):
         with patch("xcp.pci.os.path.exists") as exists_mock, \
-             patch("xcp.pci.open") as open_mock, \
-             open("tests/data/pci.ids") as fake_data:
+             patch("xcp.pci.utf8open") as open_mock, \
+             open("tests/data/pci.ids", **open_utf8) as fake_data:  # type: ignore[call-overload]
             exists_mock.return_value = True
             open_mock.return_value.__iter__ = Mock(return_value=iter(fake_data))
             ids = PCIIds.read()
@@ -116,21 +121,49 @@ class TestPCIIds(unittest.TestCase):
         self.assertEqual(video_class, ["03"])
         sorted_devices = sorted(devs.findByClass(video_class),
                                 key=lambda x: x['id'])
-        self.assertEqual(len(sorted_devices), 2)
 
+        # Assert devs.findByClass() finding 3 GPUs from tests/data/lspci-mn in our mocked PCIIds DB:
+        self.assertEqual(len(sorted_devices), 3)
+
+        # For each of the found devices, assert these expected values:
         for (video_dev,
              num_functions,
              vendor,
              device,
+             subdevice,
         ) in zip(sorted_devices,
-                 (1, 5),
-                 ("Advanced Micro Devices, Inc. [AMD/ATI]",
-                  "Advanced Micro Devices, Inc. [AMD/ATI]"),
-                 ("Navi 14 [Radeon RX 5500/5500M / Pro 5500M]",
-                  "Renoir"),
+            # 1: Number of other PCI device functions shown by mocked lspci in this PCI slot:
+            (
+                1,
+                0,
+                5,
+            ),
+            # 2: GPU Vendor
+            (
+                "Advanced Micro Devices, Inc. [AMD/ATI]",
+                "Advanced Micro Devices, Inc. [AMD/ATI]",
+                "Advanced Micro Devices, Inc. [AMD/ATI]",
+            ),
+            # 3: GPU Device name
+            (
+                "Navi 14 [Radeon RX 5500/5500M / Pro 5500M]",
+                "Hawaii XT / Grenada XT [Radeon R9 290X/390X]",
+                "Renoir",
+            ),
+            # 4: GPU Subdevice name
+            (
+                None,
+                "R9 290X IceQ X² Ultra Turbo Overdrive³ USB 3.2 SuperSpeed Edition",
+                None,
+            ),
         ):
             self.assertEqual(len(devs.findRelatedFunctions(video_dev['id'])), num_functions)
             self.assertEqual(ids.findVendor(video_dev['vendor']), vendor)
             self.assertEqual(ids.findDevice(video_dev['vendor'], video_dev['device']), device)
+            # Expect that we can lookup the subdevice and get the name of the subdevice, if found:
+            self.assertEqual(
+                ids.findSubdevice(video_dev["subvendor"], video_dev["subdevice"]),
+                subdevice,
+            )
 
         self.assertEqual(len(devs.findRelatedFunctions('00:18.1')), 7)

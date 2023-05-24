@@ -263,6 +263,7 @@ class PCIDevices(object):
             stdout=subprocess.PIPE,
             universal_newlines=True,
         )
+        assert cmd.stdout
         for l in cmd.stdout:
             line = l.rstrip()
             el = [x for x in line.replace('"', '').split() if not x.startswith('-')]
@@ -274,6 +275,7 @@ class PCIDevices(object):
             if len(el) == 6:
                 self.devs[el[0]]['subvendor'] = el[4]
                 self.devs[el[0]]['subdevice'] = el[5]
+        cmd.stdout.close()  # with subprocess.Popen() is not supported in Python 2
         cmd.wait()
 
     def findByClass(self, cls, subcls = None):

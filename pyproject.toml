@@ -53,6 +53,7 @@ test = [
     "pytest_httpserver; python_version >= '3.7'",
     "pytest-localftpserver; python_version >= '3.7'",
     "pytest-localftpserver==0.5.1; python_version <= '3.6'",
+    "pytest-subprocess; python_version >= '3.6'",
     "typing_extensions"
 ]
 coverage = [
@@ -70,6 +71,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["xcp", "xcp.net", "xcp.net.ifrename"]
+
+[tool.black]
+line-length = 100
 
 [tool.mypy]
 pretty = true

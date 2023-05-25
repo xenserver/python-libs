@@ -47,18 +47,48 @@ dependencies = [
 test = [
     "mock",
     "pyfakefs",
-    "pytest",
+    "pytest<7",
     "pytest-cov",
     "pytest-forked",
     "pytest_httpserver; python_version >= '3.7'",
     "pytest-localftpserver; python_version >= '3.7'",
     "pytest-localftpserver==0.5.1; python_version <= '3.6'",
+    "pytest-pythonpath",
     "pytest-subprocess; python_version >= '3.6'",
+    "pytest-timeout",
     "typing_extensions"
 ]
 coverage = [
     "coverage[toml]",
     "diff_cover"
+]
+mypy = [
+    "lxml",
+    "mypy",
+    "mypy-extensions",
+    "typing_extensions",
+    "types-mock",
+    "types-simplejson",
+    "types-six",
+]
+pyre = [
+    "pyre-check",
+    "pyre-extensions",
+]
+pytype = [
+    "pandas",
+    "pytype",
+]
+tox = [
+    # The latest versions of tox need 'py>=1.11.0' and this is not stated in the deps of tox-4.5.1.
+    "py>=1.11.0",
+    # tox>=4 is needed in order to fix reading the python2.7 deps from pyproject.toml
+    "tox>=4.5.1; python_version >= '3.7'",
+    "tox-gh-actions; python_version >= '3.7'",
+    # virtualenv-20.22 breaks using python2.7 for the `py27` virtualenv with tox and newer
+    # versions even break py36(which is also EOL) because py36 does not support
+    # from __future__ import annotations
+    "virtualenv<20.22",
 ]
 
 [project.urls]

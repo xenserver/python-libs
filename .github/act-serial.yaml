@@ -21,14 +21,14 @@ jobs:
       # See: https://github.com/xenserver/python-libs/pull/26#discussion_r1179482169
       max-parallel: 1
       # Want to get the results of all the tests, don't terminate all on a fail:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
         # This tests with Python 2.7 and with Ubuntu-20.04's Python 3.8 for combined py2+3 coverage:
-        - python-version: '2.7'
-          os: ubuntu-20.04
         - python-version: '3.11'
           os: ubuntu-latest
+        - python-version: '2.7'
+          os: ubuntu-20.04
         - python-version: '3.10'
           os: ubuntu-latest
         - python-version: '3.9'
@@ -69,14 +69,3 @@ jobs:
       - name: Generate combined test-coverage with Python 2.7 and 3.8 for Upload
         if: ${{ matrix.python-version == 2.7 }}
         run: tox --workdir .github/workflows/.tox --recreate -e py38-covcombine
-
-      - name: Upload coverage reports to Codecov
-        if: ${{ matrix.python-version == 2.7 }}
-        uses: codecov/codecov-action@v3
-        with:
-          directory: .github/workflows/.tox/py38-covcombine/log
-          env_vars: OS,PYTHON
-          fail_ci_if_error: true
-          flags: unittest
-          name: py27-py38-combined
-          verbose: true

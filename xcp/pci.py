@@ -39,7 +39,7 @@ VALID_SBDF = re.compile(r"^%s$" % _SBDF, re.X)
 
 VALID_SBDFI = re.compile(
     r"^(?P<sbdf>%s)"
-    r"  (?:[[](?P<index>[\d]{1,2})[]])?$"   # Index (optional)
+    r"  (?:[\[](?P<index>[\d]{1,2})[\]])?$"   # Index (optional)
     % _SBDF
     , re.X)
 
@@ -301,6 +301,30 @@ class PCIDevices(object):
 
 
 def pci_sbdfi_to_nic(sbdfi, nics):
+    """
+    Return NIC for a given PCI SBDF identifier(optionally with a MAC address index)
+
+    Explanation of the PCI SBDF MAC address index implemented here:
+    CP-28832: Support the use of an index after PCI bus location
+
+    Some NICs expose multiple ethernet devices for a single PCI location, meaning
+    there is confusion about the physical names and no way to distinguish between
+    them other than MAC address.  Auditing a large environment to obtain MAC
+    addresses to feed into the host installer (e.g. using map_netdev) is not
+    viable, therefore this change implements an index (ordered by MAC) to the PCI
+    bus location to uniquely identify a NIC:
+
+    - Match SBDF[index] input against a regular expression pattern to extract the
+      SBDF identifier and the optional MAC index(the default value of the index is 0)
+    - Filter the list of NICs to find those with a matching PCI SBDF identifier.
+    - Sort matching NICs by MAC address (in case the passed MAC index is > 0)
+
+    The test tests/test_sbdfi_to_nic.py gives an easy overview how it is used.
+    @param sbdfi: PCI SBDF identifier of the NIC, Optionally with an index
+    @param nics: List of NIC objects
+    @returns: NIC object at the given MAC index
+    @raises: Exception if SBDF[index] is not found
+    """
     match = VALID_SBDFI.match(sbdfi)
 
     index = 0

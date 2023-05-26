@@ -17,39 +17,48 @@ Test-driven Development (TDD) Model
 This package has CI which can be run locally but is also run in GitHub CI to ensure
 Test-driven development.
 
-The Continous Integration Tests feature:
+The Continuous Integration Tests feature:
 - Combined coverage testing of Python 2.7 and Python 3.8 code branches
 - Automatic Upload of the combined coverage to CodeCov (from the GitHub Workflow)
 - Checking of the combined coverage against the diff to master: Fails if changes are not covered!
 - Pylint report in the GitHub Action Summary page, with Warning and Error annotatios, even in the code review.
 - Check that changes don't generate pylint warnings (if warning classes which are enabled in pylintrc)
-- Static analysis using mypy, pyre and pytype
+- Static analysis using `mypy`, `pyre` and `pytype`
 
 This enforces that any change (besides whitespace):
 - has code coverage and
-- does not introduce a pylint warning which is not disabled in `pylintrc`
+- does not introduce a `pylint` warning which is not disabled in `pylintrc`
 - does not introduce a type of static analysis warning which is currently suppressed.
 
 Status Summary
 --------------
-- The warnings shown (in the GitHub Actions Summary Page) are reminders that the
-  PRs 22, 23, 24 are needed, before other projects should try to use it with Python3!
+- The warnings shown on the GitHub Actions Summary Page indicate the remaining
+  work for full Pyhon3 support (excluding missing tests).
 
-Pylint results from GitHub CI in GitHub Actions page
+`Pylint` results from GitHub CI in GitHub Actions page
 ----------------------------------------------------
 A step of the GitHub workflow produces a browser-friendly `pylint` report:
 From the [Actions tab](https://github.com/xenserver/python-libs/actions),
 open a recent workflow run the latest and scroll down until you see the tables!
 
-Testing locally and in GitHub CI using tox
-------------------------------------------
+Configuration files
+-------------------
+- `pyproject.toml`: Top-level configuration of the package metadata and dependencies
+- `tox.ini`: Secondary level configuration, defines of the CI executed by `tox`
+- `pytest.ini`: The defaults used by `pytest` unless overruled by command line options
+- `.github/workflows/main.yml`: Configuration of the GitHub CI matrix jobs and coverage upload
+- `.github/act-serial.yaml`: Configuration for the jobs run by the local GitHub actions runner `act`
+- `pylintrc`: Configuration file of `Pylint`
+
+Testing locally and in GitHub CI using `tox`
+--------------------------------------------
 
 `pytest` runs tests, checks by `pylint` and `mypy`. With `tox`, developers can
 run the full test suite for Python 2.7 and 3.x. Unit tests are passing, but there are
  many Python3 issues which it does not uncover yet.
 
-> Intro: Managing a Project's Virtualenvs with tox -
-> A comprehensive beginner's introduction to tox.
+> _"Intro: Managing a Project's Virtualenvs with tox -
+> A comprehensive beginner's introduction to tox":_
 > https://www.seanh.cc/2018/09/01/tox-tutorial/
 
 To run the tests for all supported and installed python versions, run:
@@ -61,15 +70,41 @@ pip3 install --user --upgrade 'py>=1.11.0' 'virtualenv<20.22' 'tox>=4.5.1'; hash
 - `virtualenv-20.22` breaks using python2.7 for the `py27` virtualenv with tox,
   therefore it has to be downgraded thus `'virtualenv<20.22'`.
 
-You can run tox with just the python versions you have using `tox -e py27-test -e py3.11-mypy`.
+Using pip-tools, you can also extract the requirements and extras from `pyptoject.toml`:
+```bash
+PYTHON=python3.10
+$PYTHON -m pip install pip-tools
+$PYTHON -m piptools compile --extra=.,test,mypy,pyre,pytype,tox -o - pyproject.toml |
+    $PYTHON -m pip install -r /dev/stdin --no-warn-conflicts
+```
+With this, you can run most of the CI tests run by `tox` and GitHub CI also from the shell.
+
+You can run `tox` with just the Python versions you have using `tox -e py27-test -e py3.11-mypy`.
 The syntax is `-e py<pvthon-version>-<factor1>[-factor2]` The currently supported factors
 are:
-- `test`: runs pytest
-- `cov`: runs pytest --cov and generate XML and HTML reports in `.tox/py<ver>-cov/logs/`
-- `mypy`: runs mypy
-- `fox`: runs like `cov` but then opens the HTML reports in Firefox!
+- `test`: runs `pytest`
+- `cov`: runs `pytest --cov` and generates `XML` and `HTML` reports in `.tox/py<ver>-cov/logs/`
+- `mypy`: runs `mypy`
+- `fox`: runs like `cov` but then opens the `HTML` reports in Firefox!
 
-The list of `virtualenvs` can be shown using this command: `tox -av`
+Example development workflow
+----------------------------
+* `pip install pytest-watch` - `ptw` watches changed files and runs pytest after changes are saved.
+    * Then run `ptw` on the code/tests you work on, e.g.: `ptw tests/test_pci_*` and edit the files.
+* Run the tests for at also with `LC_ALL=C python3.6 -m pytest` to check for any `ascii` codec
+  issues by Python3.6
+* Test with `python2.7 -m pytest`
+* Run `mypy` (without any arguments - The configuration is in `pyproject.toml`)
+* Run `./run-pytype.py`
+* Run `./run-pyre.py`
+* Run `tox -e py36-lint` and fix any `Pylint` warnings
+* Run `tox -e py38-covcombine` and fix any missing diff-coverage.
+* Run `tox` for the full CI test suite
+* Run `act` for the full CI test suite in local containers (similar to GitHub action containers)
+* Commit with `--signoff` on a new branch and push it and check the triggered GitHub Action run succeeds.
+* Open a new PR
+
+The list of `virtualenvs` configured in tox can be shown using this command: `tox -av`
 ```yaml
 $ tox -av
 default environments:

@@ -1,0 +1,17 @@
+{
+  "problemMatcher": [
+        {
+            "owner": "python-libs-PYTHONWARNINGS",
+            "severity": "warning",
+            "pattern": [
+                {
+                    "regexp": "^.*/python-libs/(.+):([0-9]*):(.*):(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "code": 3,
+                    "message": 4
+                }
+            ]
+        }
+  ]
+}

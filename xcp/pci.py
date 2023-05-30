@@ -26,7 +26,7 @@ import subprocess
 import re
 import six
 
-from .compat import utf8open
+from .compat import open_with_codec_handling
 
 _SBDF = (r"(?:(?P<segment> [\da-dA-F]{4}):)?" # Segment (optional)
          r"     (?P<bus>     [\da-fA-F]{2}):"   # Bus
@@ -187,7 +187,7 @@ class PCIIds(object):
         vendor = None
         cls = None
 
-        fh = utf8open(fn)
+        fh = open_with_codec_handling(fn, encoding="utf-8")
         for l in fh:
             line = l.rstrip()
             if line == '' or line.startswith('#'):

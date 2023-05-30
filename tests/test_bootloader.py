@@ -6,6 +6,17 @@ from tempfile import NamedTemporaryFile, mkdtemp
 
 from xcp.bootloader import Bootloader
 
+
+def test_writeGrubWithTempFile(tmpdir):
+    """Test xcp.bootloader.{writeGrub,writeExtLinux}.open_with_codec_handling with tmpdir fixture"""
+    bootloader = Bootloader.readGrub2("tests/data/grub.cfg")
+    filename = str(tmpdir.mkdir("grub").join("menu.lst"))
+    bootloader.writeGrub(filename)
+    Bootloader.readGrub(filename)
+    bootloader.writeExtLinux(filename)
+    Bootloader.readExtLinux(filename)
+
+
 class TestBootloader(unittest.TestCase):
     def test_grub2(self):
         bl = Bootloader.readGrub2("tests/data/grub.cfg")

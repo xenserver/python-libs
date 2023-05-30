@@ -5,6 +5,7 @@ import subprocess
 from tempfile import NamedTemporaryFile, mkdtemp
 
 from xcp.bootloader import Bootloader
+from xcp.compat import open_with_codec_handling
 
 
 def test_writeGrubWithTempFile(tmpdir):
@@ -40,13 +41,13 @@ class TestLinuxBootloader(unittest.TestCase):
         grubdir = os.path.join(bootdir, "grub")
         os.makedirs(grubdir)
         shutil.copyfile("tests/data/grub-linux.cfg", os.path.join(grubdir, "grub.cfg"))
-        with open(os.path.join(bootdir, "vmlinuz-1"), "w"):
+        with open_with_codec_handling(os.path.join(bootdir, "vmlinuz-1"), "w"):
             pass
-        with open(os.path.join(bootdir, "vmlinuz-2"), "w"):
+        with open_with_codec_handling(os.path.join(bootdir, "vmlinuz-2"), "w"):
             pass
-        with open(os.path.join(bootdir, "initrd.img-1"), "w"):
+        with open_with_codec_handling(os.path.join(bootdir, "initrd.img-1"), "w"):
             pass
-        with open(os.path.join(bootdir, "initrd.img-2"), "w"):
+        with open_with_codec_handling(os.path.join(bootdir, "initrd.img-2"), "w"):
             pass
     def tearDown(self):
         shutil.rmtree(self.tmpdir)

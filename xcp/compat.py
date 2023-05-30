@@ -1,26 +1,43 @@
 """Helper module for setting up binary or UTF-8 I/O for Popen and open in Python 3.6 and newer"""
+# pyright: strict
+# pyright: reportTypeCommentUsage=false
+# pyright: reportUnknownParameterType=false
 # See README-Unicode.md for Details
 import sys
+from typing import TYPE_CHECKING
 
-if sys.version_info >= (3, 0):  # pragma: no cover
+if TYPE_CHECKING:
+    from typing import IO, Any  # pylint: disable=unused-import  # pragma: no cover
+
+# pylint: disable=unspecified-encoding
+if sys.version_info >= (3, 0):
     open_utf8 = {"encoding": "utf-8", "errors": "replace"}
 
-    def utf8open(filename, *args, **kwargs):
+    def open_with_codec_handling(filename, mode="r", encoding="utf-8", **kwargs):
+        # type:(str, str, str, Any) -> IO[Any]
         """Helper for open(): Handle UTF-8: Default to encoding="utf-8", errors="replace" for Py3"""
-        if "b" in (args[0] if args else kwargs.get("mode", "")):
+        if "b" in mode:
             # Binary mode: just call open() unmodified:
-            return open(filename, *args, **kwargs)  # pylint: disable=unspecified-encoding
+            return open(filename, mode, **kwargs)  # pragma: no cover
         # Text mode: default to UTF-8 with error handling to replace malformed UTF-8 sequences
-        kwargs.setdefault("encoding", "utf-8")  # Needed for Python 3.6 when no UTF-8 locale is set
+        # Needed for Python 3.6 when no UTF-8 locale is set:
+        kwargs.setdefault("encoding", encoding)
         kwargs.setdefault("errors", "replace")  # Simple codec error handler: Replace malformed char
-        # pylint: disable-next=unspecified-encoding
-        return open(filename, *args, **kwargs)  # type: ignore[call-overload]
+        return open(filename, mode, **kwargs)  # type: ignore[call-overload]
+
 else:
-    # Python2.7: None of the above is either supported or relevant (strings are bytes):
     open_utf8 = {}
-    utf8open = open
+
+    def open_with_codec_handling(filename, mode="r", encoding="", errors="", **kwargs):
+        # type:(str, str, str, str, str) -> IO[Any]
+        """open() wrapper to pass mode and **kwargs to open(), ignores endcoding and errors args"""
+        _ = encoding
+        _ = errors
+        return open(filename, mode, **kwargs)
+
 
 def open_defaults_for_utf8_text(args, kwargs):
+    # type:(tuple[Any, ...] | None, Any) -> tuple[str, Any]
     """Setup keyword arguments for UTF-8 text mode with codec error handler to replace chars"""
     other_kwargs = kwargs.copy()
     mode = other_kwargs.pop("mode", "")

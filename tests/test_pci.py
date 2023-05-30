@@ -163,13 +163,13 @@ class TestPCIIdsPytestSubprocessMock(PciVideoClassTestCase):
 
     def test_videoclass_by_mock_calls(self):
         with patch("xcp.pci.os.path.exists") as exists_mock, patch(
-            "xcp.pci.utf8open"
+            "xcp.pci.open_with_codec_handling"
         ) as open_mock, open("tests/data/pci.ids", encoding="utf-8") as fake_data:
             exists_mock.return_value = True
             open_mock.return_value.__iter__ = Mock(return_value=iter(fake_data))
             ids = PCIIds.read()
         exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
-        open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
+        open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids", encoding="utf-8")
         self.assert_videoclass_devices(ids, self.mock_lspci_using_open_testfile())
 
     def mock_lspci_using_open_testfile(self):

@@ -459,7 +459,7 @@ class Bootloader(object):
             raise RuntimeError("No existing bootloader configuration found")
 
     def writeExtLinux(self, dst_file = None):
-        if hasattr(dst_file, 'name'):
+        if dst_file and hasattr(dst_file, 'name'):
             fh = dst_file
         else:
             fh = open(dst_file, 'w')
@@ -501,7 +501,7 @@ class Bootloader(object):
             fh.close()
 
     def writeGrub(self, dst_file = None):
-        if hasattr(dst_file, 'name'):
+        if dst_file and hasattr(dst_file, 'name'):
             fh = dst_file
         else:
             fh = open(dst_file, 'w')
@@ -535,7 +535,7 @@ class Bootloader(object):
             fh.close()
 
     def writeGrub2(self, dst_file = None):
-        if hasattr(dst_file, 'name'):
+        if dst_file and hasattr(dst_file, 'name'):
             fh = dst_file
         else:
             fh = open(dst_file, 'w')

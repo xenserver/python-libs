@@ -1,9 +1,27 @@
 # Python bytecode files
 *.py[co]
+__pycache__/
 
 # Emacs backup files
 *~
+# Vim swap files
+*.swp
 
 # python coverage data
 .coverage
+
+# Python static analysis tool cache directories
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Pytest cache
+.pytest_cache/
+
+# Tox {workdir} directory
+.tox/
+
 htmlcov/
+
+# Pip editable install directory
+python_libs.egg-info/

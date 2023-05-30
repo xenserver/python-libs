@@ -28,7 +28,7 @@ from __future__ import division
 import re
 
 from . import version
-import sys
+from .compat import open_with_codec_handling
 
 def default_memory_v2(host_mem_kib):
     """Return the default for the amount of dom0 memory for the
@@ -82,7 +82,7 @@ def default_memory(host_mem_kib):
 
     # read current host version
     platform_version = None
-    with open("/etc/xensource-inventory") as f:
+    with open_with_codec_handling("/etc/xensource-inventory") as f:
         for l in f.readlines():
             line = l.strip()
             if line.startswith('PLATFORM_VERSION='):

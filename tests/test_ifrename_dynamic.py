@@ -6,6 +6,9 @@ from copy import deepcopy
 
 from io import StringIO
 
+import pyfakefs.fake_filesystem_unittest
+
+from xcp.compat import open_with_codec_handling
 from xcp.net.ifrename.dynamic import DynamicRules
 from xcp.net.ifrename.macpci import MACPCI
 from xcp.logger import LOG, openLog, closeLogs
@@ -33,13 +36,13 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(dr.old, [])
 
     def test_empty(self):
+        dr = DynamicRules(path="empty")
 
-        fd = StringIO(
-            '{"lastboot":[],"old":[]}'
-            )
-        dr = DynamicRules(fd=fd)
-
-        self.assertTrue(dr.load_and_parse())
+        with pyfakefs.fake_filesystem_unittest.Patcher():
+            with open_with_codec_handling("empty", "w") as rulefile:
+                rulefile.write('{"lastboot":[],"old":[]}')
+            self.assertTrue(dr.load_and_parse())
+            self.assertTrue(dr.save())
 
         self.assertEqual(dr.lastboot, [])
         self.assertEqual(dr.old, [])

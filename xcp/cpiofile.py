@@ -55,9 +55,13 @@ import time
 import struct
 import copy
 import io
-from typing import cast
+from typing import IO, TYPE_CHECKING, Any, cast
 
 import six
+
+if TYPE_CHECKING:
+    from bz2 import _ReadBinaryMode, _WriteBinaryMode
+    from gzip import GzipFile
 
 if sys.platform == 'mac':
     # This module needs work for MacOS9, especially in the area of pathname
@@ -557,6 +561,7 @@ class _BZ2Proxy(_CMPProxy):
     """
 
     def __init__(self, fileobj, mode):
+        # type:(IO[Any], _ReadBinaryMode | _WriteBinaryMode) -> None
         _CMPProxy.__init__(self, fileobj, mode)
         self.init()
 
@@ -1069,6 +1074,7 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def cpioopen(cls, name, mode="r", fileobj=None):
+        # type:(str, _ReadBinaryMode | _WriteBinaryMode, IO[Any] | GzipFile | None) -> CpioFile
         """Open uncompressed cpio archive name for reading or writing.
         """
         if len(mode) > 1 or mode not in "raw":
@@ -1100,6 +1106,7 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def bz2open(cls, name, mode="r", fileobj=None, compresslevel=9):
+        # type:(str, _ReadBinaryMode | _WriteBinaryMode, IO[Any] | None, int) -> CpioFile
         """Open bzip2 compressed cpio archive name for reading or writing.
            Appending is not allowed.
         """
@@ -1112,7 +1119,7 @@ class CpioFile(six.Iterator):
             raise CompressionError("bz2 module is not available")
 
         if fileobj is not None:
-            fileobj = _BZ2Proxy(fileobj, mode)
+            fileobj = cast(IO[Any], _BZ2Proxy(fileobj, mode))  # pragma: no cover
         else:
             fileobj = bz2.BZ2File(name, mode, compresslevel=compresslevel)
 

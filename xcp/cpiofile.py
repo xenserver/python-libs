@@ -278,10 +278,6 @@ class _Stream(object):
                 self._init_write_gz()
 
         if comptype == "bz2":
-            try:
-                import bz2
-            except ImportError:
-                raise CompressionError("bz2 module is not available")
             if mode == "r":
                 self.dbuf = b""
                 self.cmp = bz2.BZ2Decompressor()
@@ -561,7 +557,6 @@ class _BZ2Proxy(_CMPProxy):
         self.init()
 
     def init(self):
-        import bz2
         self.pos = 0
         if self.mode == "r":
             self.cmpobj = bz2.BZ2Decompressor()
@@ -1105,11 +1100,6 @@ class CpioFile(six.Iterator):
         """
         if len(mode) > 1 or mode not in "rw":
             raise ValueError("mode must be 'r' or 'w'.")
-
-        try:
-            import bz2
-        except ImportError:
-            raise CompressionError("bz2 module is not available")
 
         if fileobj is not None:
             fileobj = _BZ2Proxy(fileobj, mode)

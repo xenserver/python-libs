@@ -33,6 +33,7 @@ import traceback
 import logging
 import logging.handlers
 
+from .compat import open_with_codec_handling
 
 LOG = logging.getLogger()
 LOG.setLevel(logging.NOTSET)
@@ -48,7 +49,7 @@ def openLog(lfile, level=logging.INFO):
     try:
         # if lfile is a string, assume we need to open() it
         if isinstance(lfile, str):
-            h = open(lfile, 'a')
+            h = open_with_codec_handling(lfile, "a")
             if h.isatty():
                 handler = logging.StreamHandler(h)
             else:

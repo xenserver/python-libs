@@ -332,9 +332,12 @@ class FTPAccessor(Accessor):
         url = urllib.parse.unquote(address)
 
         self.ftp.voidcmd('TYPE I')
-        s = self.ftp.transfercmd('RETR ' + url).makefile('rb')
+        socket = self.ftp.transfercmd('RETR ' + url)
+        buffered_reader = socket.makefile('rb')
+        # See https://github.com/xenserver/python-libs/pull/49#discussion_r1212794936:
+        socket.close()
         self.cleanup = True
-        return s
+        return buffered_reader
 
     def writeFile(self, in_fh, out_name):
         self._cleanup()

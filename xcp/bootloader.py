@@ -30,8 +30,13 @@ import os.path
 import re
 import tempfile
 import copy
+from typing import cast
+
 import branding
+
 import xcp.cmd
+
+from .compat import open_with_codec_handling
 
 COUNTER = 0
 
@@ -108,7 +113,7 @@ class Bootloader(object):
         title = None
         kernel = None
 
-        fh = open(src_file)
+        fh = open_with_codec_handling(src_file, encoding="utf-8")
         try:
             for line in fh:
                 l = line.strip()
@@ -216,7 +221,7 @@ class Bootloader(object):
             COUNTER += 1
             return "label%d" % COUNTER
 
-        fh = open(src_file)
+        fh = open_with_codec_handling(src_file, encoding="utf-8")
         try:
             for line in fh:
                 l = line.strip()
@@ -332,7 +337,7 @@ class Bootloader(object):
             COUNTER += 1
             return "label%d" % COUNTER
 
-        fh = open(src_file)
+        fh = open_with_codec_handling(src_file, encoding="utf-8")
         try:
             for line in fh:
                 l = line.strip()
@@ -462,7 +467,7 @@ class Bootloader(object):
         if hasattr(dst_file, 'name'):
             fh = dst_file
         else:
-            fh = open(dst_file, 'w')
+            fh = open_with_codec_handling(cast(str, dst_file), "w", encoding="utf-8")
         print("# location " + self.location, file=fh)
 
         if self.serial:
@@ -504,7 +509,7 @@ class Bootloader(object):
         if hasattr(dst_file, 'name'):
             fh = dst_file
         else:
-            fh = open(dst_file, 'w')
+            fh = open_with_codec_handling(cast(str, dst_file), "w", encoding="utf-8")
         print("# location " + self.location, file=fh)
 
         if self.serial:
@@ -538,7 +543,7 @@ class Bootloader(object):
         if hasattr(dst_file, 'name'):
             fh = dst_file
         else:
-            fh = open(dst_file, 'w')
+            fh = open_with_codec_handling(cast(str, dst_file), "w", encoding="utf-8")
 
         if self.serial:
             print("serial --unit=%s --speed=%s" % (self.serial['port'],

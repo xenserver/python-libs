@@ -3,16 +3,14 @@ import sys
 import unittest
 from os import environ
 
-import pyfakefs.fake_filesystem_unittest  # type: ignore[import]  # uses pyfakefs
-import pytest  # type: ignore[import]
-
-if sys.version_info >= (3,6):
-    import pytest_subprocess  # type: ignore[import] # pylint: disable=unused-import
-
+import pyfakefs.fake_filesystem_unittest
+import pytest
 from mock import Mock, patch
 
 from xcp.pci import PCI, PCIDevices, PCIIds
 
+if sys.version_info >= (3, 6):
+    from pytest_subprocess.fake_process import FakeProcess
 
 class TestInvalid(unittest.TestCase):
 
@@ -68,16 +66,16 @@ class TestValid(unittest.TestCase):
         self.assertEqual(PCI("0000:00:00.0"), PCI("00:00.0"))
 
 
-class PciVideoClassTestCase(unittest.TestCase):
-    def assert_videoclass_devices(self, ids, devs):  # type: (PCIIds, PCIDevices) -> None
+if sys.version_info >= (2, 7):
+    def assert_videoclass_devices(ids, devs):  # type: (PCIIds, PCIDevices) -> None
         """Verification function for checking the otuput of PCIDevices.findByClass()"""
         video_class = ids.lookupClass('Display controller')
-        self.assertEqual(video_class, ["03"])
+        assert video_class == ["03"]
         sorted_devices = sorted(devs.findByClass(video_class),
                                 key=lambda x: x['id'])
 
         # Assert devs.findByClass() finding 3 GPUs from tests/data/lspci-mn in our mocked PCIIds DB:
-        self.assertEqual(len(sorted_devices), 3)
+        assert len(sorted_devices) == 3
 
         # For each of the found devices, assert these expected values:
         for (video_dev,
@@ -111,16 +109,13 @@ class PciVideoClassTestCase(unittest.TestCase):
                 None,
             ),
         ):
-            self.assertEqual(len(devs.findRelatedFunctions(video_dev['id'])), num_functions)
-            self.assertEqual(ids.findVendor(video_dev['vendor']), vendor)
-            self.assertEqual(ids.findDevice(video_dev['vendor'], video_dev['device']), device)
+            assert len(devs.findRelatedFunctions(video_dev["id"])) == num_functions
+            assert ids.findVendor(video_dev["vendor"]) == vendor
+            assert ids.findDevice(video_dev["vendor"], video_dev["device"]) == device
             # Expect that we can lookup the subdevice and get the name of the subdevice, if found:
-            self.assertEqual(
-                ids.findSubdevice(video_dev["subvendor"], video_dev["subdevice"]),
-                subdevice,
-            )
+            assert ids.findSubdevice(video_dev["subvendor"], video_dev["subdevice"]) == subdevice
 
-        self.assertEqual(len(devs.findRelatedFunctions('00:18.1')), 7)
+        assert len(devs.findRelatedFunctions("00:18.1")) == 7
 
 
 class TestPCIIdsFailure(unittest.TestCase):
@@ -132,8 +127,8 @@ class TestPCIIdsFailure(unittest.TestCase):
         exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
 
 
-class TestPCIIds(PciVideoClassTestCase):
-    def test_videoclass_without_mock(self):
+if sys.version_info >= (2, 7):
+    def test_videoclass_without_mock():
         """
         Verifies that xcp.pci uses the open() and Popen() correctly across versions.
         Tests PCIIds.read() and PCIDevices() without mock for verifying compatibility
@@ -146,7 +141,7 @@ class TestPCIIds(PciVideoClassTestCase):
             ids = PCIIds.read()
         saved_PATH = environ["PATH"]
         environ["PATH"] = "tests/data"  # Let PCIDevices() call Popen("tests/data/lspci")
-        self.assert_videoclass_devices(ids, PCIDevices())
+        assert_videoclass_devices(ids, PCIDevices())
         environ["PATH"] = saved_PATH
 
 if sys.version_info >= (3, 0):
@@ -155,13 +150,7 @@ if sys.version_info >= (3, 0):
         """PyTest fixture for use by FTPAccessorTestCase to get the ftpserver object"""
         request.cls.fp = fp
 
-
-@pytest.mark.skipif(sys.version_info < (3, 0), reason="pytest-subprocess is not compatible for 2.7")
-@pytest.mark.usefixtures("pytest_popen_fixture")
-class TestPCIIdsPytestSubprocessMock(PciVideoClassTestCase):
-    fp = None
-
-    def test_videoclass_by_mock_calls(self):
+    def test_videoclass_by_mock_calls(fp):
         with patch("xcp.pci.os.path.exists") as exists_mock, patch(
             "xcp.pci.open_with_codec_handling"
         ) as open_mock, open("tests/data/pci.ids", encoding="utf-8") as fake_data:
@@ -170,10 +159,11 @@ class TestPCIIdsPytestSubprocessMock(PciVideoClassTestCase):
             ids = PCIIds.read()
         exists_mock.assert_called_once_with("/usr/share/hwdata/pci.ids")
         open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids", encoding="utf-8")
-        self.assert_videoclass_devices(ids, self.mock_lspci_using_open_testfile())
+        assert_videoclass_devices(ids, mock_lspci_using_open_testfile(fp))
 
-    def mock_lspci_using_open_testfile(self):
+    def mock_lspci_using_open_testfile(fp):
         """Mock xcp.pci.PCIDevices.Popen() using open(tests/data/lspci-mn)"""
         with open("tests/data/lspci-mn", "rb") as fake_data:
-            self.fp.register_subprocess(["lspci", "-mn"], stdout=fake_data.read())  # type: ignore
+            assert isinstance(fp, FakeProcess)
+            fp.register_subprocess(["lspci", "-mn"], stdout=fake_data.read())
         return PCIDevices()

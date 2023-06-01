@@ -300,18 +300,18 @@ class PCIDevices(object):
         return [x for x in self.devs if x != dev and slot(x) == slot(dev)]
 
 
-def pci_sbdfi_to_nic(sbdfi, nics):
+def pci_sbdfi_to_nic(sbdfi, nics):  # sourcery skip: raise-specific-error
     """
     Return NIC for a given PCI SBDF identifier(optionally with a MAC address index)
 
     Explanation of the PCI SBDF MAC address index implemented here:
-    CP-28832: Support the use of an index after PCI bus location
+    Support the use of an index after PCI bus location
 
     Some NICs expose multiple ethernet devices for a single PCI location, meaning
     there is confusion about the physical names and no way to distinguish between
     them other than MAC address.  Auditing a large environment to obtain MAC
     addresses to feed into the host installer (e.g. using map_netdev) is not
-    viable, therefore this change implements an index (ordered by MAC) to the PCI
+    viable, therefore this implements an index (ordered by MAC) to the PCI
     bus location to uniquely identify a NIC:
 
     - Match SBDF[index] input against a regular expression pattern to extract the

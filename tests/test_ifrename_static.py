@@ -4,6 +4,8 @@ import unittest
 
 from io import StringIO
 
+import pyfakefs.fake_filesystem_unittest
+
 from xcp.net.ifrename.static import StaticRules
 from xcp.net.ifrename.macpci import MACPCI
 from xcp.logger import openLog, closeLogs
@@ -42,11 +44,14 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(sr.rules, [])
 
     def test_comment(self):
+        sr = StaticRules(path="comment")
 
-        fd = StringIO("#comment")
-        sr = StaticRules(fd = fd)
+        with pyfakefs.fake_filesystem_unittest.Patcher():
+            with open("comment", "wb") as rulefile:
+                rulefile.write(b"# Hello, this is a comment with a non-ASCII byte: \x2b")
+            self.assertTrue(sr.load_and_parse())
+            self.assertTrue(sr.save())
 
-        self.assertTrue(sr.load_and_parse())
         self.assertEqual(sr.formulae, {})
         self.assertEqual(sr.rules, [])
 

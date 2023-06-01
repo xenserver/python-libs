@@ -42,6 +42,8 @@ Any line starting with '#' is considered to be a comment
 
 from __future__ import unicode_literals
 
+from ...compat import open_with_codec_handling
+
 __version__ = "1.1.1"
 __author__  = "Andrew Cooper"
 
@@ -116,7 +118,7 @@ class StaticRules(object):
                         LOG.error("Static rule file '%s' does not exist"
                                   % (self.path,))
                         return False
-                    fd = open(self.path, "r")
+                    fd = open_with_codec_handling(self.path, "r")
                     raw_lines = fd.readlines()
 
                 # else if we were given a file descriptor, just read it
@@ -328,7 +330,7 @@ class StaticRules(object):
             try:
                 # If we were given a path, try opening and writing to it
                 if self.path:
-                    fd = open(self.path, "w")
+                    fd = open_with_codec_handling(self.path, "w")
                     fd.write(self.write(header))
 
                 # else if we were given a file descriptor, just read it

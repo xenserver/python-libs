@@ -2,13 +2,12 @@ from __future__ import unicode_literals
 import json
 import logging
 import unittest
-from copy import deepcopy
 
 from io import StringIO
 
 from xcp.net.ifrename.dynamic import DynamicRules
 from xcp.net.ifrename.macpci import MACPCI
-from xcp.logger import LOG, openLog, closeLogs
+from xcp.logger import openLog, closeLogs
 
 
 class TestLoadAndParse(unittest.TestCase):

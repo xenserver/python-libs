@@ -32,7 +32,15 @@ import sys
 import traceback
 import logging
 import logging.handlers
+from typing import TYPE_CHECKING, TextIO
 
+from .compat import open_with_codec_handling
+
+if TYPE_CHECKING:
+    from typing import IO, Any, Union
+    from logging import StreamHandler
+    from logging.handlers import RotatingFileHandler
+    LoggingStreamHandler = Union[RotatingFileHandler, StreamHandler[IO[Any]], StreamHandler[TextIO]]
 
 LOG = logging.getLogger()
 LOG.setLevel(logging.NOTSET)
@@ -43,14 +51,15 @@ FORMAT = logging.Formatter(
 our_handlers = []
 
 def openLog(lfile, level=logging.INFO):
+    # type:(Union[str, TextIO], int) -> bool
     """Add a new file target to be logged to"""
 
     try:
         # if lfile is a string, assume we need to open() it
         if isinstance(lfile, str):
-            h = open(lfile, 'a')
+            h = open_with_codec_handling(lfile, "a")
             if h.isatty():
-                handler = logging.StreamHandler(h)
+                handler = logging.StreamHandler(h)  # type: LoggingStreamHandler
             else:
                 h.close()
                 handler = logging.handlers.RotatingFileHandler(lfile,

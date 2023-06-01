@@ -1,3 +1,4 @@
+# pyright: reportGeneralTypeIssues=false
 from __future__ import print_function
 from __future__ import unicode_literals
 import logging
@@ -7,8 +8,9 @@ from copy import deepcopy
 
 from io import StringIO
 
+# pylint:disable=wildcard-import,unused-wildcard-import,invalid-name,use-implicit-booleaness-not-len
 from xcp.net.ifrename.logic import *
-from xcp.logger import LOG, openLog, closeLogs
+from xcp.logger import openLog, closeLogs
 
 def apply_transactions(lst, trans):
 

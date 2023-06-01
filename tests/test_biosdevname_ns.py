@@ -2,8 +2,8 @@
 import unittest
 from os import system
 
-import pytest  # type: ignore # for pyre in tox only
-import pytest_forked  # type: ignore # pylint: disable=unused-import # This needs pytest-forked
+import pytest
+import pytest_forked  # pylint: disable=unused-import # Ensure pytest-forked is installed
 
 import xcp.net.biosdevname
 
@@ -12,11 +12,11 @@ from .xcptestlib_unshare import CLONE_NEWUSER, disassociate_namespaces
 
 def check_devices(self, devices):
     for item in devices.items():
-        print(item[0])
-        print(item[1]["BIOS device"])
-        print(item[1]["Assigned MAC"])
-        print(item[1]["Bus Info"])
-        print(item[1]["Driver"])
+        assert item[0]
+        assert item[1]["BIOS device"]
+        assert item[1]["Assigned MAC"]
+        assert item[1]["Bus Info"]
+        assert item[1]["Driver"]
 
 
 class TestDeviceNames(unittest.TestCase):

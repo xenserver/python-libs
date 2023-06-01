@@ -4,8 +4,8 @@ import os
 import unittest
 from subprocess import PIPE
 
-import pytest  # type: ignore # for pyre in tox only
-import pytest_forked  # type: ignore # pylint: disable=unused-import # This needs pytest-forked
+import pytest
+import pytest_forked  # pylint: disable=unused-import # Ensure pytest-forked is installed
 from mock import Mock, patch
 
 import xcp.net.ip

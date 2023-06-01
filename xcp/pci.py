@@ -326,6 +326,9 @@ def pci_sbdfi_to_nic(sbdfi, nics):
     @raises: Exception if SBDF[index] is not found
     """
     match = VALID_SBDFI.match(sbdfi)
+    if not match:
+        raise AttributeError("'NoneType' object has no attribute 'groupdict'")
+    assert match
 
     index = 0
     if 'index' in match.groupdict():
@@ -338,6 +341,10 @@ def pci_sbdfi_to_nic(sbdfi, nics):
     matching_nics.sort(key=lambda nic: nic.mac)
 
     if index >= len(matching_nics):
-        raise Exception("Insufficient NICs with PCI SBDF %s (Found %d, wanted at least %d)" % (value, len(matching_nics), index))
+        # pylint: disable-next=broad-exception-raised
+        raise Exception(
+            "Insufficient NICs with PCI SBDF %s (Found %d, wanted at least %d)"
+            % (value, len(matching_nics), index)
+        )
 
     return matching_nics[index]

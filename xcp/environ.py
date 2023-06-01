@@ -26,6 +26,8 @@
 import os
 import os.path
 
+from .compat import open_with_codec_handling
+
 EXTRA_SCRIPTS_DIR = '/mnt'
 
 def installerRunning():
@@ -45,7 +47,7 @@ def readInventory(root = '/'):
     try:
 
         try:
-            fh = open(os.path.join(root, 'etc/xensource-inventory'))
+            fh = open_with_codec_handling(os.path.join(root, "etc/xensource-inventory"))
 
             for line in (x for x in (y.strip() for y in fh)
                          if not x.startswith('#')):

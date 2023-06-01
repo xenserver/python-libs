@@ -278,6 +278,7 @@ class Bootloader(object):
                         kernel_args = hypervisor_args
                         label = create_label(title)
                         menu_order.append(label)
+                        # pylint: disable-next=no-value-for-parameter
                         menu[label] = MenuEntry(kernel = kernel,
                                                 kernel_args = kernel_args,
                                                 initrd = els[1], title = title)
@@ -373,8 +374,14 @@ class Bootloader(object):
                                 override_bp = True
                                 break
                         if not override_bp:
-                            extra = ['if [ -s $prefix/grubenv ]; then', '\tload_env', 'fi', '',
-                                     'if [ -n "$override_entry" ]; then', '\tset default=$override_entry', 'fi', '']
+                            extra = ['if [ -s $prefix/grubenv ]; then',
+                                     '\tload_env',
+                                     'fi',
+                                     '',
+                                     'if [ -n "$override_entry" ]; then',
+                                     '\tset default=$override_entry',
+                                     'fi',
+                                     '']
                             boilerplate += extra
                     boilerplates.append(boilerplate)
                     boilerplate = []
@@ -445,7 +452,7 @@ class Bootloader(object):
         env_block = os.path.join(os.path.dirname(src_file), 'grubenv')
         bootloader = cls('grub2', src_file, menu, menu_order, default,
                          timeout, serial, env_block = env_block)
-        bootloader.boilerplate = boilerplates
+        bootloader.boilerplate = boilerplates  # pylint: disable=attribute-defined-outside-init
         return bootloader
 
     @classmethod
@@ -471,7 +478,7 @@ class Bootloader(object):
         print("# location " + self.location, file=fh)
 
         if self.serial:
-            if self.serial.get('flow', None) is None: 
+            if self.serial.get("flow", None) is None:
                 print("serial %s %s" % (self.serial['port'],
                                         self.serial['baud']), file=fh)
             else:
@@ -644,7 +651,6 @@ class Bootloader(object):
     @classmethod
     def newDefault(cls, kernel_link_name, initrd_link_name, root = '/'):
         b = cls.loadExisting(root)
-        # FIXME handle initial case
         if b.menu[b.default].kernel != kernel_link_name:
             backup = []
             if not os.path.exists(os.path.join(root, kernel_link_name[1:])):

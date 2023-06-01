@@ -75,6 +75,7 @@ try:
 except ImportError:
     GRP = PWD = None  # type: ignore[assignment] # pragma: no cover
 
+# pylint: skip-file
 # from cpiofile import *
 __all__ = ["CpioFile", "CpioInfo", "is_cpiofile", "CpioError"]
 

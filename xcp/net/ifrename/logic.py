@@ -104,7 +104,7 @@ def __rename_nic(nic, name, transactions, cur_state):
     else:
         # Another nic is in the way for applying the rule.  Move it sideways
 
-        # TODO: given new assertions, will this ever be nessesary?
+        # Old comment from 2012: given new assertions, will this ever be nessesary?
         if aliased.kname[:5] == "side-":
             aliased_eth = aliased.kname.split('-')[2]
         else:

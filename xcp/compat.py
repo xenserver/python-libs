@@ -9,6 +9,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from typing import IO, Any  # pylint: disable=unused-import  # pragma: no cover
 
+def open_textfile(filename, mode, encoding="utf-8", **kwargs):
+    # type:(str, str, str, Any) -> IO[str]
+    """For best type checking and type inference, wrap open_with_codec_handling returning IO[str]"""
+    if "b" in mode:
+        raise ValueError("open_textfile returns IO[str]: mode must not contain 'b'")
+    return open_with_codec_handling(filename, mode, encoding, **kwargs)
+
 # pylint: disable=unspecified-encoding
 if sys.version_info >= (3, 0):
     open_utf8 = {"encoding": "utf-8", "errors": "replace"}

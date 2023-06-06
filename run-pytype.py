@@ -5,17 +5,17 @@ import shlex
 import sys
 from logging import INFO, basicConfig, info
 from subprocess import DEVNULL, PIPE, Popen
-from typing import TextIO
+from typing import List, TextIO
 
 import pandas as pd
 
 
-def run_pytype(command: list, branch_url: str, errorlog: TextIO, results):
+def run_pytype(command: List[str], branch_url: str, errorlog: TextIO, results):
     info(" ".join(shlex.quote(arg) for arg in command))
     # When run in tox, pytype dumps debug messages to stderr. Point stderr to /dev/null:
     popen = Popen(command, stdout=PIPE, stderr=DEVNULL, universal_newlines=True)
     error = ""
-    row = {}
+    row = {}  # type: dict[str, str]
     while True:
         if not popen.stdout:
             break
@@ -108,7 +108,6 @@ def main(me: str, branch_url: str):
         branch_url (str): _url of the branch for file links in the summary table
     """
     never = (
-        "xcp/bootloader.py",
         "xcp/repository.py",
         "tests/test_ifrename_logic.py",
         "tests/test_xmlunwrap.py",

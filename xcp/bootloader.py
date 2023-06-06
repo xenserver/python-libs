@@ -36,7 +36,7 @@ import branding
 
 import xcp.cmd
 
-from .compat import open_with_codec_handling
+from .compat import open_textfile
 
 COUNTER = 0
 
@@ -44,6 +44,8 @@ class MenuEntry(object):
     def __init__(self, hypervisor, hypervisor_args, kernel, kernel_args,
                  initrd, title = None, tboot = None, tboot_args = None,
                  root = None):
+        self.extra = None
+        self.contents = []
         self.tboot = tboot
         self.tboot_args = tboot_args
         self.hypervisor = hypervisor
@@ -55,7 +57,7 @@ class MenuEntry(object):
         self.root = root
 
     def getTbootArgs(self):
-        return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.tboot_args)
+        return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', cast(str, self.tboot_args))
 
     def setTbootArgs(self, args):
         self.tboot_args = ' '.join(args)
@@ -83,6 +85,7 @@ class Bootloader(object):
         if menu_order is None:
             menu_order = []
 
+        self.boilerplate = []
         self.src_fmt = src_fmt
         self.src_file = src_file
         self.menu = menu
@@ -103,7 +106,8 @@ class Bootloader(object):
 
     @classmethod
     def readExtLinux(cls, src_file):
-        menu = {}
+        # type:(str) -> Bootloader
+        menu = {}  # type: dict[str, MenuEntry | dict[str, str]]
         menu_order = []
         default = None
         timeout = None
@@ -113,7 +117,7 @@ class Bootloader(object):
         title = None
         kernel = None
 
-        fh = open_with_codec_handling(src_file, encoding="utf-8")
+        fh = open_textfile(src_file, "r")
         try:
             for line in fh:
                 l = line.strip()
@@ -123,17 +127,16 @@ class Bootloader(object):
                 keywrd = els[0].lower()
 
                 # header
-                if (l.startswith('# location ') and len(els) == 3 and
-                    els[2] in ['mbr', 'partition']):
+                if l.startswith('# location ') and len(els) == 3 and els[2] in ['mbr', 'partition']:
                     location = els[2]
                 elif keywrd == 'serial' and len(els) > 1:
                     baud = '9600'
+                    flow = None
                     if len(els) > 2:
                         if ' ' in els[2]:
                             baud, flow = els[2].split(None, 1)
                         else:
                             baud = els[2]
-                            flow = None
                     serial = {'port': int(els[1]), 'baud': int(baud), 'flow': flow}
                 elif keywrd == 'default' and len(els) == 2:
                     default = els[1]
@@ -159,7 +162,7 @@ class Bootloader(object):
                             args = [x.strip() for x in els[2].split('---')]
                             if len(args) == 4:
                                 hypervisor = args[1].split(None, 1)
-                                kernel = args[2].split(None, 1)
+                                kernel = args[2].split(None, 1)  # type:ignore[assignment] # mypy
                                 if len(hypervisor) == 2 and len(kernel) == 2:
                                     menu[label] = MenuEntry(tboot = els[1],
                                                             tboot_args = args[0],
@@ -174,7 +177,7 @@ class Bootloader(object):
                             # kernel args & initrd
                             args = [x.strip() for x in els[2].split('---')]
                             if len(args) == 3:
-                                kernel = args[1].split(None, 1)
+                                kernel = args[1].split(None, 1)  # type:ignore[assignment] # mypy
                                 if len(kernel) == 2:
                                     menu[label] = MenuEntry(hypervisor = els[1],
                                                             hypervisor_args = args[0],
@@ -190,6 +193,7 @@ class Bootloader(object):
 
     @classmethod
     def readGrub(cls, src_file):
+        # type: (str) -> Bootloader
         menu = {}
         menu_order = []
         default = 0
@@ -221,7 +225,7 @@ class Bootloader(object):
             COUNTER += 1
             return "label%d" % COUNTER
 
-        fh = open_with_codec_handling(src_file, encoding="utf-8")
+        fh = open_textfile(src_file, "r")
         try:
             for line in fh:
                 l = line.strip()
@@ -230,8 +234,7 @@ class Bootloader(object):
                     continue
 
                 # header
-                if (l.startswith('# location ') and len(els) == 3 and
-                    els[2] in ['mbr', 'partition']):
+                if l.startswith('# location ') and len(els) == 3 and els[2] in ['mbr', 'partition']:
                     location = els[2]
                 elif els[0] == 'serial' and len(els) > 1:
                     port = 0
@@ -278,8 +281,9 @@ class Bootloader(object):
                         kernel_args = hypervisor_args
                         label = create_label(title)
                         menu_order.append(label)
-                        # pylint: disable-next=no-value-for-parameter
-                        menu[label] = MenuEntry(kernel = kernel,
+                        menu[label] = MenuEntry(None,
+                                                None,
+                                                kernel = kernel,
                                                 kernel_args = kernel_args,
                                                 initrd = els[1], title = title)
                         hypervisor = None
@@ -296,9 +300,10 @@ class Bootloader(object):
 
     @classmethod
     def readGrub2(cls, src_file):
+        # type:(str) -> Bootloader
         menu = {}
         menu_order = []
-        default = 0
+        default = 0  # type: str | int # is mapped to str for Bootloader(..., default)
         timeout = None
         serial = None
         title = None
@@ -311,9 +316,9 @@ class Bootloader(object):
         initrd = None
         root = None
         menu_entry_extra = None
-        menu_entry_contents = []
-        boilerplate = []
-        boilerplates = []
+        menu_entry_contents = []  # type: list[str]
+        boilerplate = []  # type: list[str]
+        boilerplates = []  # type: list[list[str]]
 
         def create_label(title):
             global COUNTER
@@ -338,7 +343,7 @@ class Bootloader(object):
             COUNTER += 1
             return "label%d" % COUNTER
 
-        fh = open_with_codec_handling(src_file, encoding="utf-8")
+        fh = open_textfile(src_file, "r")
         try:
             for line in fh:
                 l = line.strip()
@@ -369,8 +374,8 @@ class Bootloader(object):
                         # Add boilerplate to read override entry from environment
                         # block if not present
                         override_bp = False
-                        for line in boilerplate:
-                            if 'load_env' in line:
+                        for boilerplate_line in boilerplate:
+                            if 'load_env' in boilerplate_line:
                                 override_bp = True
                                 break
                         if not override_bp:
@@ -452,11 +457,12 @@ class Bootloader(object):
         env_block = os.path.join(os.path.dirname(src_file), 'grubenv')
         bootloader = cls('grub2', src_file, menu, menu_order, default,
                          timeout, serial, env_block = env_block)
-        bootloader.boilerplate = boilerplates  # pylint: disable=attribute-defined-outside-init
+        bootloader.boilerplate = boilerplates
         return bootloader
 
     @classmethod
     def loadExisting(cls, root = '/'):
+        # type: (str) -> Bootloader
         if os.path.exists(os.path.join(root, "boot/efi/EFI/xenserver/grub.cfg")):
             return cls.readGrub2(os.path.join(root, "boot/efi/EFI/xenserver/grub.cfg"))
         elif os.path.exists(os.path.join(root, "boot/grub/grub.cfg")):
@@ -474,7 +480,7 @@ class Bootloader(object):
         if dst_file and hasattr(dst_file, 'name'):
             fh = dst_file
         else:
-            fh = open_with_codec_handling(cast(str, dst_file), "w", encoding="utf-8")
+            fh = open_textfile(cast(str, dst_file), "w")
         print("# location " + self.location, file=fh)
 
         if self.serial:
@@ -516,7 +522,7 @@ class Bootloader(object):
         if dst_file and hasattr(dst_file, 'name'):
             fh = dst_file
         else:
-            fh = open_with_codec_handling(cast(str, dst_file), "w", encoding="utf-8")
+            fh = open_textfile(cast(str, dst_file), "w")
         print("# location " + self.location, file=fh)
 
         if self.serial:
@@ -550,7 +556,7 @@ class Bootloader(object):
         if dst_file and hasattr(dst_file, 'name'):
             fh = dst_file
         else:
-            fh = open_with_codec_handling(cast(str, dst_file), "w", encoding="utf-8")
+            fh = open_textfile(cast(str, dst_file), "w")
 
         if self.serial:
             print("serial --unit=%s --speed=%s" % (self.serial['port'],

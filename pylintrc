@@ -56,7 +56,21 @@ disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141,
     super-with-arguments,       # super() with arguments is a Python3-only feature
     consider-using-f-string,    # Python3-only feature, need to migrate everything first
     consider-using-with,        # Only for new code, move to Python3 is more important
-    logging-not-lazy            # Debug-Logging is not used in "hot" code paths here
+    logging-not-lazy,           # Debug-Logging is not used in "hot" code paths here
+    bad-whitespace,             # Relax other minor suggestions to focus on errors:
+    consider-using-dict-items,
+    consider-using-enumerate,
+    consider-using-ternary,
+    import-outside-toplevel,
+    len-as-condition,
+    multiple-imports,
+    no-else-raise,
+    no-else-return,
+    raise-missing-from,
+    too-many-branches,
+    too-many-nested-blocks,
+    unnecessary-pass,
+    wrong-import-position,
 
 
 [REPORTS]

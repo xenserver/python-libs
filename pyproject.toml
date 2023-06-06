@@ -109,7 +109,7 @@ line-length = 100
 pretty = true
 show_error_context = true
 error_summary = true
-files = ["xcp", "tests/test_*.py", "stubs"]
+files = ["xcp", "tests/test_*.py"]
 mypy_path = "stubs"
 python_version = "3.10"
 warn_redundant_casts = true
@@ -152,7 +152,6 @@ module = [
     "xcp.pci",        # xcp.pci should be fixed by PR #22
     "xcp.cpiofile",
     "xcp.repository",
-    "xcp.bootloader",
 ]
 check_untyped_defs = false # enable to see the blame list
 disable_error_code = ["var-annotated", "unreachable"]
@@ -177,10 +176,28 @@ disable_error_code = ["attr-defined", "no-any-return"]
 
 # Due to special cases for unicode handline in Python2 which are not reached by Python3:
 [[tool.mypy.overrides]]
-module = "xcp.xmlunwrap"
+module = ["xcp.bootloader", "xcp.xmlunwrap"]
 warn_unreachable = false
 
 [tool.coverage.run]
 # The coverage-comment-action needs a .converage file with relative path names:
 # https://github.com/py-cov-action/python-coverage-comment-action#setup
 relative_files = true
+
+[tool.pyright]
+exclude = [
+    "xcp/cpiofile.py",
+    "xcp/net/ifrename/logic.py",
+    "xcp/repository.py",
+]
+extraPaths = ["stubs"]
+include = ["xcp", "tests"]
+pythonPlatform = "Linux"
+pythonVersion = "3.6"
+reportFunctionMemberAccess = true
+reportGeneralTypeIssues = "warning"
+reportOptionalMemberAccess = "warning"
+reportPrivateUsage = true
+reportPropertyTypeMismatch = true
+reportUnnecessaryTypeIgnoreComment = false
+stubPath = "stubs"

@@ -18,6 +18,18 @@ def test_writeGrubWithTempFile(tmpdir):
     Bootloader.readExtLinux(filename)
 
 
+def test_GrubLegacyExtLinuxWithTempFile(tmpdir):
+    """Note: GRUB-Legacy and EXTLINUX code can likely be removed (pending approval)"""
+    bootloader = Bootloader.readGrub2("tests/data/grub-linux.cfg")
+    filename = str(tmpdir.mkdir("grub").join("menu.lst"))
+    bootloader.writeExtLinux(filename)
+    Bootloader.readExtLinux(filename)
+    bootloader.menu.pop("xe-tboot")
+    bootloader.menu_order.remove("xe-tboot")
+    bootloader.writeGrub(filename)
+    Bootloader.readGrub(filename)
+
+
 class TestBootloader(unittest.TestCase):
     def test_grub2(self):
         bl = Bootloader.readGrub2("tests/data/grub.cfg")
@@ -54,6 +66,34 @@ class TestLinuxBootloader(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
     def test_grub2_newdefault(self):
         Bootloader.newDefault("/boot/vmlinuz-2", "/boot/initrd.img-2", root=self.tmpdir)
+        bl = Bootloader.loadExisting(root=self.tmpdir)
+        assert bl.boilerplate == [
+            [
+                "# set default=0 is disabled to cover boilerplate generation code",
+                "if [ -s $prefix/grubenv ]; then",
+                "\tload_env",
+                "fi",
+                "",
+                'if [ -n "$override_entry" ]; then',
+                "\tset default=$override_entry",
+                "fi",
+                "",
+            ],
+            [],
+            [],
+        ]
+        assert str(bl.default).startswith("safe")
+        assert bl.location == "mbr"
+        assert bl.menu["safe"].hypervisor is None
+        assert bl.menu["safe"].hypervisor_args is None
+        assert bl.menu["safe"].title == "Linux - Safe Mode"
+        assert bl.menu["safe"].kernel == "/boot/vmlinuz-2"
+        assert bl.menu["safe"].kernel_args == "ro"
+        assert bl.menu["safe"].initrd == "/boot/initrd.img-2"
+        assert bl.menu["xe-tboot"].title == "XCP-ng (Trusted Boot)"
+        assert bl.menu["xe-tboot"].hypervisor == "/boot/xen.gz"
+        assert bl.menu["xe-tboot"].tboot == "/boot/tboot.gz"
+        assert bl.menu["xe-tboot"].getTbootArgs() == ["logging=serial,memory"]
 
 class TestBootloaderAdHoc(unittest.TestCase):
     def setUp(self):

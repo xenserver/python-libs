@@ -33,8 +33,7 @@ from typing import cast, TYPE_CHECKING
 
 from six.moves import urllib  # pyright: ignore
 
-import xcp.mount as mount
-import xcp.logger as logger
+from xcp import logger, mount
 
 if TYPE_CHECKING:
     from typing import IO

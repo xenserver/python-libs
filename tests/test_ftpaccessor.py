@@ -71,4 +71,5 @@ def test_download_binary_file(ftp_accessor):
     """Download a binary file and compare the returned file content"""
     remote_ftp_filehandle = ftp_accessor.openAddress("filename")
     assert remote_ftp_filehandle.read() == binary_data
+    assert ftp_accessor.access("filename") is True  # covers FTPAccessor._cleanup()
     ftp_accessor.finish()

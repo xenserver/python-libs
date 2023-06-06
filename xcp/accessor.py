@@ -64,8 +64,8 @@ class Accessor(object):
             f = self.openAddress(name)
             if not f:
                 return False
-            f.close()
-        except Exception as e:
+            f.close()  # pylint: disable=no-member
+        except Exception:
             return False
 
         return True

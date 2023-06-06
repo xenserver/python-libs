@@ -184,3 +184,21 @@ warn_unreachable = false
 # The coverage-comment-action needs a .converage file with relative path names:
 # https://github.com/py-cov-action/python-coverage-comment-action#setup
 relative_files = true
+
+[tool.pyright]
+exclude = [
+    "xcp/cpiofile.py",
+    "xcp/net/ifrename/logic.py",
+    "xcp/repository.py",
+]
+extraPaths = ["stubs"]
+include = ["xcp", "tests"]
+pythonPlatform = "Linux"
+pythonVersion = "3.6"
+reportFunctionMemberAccess = true
+reportGeneralTypeIssues = "warning"
+reportOptionalMemberAccess = "warning"
+reportPrivateUsage = true
+reportPropertyTypeMismatch = true
+reportUnnecessaryTypeIgnoreComment = false
+stubPath = "stubs"

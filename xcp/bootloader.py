@@ -106,7 +106,8 @@ class Bootloader(object):
 
     @classmethod
     def readExtLinux(cls, src_file):
-        menu = {}
+        # type:(str) -> Bootloader
+        menu = {}  # type: dict[str, MenuEntry | dict[str, str]]
         menu_order = []
         default = None
         timeout = None
@@ -161,7 +162,7 @@ class Bootloader(object):
                             args = [x.strip() for x in els[2].split('---')]
                             if len(args) == 4:
                                 hypervisor = args[1].split(None, 1)
-                                kernel = args[2].split(None, 1)
+                                kernel = args[2].split(None, 1)  # type:ignore[assignment] # mypy
                                 if len(hypervisor) == 2 and len(kernel) == 2:
                                     menu[label] = MenuEntry(tboot = els[1],
                                                             tboot_args = args[0],
@@ -176,7 +177,7 @@ class Bootloader(object):
                             # kernel args & initrd
                             args = [x.strip() for x in els[2].split('---')]
                             if len(args) == 3:
-                                kernel = args[1].split(None, 1)
+                                kernel = args[1].split(None, 1)  # type:ignore[assignment] # mypy
                                 if len(kernel) == 2:
                                     menu[label] = MenuEntry(hypervisor = els[1],
                                                             hypervisor_args = args[0],
@@ -192,6 +193,7 @@ class Bootloader(object):
 
     @classmethod
     def readGrub(cls, src_file):
+        # type: (str) -> Bootloader
         menu = {}
         menu_order = []
         default = 0
@@ -314,9 +316,9 @@ class Bootloader(object):
         initrd = None
         root = None
         menu_entry_extra = None
-        menu_entry_contents = []
-        boilerplate = []
-        boilerplates = []
+        menu_entry_contents = []  # type: list[str]
+        boilerplate = []  # type: list[str]
+        boilerplates = []  # type: list[list[str]]
 
         def create_label(title):
             global COUNTER
@@ -460,6 +462,7 @@ class Bootloader(object):
 
     @classmethod
     def loadExisting(cls, root = '/'):
+        # type: (str) -> Bootloader
         if os.path.exists(os.path.join(root, "boot/efi/EFI/xenserver/grub.cfg")):
             return cls.readGrub2(os.path.join(root, "boot/efi/EFI/xenserver/grub.cfg"))
         elif os.path.exists(os.path.join(root, "boot/grub/grub.cfg")):

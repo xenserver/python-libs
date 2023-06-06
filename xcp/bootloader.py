@@ -278,8 +278,9 @@ class Bootloader(object):
                         kernel_args = hypervisor_args
                         label = create_label(title)
                         menu_order.append(label)
-                        # pylint: disable-next=no-value-for-parameter
-                        menu[label] = MenuEntry(kernel = kernel,
+                        menu[label] = MenuEntry(None,
+                                                None,
+                                                kernel = kernel,
                                                 kernel_args = kernel_args,
                                                 initrd = els[1], title = title)
                         hypervisor = None

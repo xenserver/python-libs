@@ -27,12 +27,7 @@ def test_GrubLegacyExtLinuxWithTempFile(tmpdir):
     bootloader.menu.pop("xe-tboot")
     bootloader.menu_order.remove("xe-tboot")
     bootloader.writeGrub(filename)
-    try:
-        Bootloader.readGrub(filename)
-    except TypeError:
-        print("Fixed by next commit")
-        return
-    raise AssertionError("Unexpected pass")
+    Bootloader.readGrub(filename)
 
 
 class TestBootloader(unittest.TestCase):

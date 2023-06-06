@@ -3,9 +3,20 @@ import unittest
 import xcp.accessor
 
 class TestAccessor(unittest.TestCase):
+    def setUp(self):
+        """Provide the refrence content of the repo/.treeinfo file for check_repo_access()"""
+        with open("tests/data/repo/.treeinfo", "rb") as dot_treeinfo:
+            self.reference_treeinfo = dot_treeinfo.read()
+
     def check_repo_access(self, a):
         """Common helper function for testing Accessor.access() with repo files"""
         a.start()
+
+        treeinfo_file = a.openAddress('.treeinfo')
+        assert not isinstance(treeinfo_file, bool)  # check to not return False, pytype alerts on it
+        assert treeinfo_file.read() == self.reference_treeinfo
+        treeinfo_file.close()
+
         self.assertTrue(a.access('.treeinfo'))
         self.assertFalse(a.access('no_such_file'))
         self.assertEqual(a.lastError, 404)

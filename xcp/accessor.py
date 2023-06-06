@@ -217,7 +217,7 @@ class FileAccessor(Accessor):
 
     def openAddress(self, address):
         try:
-            file = open(os.path.join(self.baseAddress, address), "rb")
+            reader = open(os.path.join(self.baseAddress, address), "rb")
         except IOError as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
@@ -233,7 +233,7 @@ class FileAccessor(Accessor):
         except Exception as e:
             self.lastError = 500
             return False
-        return file
+        return reader
 
     def writeFile(self, in_fh, out_name):
         logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
@@ -300,7 +300,7 @@ class FTPAccessor(Accessor):
             self.cleanup = False
             self.ftp = None
 
-    def access(self, path):
+    def access(self, path):  # pylint: disable=arguments-differ,arguments-renamed
         try:
             logger.debug("Testing "+path)
             self._cleanup()
@@ -388,7 +388,7 @@ SUPPORTED_ACCESSORS = {'nfs': NFSAccessor,
                        'ftp': FTPAccessor,
                        'file': FileAccessor,
                        'dev': DeviceAccessor,
-                       }
+                      }
 
 def createAccessor(baseAddress, *args):
     url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)

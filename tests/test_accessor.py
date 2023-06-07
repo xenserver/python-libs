@@ -41,3 +41,11 @@ class TestAccessor(unittest.TestCase):
 
         a = xcp.accessor.FilesystemAccessor("tests/data/repo/", True)
         self.check_repo_access(a)
+
+
+def test_access_handles_exception():
+    class AccessorHandlesException(xcp.accessor.Accessor):
+        def openAddress(self, address):
+            raise IOError("Test Accessor.access returning False on Exception to cove code")
+
+    assert AccessorHandlesException(True).access("filename") is False

@@ -71,7 +71,7 @@ def getStrAttribute(el, attrs, default = '', mandatory = False):
 def getBoolAttribute(el, attrs, default = None):
     # type:(Element, list[str], Optional[bool]) -> bool | None
     mandatory = (default == None)
-    val = getStrAttribute(el, attrs, '', mandatory).lower()
+    val = cast(str, getStrAttribute(el, attrs, '', mandatory)).lower()
     if val == '':
         return default
     return val in ['yes', 'true']
@@ -80,7 +80,7 @@ def getIntAttribute(el, attrs, default = None):
     # type:(Element, list[str], Optional[int]) -> int | None
     mandatory = (default == None)
     val = getStrAttribute(el, attrs, '', mandatory)
-    if val == '':
+    if not val:
         return default
     try:
         return int(val, 0)

@@ -70,7 +70,7 @@ def getStrAttribute(el, attrs, default = '', mandatory = False):
 
 def getBoolAttribute(el, attrs, default = None):
     # type:(Element, list[str], Optional[bool]) -> bool | None
-    mandatory = (default == None)
+    mandatory = default is None
     val = cast(str, getStrAttribute(el, attrs, '', mandatory)).lower()
     if val == '':
         return default
@@ -78,7 +78,7 @@ def getBoolAttribute(el, attrs, default = None):
 
 def getIntAttribute(el, attrs, default = None):
     # type:(Element, list[str], Optional[int]) -> int | None
-    mandatory = (default == None)
+    mandatory = default is None
     val = getStrAttribute(el, attrs, '', mandatory)
     if not val:
         return default
@@ -89,7 +89,7 @@ def getIntAttribute(el, attrs, default = None):
 
 def getMapAttribute(el, attrs, mapping, default = None):
     # type:(Element, list[str], list[tuple[str, int]], Optional[str]) -> Any
-    mandatory = (default == None)
+    mandatory = default is None
     k, v = zip(*mapping)
     key = getStrAttribute(el, attrs, default, mandatory)
 

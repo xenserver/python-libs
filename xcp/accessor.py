@@ -102,13 +102,7 @@ class FilesystemAccessor(Accessor):
     def openAddress(self, address):
         try:
             filehandle = open(os.path.join(self.location, address), "rb")
-        except OSError as e:
-            if e.errno == errno.EIO:
-                self.lastError = 5
-            else:
-                self.lastError = mapError(e.errno)
-            return False
-        except IOError as e:
+        except (IOError, OSError) as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
             else:
@@ -223,13 +217,7 @@ class FileAccessor(Accessor):
     def openAddress(self, address):
         try:
             file = open(os.path.join(self.baseAddress, address), "rb")
-        except IOError as e:
-            if e.errno == errno.EIO:
-                self.lastError = 5
-            else:
-                self.lastError = mapError(e.errno)
-            return False
-        except OSError as e:
+        except (IOError, OSError) as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
             else:
@@ -316,13 +304,7 @@ class FTPAccessor(Accessor):
                 return True
             lst = self.ftp.nlst(os.path.dirname(url))
             return os.path.basename(url) in list(map(os.path.basename, lst))
-        except IOError as e:
-            if e.errno == errno.EIO:
-                self.lastError = 5
-            else:
-                self.lastError = mapError(e.errno)
-            return False
-        except OSError as e:
+        except (IOError, OSError) as e:
             if e.errno == errno.EIO:
                 self.lastError = 5
             else:

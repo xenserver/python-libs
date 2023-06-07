@@ -23,12 +23,19 @@
 
 """xmlunwrap - general methods to unwrap XML elements & attributes"""
 
+from typing import TYPE_CHECKING, Any, Optional, cast
+
 import six
+
+if TYPE_CHECKING:
+    from xml.dom.minidom import Element  # type: ignore[import]
 
 class XmlUnwrapError(Exception):
     pass
 
 def getText(nodelist):
+    # type:(Element) -> str
+    """Return the text of the element as stripped string"""
     rc = ""
 
     for node in nodelist.childNodes:
@@ -47,6 +54,7 @@ def getElementsByTagName(el, tags, mandatory = False):
     return matching
 
 def getStrAttribute(el, attrs, default = '', mandatory = False):
+    # type:(Element, list[str], str | None, Optional[bool]) -> str | None
     matching = []
     for attr in attrs:
         val = el.getAttribute(attr)
@@ -61,6 +69,7 @@ def getStrAttribute(el, attrs, default = '', mandatory = False):
     return matching[0]
 
 def getBoolAttribute(el, attrs, default = None):
+    # type:(Element, list[str], Optional[bool]) -> bool | None
     mandatory = (default == None)
     val = getStrAttribute(el, attrs, '', mandatory).lower()
     if val == '':
@@ -68,6 +77,7 @@ def getBoolAttribute(el, attrs, default = None):
     return val in ['yes', 'true']
 
 def getIntAttribute(el, attrs, default = None):
+    # type:(Element, list[str], Optional[int]) -> int | None
     mandatory = (default == None)
     val = getStrAttribute(el, attrs, '', mandatory)
     if val == '':
@@ -78,6 +88,7 @@ def getIntAttribute(el, attrs, default = None):
         six.raise_from(XmlUnwrapError("Invalid integer value for %s" % attrs[0]), e)
 
 def getMapAttribute(el, attrs, mapping, default = None):
+    # type:(Element, list[str], list[tuple[str, int]], Optional[str]) -> Any
     mandatory = (default == None)
     k, v = zip(*mapping)
     key = getStrAttribute(el, attrs, default, mandatory)

@@ -60,8 +60,8 @@ from typing import IO, TYPE_CHECKING, Any, cast
 import six
 
 if TYPE_CHECKING:
-    from bz2 import _ReadBinaryMode, _WriteBinaryMode
     from gzip import GzipFile
+    from typing_extensions import Literal
 
 if sys.platform == 'mac':
     # This module needs work for MacOS9, especially in the area of pathname
@@ -558,7 +558,7 @@ class _BZ2Proxy(_CMPProxy):
     """
 
     def __init__(self, fileobj, mode):
-        # type:(IO[Any], _ReadBinaryMode | _WriteBinaryMode) -> None
+        # type:(IO[Any], str) -> None
         _CMPProxy.__init__(self, fileobj, mode)
         self.init()
 
@@ -1070,7 +1070,7 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def cpioopen(cls, name, mode="r", fileobj=None):
-        # type:(str, _ReadBinaryMode | _WriteBinaryMode, IO[Any] | GzipFile | None) -> CpioFile
+        # type:(str, str, IO[Any] | GzipFile | None) -> CpioFile
         """Open uncompressed cpio archive name for reading or writing.
         """
         if len(mode) > 1 or mode not in "raw":
@@ -1102,10 +1102,8 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def bz2open(cls, name, mode="r", fileobj=None, compresslevel=9):
-        # type:(str, _ReadBinaryMode | _WriteBinaryMode, IO[Any] | None, int) -> CpioFile
-        """Open bzip2 compressed cpio archive name for reading or writing.
-           Appending is not allowed.
-        """
+        # type:(str, Literal["r", "w"], IO[Any] | None, int) -> CpioFile
+        """Open bzip2 compressed cpio archive name for reading or writing, no appending"""
         if len(mode) > 1 or mode not in "rw":
             raise ValueError("mode must be 'r' or 'w'.")
 

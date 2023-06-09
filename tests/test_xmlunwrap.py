@@ -1,12 +1,12 @@
 import unittest
 import xml.dom.minidom
 
-from xcp.xmlunwrap import (getElementsByTagName, getText, getMapAttribute,
+from xcp.xmlunwrap import (getBoolAttribute, getElementsByTagName, getText, getMapAttribute,
                            getStrAttribute, getIntAttribute, XmlUnwrapError)
 
 class TestXmlUnwrap(unittest.TestCase):
     def setUp(self):
-        a_text = """<installation mode='test' integer='1'>
+        a_text = """<installation mode='test' integer='1' bool='true'>
         <fred>text1</fred>
         <fred>text2</fred>
         </installation>"""
@@ -19,6 +19,12 @@ class TestXmlUnwrap(unittest.TestCase):
         self.assertEqual([getText(el)
                           for el in getElementsByTagName(self.top_el, ["fred"])],
                          ["text1", "text2"])
+
+        # Test xcp.xmlunwrap.getBoolAttribute()
+        assert getBoolAttribute(self.top_el, ["bool"]) is True
+        assert getBoolAttribute(self.top_el, ["noexist"], False) is False
+        with self.assertRaises(XmlUnwrapError):
+            getBoolAttribute(self.top_el, ["nonexisting-attribute"])
 
         # Test xcp.xmlunwrap.getIntAttribute()
         self.assertEqual(getIntAttribute(self.top_el, ["integer"], 5), 1)

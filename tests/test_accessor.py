@@ -1,6 +1,19 @@
 import unittest
 
+from pyfakefs.fake_filesystem import FakeFilesystem
+
 import xcp.accessor
+
+from .test_mountingaccessor import check_binary_read, check_binary_write
+
+
+def test_file_accessor(fs):
+    # type:(FakeFilesystem) -> None
+    """Test FileAccessor.writeFile(), .openAddress and .access using pyfakefs"""
+    accessor = xcp.accessor.createAccessor("file://repo/", False)
+    check_binary_read(accessor, "/repo", fs)
+    check_binary_write(accessor, "/repo", fs)
+
 
 class TestAccessor(unittest.TestCase):
     def setUp(self):
@@ -28,12 +41,6 @@ class TestAccessor(unittest.TestCase):
         # Temporary: To be obsoleted by a dedicated test case using a pytest-native
         # httpd which will cover code paths like HTTP Basic Auth in an upcoming commit:
         a = xcp.accessor.createAccessor("https://updates.xcp-ng.org/netinstall/8.2.1", True)
-        self.check_repo_access(a)
-
-    def test_file(self):
-        """Test FileAccessor.access()"""
-
-        a = xcp.accessor.createAccessor("file://tests/data/repo/", True)
         self.check_repo_access(a)
 
     def test_filesystem_accessor_access(self):

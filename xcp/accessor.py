@@ -232,7 +232,7 @@ class FileAccessor(Accessor):
 
     def writeFile(self, in_fh, out_name):
         logger.info("Copying to %s" % os.path.join(self.baseAddress, out_name))
-        out_fh = open(os.path.join(self.baseAddress, out_name), 'w')
+        out_fh = open(os.path.join(self.baseAddress, out_name), "wb")
         return self._writeFile(in_fh, out_fh)
 
     def __repr__(self):

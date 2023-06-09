@@ -55,7 +55,7 @@ import time
 import struct
 import copy
 import io
-from typing import IO, TYPE_CHECKING, Any, cast
+from typing import IO, TYPE_CHECKING, Any, Optional, cast
 
 import six
 
@@ -1070,9 +1070,8 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def cpioopen(cls, name, mode="r", fileobj=None):
-        # type:(str, str, IO[Any] | GzipFile | None) -> CpioFile
-        """Open uncompressed cpio archive name for reading or writing.
-        """
+        # type:(str, str, Optional[GzipFile | IO[Any]]) -> CpioFile
+        """Open uncompressed cpio archive name for reading or writing."""
         if len(mode) > 1 or mode not in "raw":
             raise ValueError("mode must be 'r', 'a' or 'w'")
         return cls(name, mode, fileobj)
@@ -1102,7 +1101,7 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def bz2open(cls, name, mode="r", fileobj=None, compresslevel=9):
-        # type:(str, Literal["r", "w"], IO[Any] | None, int) -> CpioFile
+        # type:(str, Literal["r", "w"], Optional[IO[Any]], int) -> CpioFile
         """Open bzip2 compressed cpio archive name for reading or writing, no appending"""
         if len(mode) > 1 or mode not in "rw":
             raise ValueError("mode must be 'r' or 'w'.")

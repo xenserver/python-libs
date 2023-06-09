@@ -55,7 +55,7 @@ import time
 import struct
 import copy
 import io
-from typing import IO, TYPE_CHECKING, Any, Optional, cast
+from typing import IO, TYPE_CHECKING, Any, List, Optional, cast
 
 import six
 
@@ -951,7 +951,7 @@ class CpioFile(six.Iterator):
 
         # Init datastructures
         self.closed = False
-        self.members = []       # list of members as CpioInfo objects
+        self.members = []       # type:list[CpioInfo]
         self._loaded = False    # flag if all members have been read
         self.offset = 0        # current position in the archive file
         self.inodes = {}        # dictionary caching the inodes of
@@ -1188,6 +1188,7 @@ class CpioFile(six.Iterator):
         return cpioinfo
 
     def getmembers(self):
+        # type:() -> List[CpioInfo]
         """Return the members of the archive as a list of CpioInfo objects. The
            list has the same order as the members in the archive.
         """

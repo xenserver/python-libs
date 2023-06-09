@@ -3,6 +3,7 @@
 import base64
 import sys
 import unittest
+from contextlib import contextmanager
 
 import pytest
 
@@ -55,7 +56,8 @@ class HTTPAccessorTestCase(unittest.TestCase):
 
         cls.httpserver.expect_request("/" + read_file).respond_with_handler(handle_get)
 
-    def assert_http_get_request_data(self, url, read_file, error_handler):
+    @contextmanager
+    def http_get_request_data(self, url, read_file, error_handler):
         """Serve a GET request, assert that the accessor returns the content of the GET Request"""
         self.serve_a_get_request(self.document_root, read_file, error_handler)
 
@@ -63,6 +65,10 @@ class HTTPAccessorTestCase(unittest.TestCase):
         self.assertEqual(type(httpaccessor), HTTPAccessor)
 
         with open(self.document_root + read_file, "rb") as ref:
+            yield httpaccessor, ref
+
+    def assert_http_get_request_data(self, url, read_file, error_handler):
+        with self.http_get_request_data(url, read_file, error_handler) as (httpaccessor, ref):
             http_accessor_filehandle = httpaccessor.openAddress(read_file)
             if sys.version_info >= (3, 0):
                 assert isinstance(http_accessor_filehandle, HTTPResponse)

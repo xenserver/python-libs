@@ -1762,6 +1762,7 @@ class CpioFile(six.Iterator):
         return cpioinfo
 
     def _getmember(self, name, cpioinfo=None):
+        # type:(str | bytes, CpioInfo | None) -> CpioInfo | None
         """Find an archive member by name from bottom to top.
            If cpioinfo is given, it is used as the starting point.
         """
@@ -1777,6 +1778,7 @@ class CpioFile(six.Iterator):
         for i in range(end - 1, -1, -1):
             if encoded_name == members[i].name:
                 return members[i]
+        return None  # pragma: no cover
 
     def _load(self):
         """Read through the entire archive file and look for readable

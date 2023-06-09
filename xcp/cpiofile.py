@@ -1070,7 +1070,7 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def cpioopen(cls, name, mode="r", fileobj=None):
-        # type:(str, str, Optional[GzipFile | IO[Any]]) -> CpioFile
+        # type:(str, str, Optional[GzipFile | IO[bytes]]) -> CpioFile
         """Open uncompressed cpio archive name for reading or writing."""
         if len(mode) > 1 or mode not in "raw":
             raise ValueError("mode must be 'r', 'a' or 'w'")
@@ -1101,7 +1101,7 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def bz2open(cls, name, mode="r", fileobj=None, compresslevel=9):
-        # type:(str, Literal["r", "w"], Optional[IO[Any]], int) -> CpioFile
+        # type:(str, Literal["r", "w"], Optional[IO[bytes]], int) -> CpioFile
         """Open bzip2 compressed cpio archive name for reading or writing, no appending"""
         if len(mode) > 1 or mode not in "rw":
             raise ValueError("mode must be 'r' or 'w'.")

@@ -155,13 +155,15 @@ class MountingAccessor(FilesystemAccessor):
             return
         self.start_count -= 1
         if self.start_count == 0:
+            assert self.location
             mount.umount(self.location)
             os.rmdir(self.location)
             self.location = None
 
     def writeFile(self, in_fh, out_name):
+        assert self.location
         logger.info("Copying to %s" % os.path.join(self.location, out_name))
-        out_fh = open(os.path.join(self.location, out_name), 'w')
+        out_fh = open(os.path.join(self.location, out_name), "wb")
         return self._writeFile(in_fh, out_fh)
 
     def __del__(self):

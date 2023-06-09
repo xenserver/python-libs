@@ -1120,6 +1120,7 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def xzopen(cls, name, mode="r", fileobj=None, compresslevel=6):
+        # type:(str, Literal["r", "w"], Optional[IO[bytes]], int) -> CpioFile
         """
         Open xz compressed cpio archive name for reading or writing.
         Appending is not allowed.
@@ -1139,7 +1140,7 @@ class CpioFile(six.Iterator):
             kwargs["options"] = {"level": compresslevel}
         elif "w" in mode:
             kwargs["preset"] = compresslevel
-        fileobj = lzma.LZMAFile(name, mode, **kwargs)
+        fileobj = lzma.LZMAFile(name, mode, **cast(Any, kwargs))
         try:
             t = cls.cpioopen(name, mode, fileobj)
         except IOError:

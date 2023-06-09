@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Test module of xcp.accessor.FTPAccessor
 
@@ -21,18 +22,29 @@ from io import BytesIO
 
 import pytest
 import pytest_localftpserver  # pylint: disable=unused-import # Ensure that it is installed
+from six import ensure_binary, ensure_str
 
 import xcp.accessor
 
 binary_data = b"\x80\x91\xaa\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xcc\xdd\xee\xff"
+text_data = "✋➔Hello Accessor from the 🗺, download and verify ✅ me!"
 
+
+def upload_textfile(ftpserver, accessor):
+    accessor.writeFile(BytesIO(ensure_binary(text_data)), "textfile")
+    assert accessor.access("textfile")
+    assert text_data == ensure_str(ftpserver_content(ftpserver, "testdir/textfile"))
 
 def upload_binary_file(ftpserver, accessor):
     """Upload a binary file and compare the uploaded file content with the local content"""
     accessor.writeFile(BytesIO(binary_data), "filename")
     assert accessor.access("filename")
-    ftp_content_generator = ftpserver.get_file_contents("testdir/filename", read_mode="rb")
-    assert binary_data == next(ftp_content_generator)["content"]
+    assert binary_data == ftpserver_content(ftpserver, "testdir/filename")
+
+
+def ftpserver_content(ftpserver, path):
+    ftp_content_generator = ftpserver.get_file_contents(path, read_mode="rb")
+    return next(ftp_content_generator)["content"]
 
 
 @pytest.fixture
@@ -44,6 +56,7 @@ def ftp_accessor(ftpserver):
     accessor = xcp.accessor.FTPAccessor(url + "/testdir", False)
     accessor.start()
     upload_binary_file(ftpserver, accessor)
+    upload_textfile(ftpserver, accessor)
     # This leaves ftp_accessor.finish() to each test to because disconnecting from the
     # ftpserver after the test in the fixture would cause the formatting of the pytest
     # live log to be become less readable:
@@ -72,4 +85,11 @@ def test_download_binary_file(ftp_accessor):
     remote_ftp_filehandle = ftp_accessor.openAddress("filename")
     assert remote_ftp_filehandle.read() == binary_data
     assert ftp_accessor.access("filename") is True  # covers FTPAccessor._cleanup()
+    ftp_accessor.finish()
+
+
+def test_download_textfile(ftp_accessor):
+    """Download a text file containing UTF-8 and compare the returned decoded string contents"""
+    with ftp_accessor.openText("textfile") as remote_ftp_filehandle:
+        assert remote_ftp_filehandle.read() == text_data
     ftp_accessor.finish()

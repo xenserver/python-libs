@@ -97,8 +97,7 @@ def ip_link_set_name(src_name, dst_name):
 
         if link_up.returncode != 0:
             LOG.error("Unable to bring link %s back up. (Exit %d)"
-                      % (src_name, link_down.returncode))
+                      % (src_name, link_up.returncode))  # pragma: no cover
             return
 
     LOG.info("Succesfully renamed link %s to %s" % (src_name, dst_name))
-

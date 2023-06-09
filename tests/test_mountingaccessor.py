@@ -8,6 +8,8 @@ from pyfakefs.fake_filesystem import FakeFileOpen, FakeFilesystem
 
 import xcp.accessor
 
+from .test_httpaccessor import UTF8TEXT_LITERAL
+
 binary_data = b"\x00\x1b\x5b\x95\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xcc\xdd\xee\xff"
 
 
@@ -41,6 +43,7 @@ def check_mounting_accessor(accessor, fs):
 
     assert check_binary_read(accessor, location, fs)
     assert check_binary_write(accessor, location, fs)
+    assert open_text(accessor, location, fs, UTF8TEXT_LITERAL) == UTF8TEXT_LITERAL
 
     if sys.version_info.major >= 3:
         fs.mount_points.pop(location)
@@ -82,3 +85,16 @@ def check_binary_write(accessor, location, fs):
 
     with FakeFileOpen(fs, delete_on_close=True)(location + "/" + name, "rb") as written:
         return cast(bytes, written.read()) == binary_data
+
+
+def open_text(accessor, location, fs, text):
+    # type: (xcp.accessor.MountingAccessor, str, FakeFilesystem, str) -> str
+    """Test the openText() method of subclasses of xcp.accessor.MountingAccessor"""
+    name = "textfile"
+    path = location + "/" + name
+    assert fs.create_file(path, contents=text)
+    assert accessor.access(name)
+    with accessor.openText(name) as textfile:
+        assert not isinstance(textfile, bool)
+        fs.remove(path)
+        return textfile.read()

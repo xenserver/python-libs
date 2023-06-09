@@ -136,7 +136,6 @@ class BaseRepository(object):
         access.start()
         is_yum = YumRepository.isRepo(access, "")
         access.finish()
-        
         if is_yum:
             return YumRepository.getRepoVer(access)
         return Repository.getRepoVer(access)
@@ -190,7 +189,8 @@ class YumRepository(BaseRepository):
                 treeinfofp = io.TextIOWrapper(rawtreeinfofp, encoding='utf-8')
             treeinfo = configparser.ConfigParser()
             treeinfo.read_file(treeinfofp)
-            treeinfofp = None
+            if treeinfofp != rawtreeinfofp:
+                treeinfofp.close()
             rawtreeinfofp.close()
             if treeinfo.has_section('system-v1'):
                 ver_str = treeinfo.get('system-v1', category_map[category])

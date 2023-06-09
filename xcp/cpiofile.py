@@ -1858,18 +1858,13 @@ class CpioFileCompat(object):
        ZipFile class.
     """
     def __init__(self, fpath, mode="r", compression=CPIO_PLAIN):
+        # type:(str, Literal["r", "w"], int) -> None
         if compression == CPIO_PLAIN:
             self.cpiofile = CpioFile.cpioopen(fpath, mode)
         elif compression == CPIO_GZIPPED:
             self.cpiofile = CpioFile.gzopen(fpath, mode)
         else:
             raise ValueError("unknown compression constant")
-        if mode[0:1] == "r":
-            members = self.cpiofile.getmembers()
-            for m in members:
-                m.filename = m.name
-                m.file_size = m.size
-                m.date_time = time.gmtime(m.mtime)[:6]
     def namelist(self):
         return [m.name for m in self.infolist()]
     def infolist(self):

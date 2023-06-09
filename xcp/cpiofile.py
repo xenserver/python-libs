@@ -37,6 +37,8 @@
    Derived from Lars Gustäbel's tarfile.py
 """
 from __future__ import print_function
+# pyre is not as good as other static analysis tools in inferring the correct types:
+# pyre-ignore-all-errors[6,16]
 
 __version__ = "0.1"
 __author__  = "Simon Rowe"
@@ -1178,6 +1180,7 @@ class CpioFile(six.Iterator):
         self.closed = True
 
     def getmember(self, name):
+        # type:(str | bytes) -> CpioInfo
         """Return a CpioInfo object for member `name'. If `name' can not be
            found in the archive, KeyError is raised. If a member occurs more
            than once in the archive, its last occurence is assumed to be the
@@ -1457,6 +1460,7 @@ class CpioFile(six.Iterator):
                 self._dbg(1, "cpiofile: %s" % e)
 
     def extractfile(self, member):
+        # type:(CpioInfo) -> ExFileObject | None
         """Extract a member from the archive as a file object. `member' may be
            a filename or a CpioInfo object. If `member' is a regular file, a
            file-like object is returned. If `member' is a link, a file-like
@@ -1486,7 +1490,7 @@ class CpioFile(six.Iterator):
             else:
                 # A symlink's file object is its target's file object.
                 return self.extractfile(self._getmember(cpioinfo.linkname,
-                                                        cpioinfo))
+                                                        cpioinfo))  # type: ignore
         else:
             # If there's no data associated with the member (directory, chrdev,
             # blkdev, etc.), return None instead of a file object.

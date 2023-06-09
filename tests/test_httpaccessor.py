@@ -1,4 +1,5 @@
 """Test xcp.accessor.HTTPAccessor using a local pure-Python http(s)server fixture"""
+# -*- coding: utf-8 -*-
 import base64
 import sys
 import unittest
@@ -16,6 +17,8 @@ try:
 except ImportError:
     pytest.skip(allow_module_level=True)
 
+
+UTF8TEXT_LITERAL = "✋Hello accessor from the 🗺, download and verify me! ✅"
 
 class HTTPAccessorTestCase(unittest.TestCase):
     document_root = "tests/"
@@ -109,3 +112,10 @@ class HTTPAccessorTestCase(unittest.TestCase):
             + ".pyc"
         )
         self.assert_http_get_request_data(self.httpserver.url_for(""), binary, None)
+
+    def test_httpaccessor_open_text(self):
+        """Get text containing UTF-8 and compare the returned decoded string contents"""
+        self.httpserver.expect_request("/textfile").respond_with_data(UTF8TEXT_LITERAL)
+        accessor = createAccessor(self.httpserver.url_for("/"), True)
+        with accessor.openText("textfile") as textfile:
+            assert textfile.read() == UTF8TEXT_LITERAL

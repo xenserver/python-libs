@@ -186,6 +186,7 @@ class PCIIds(object):
 
         vendor = None
         cls = None
+        cls_text = None
 
         fh = open_with_codec_handling(fn, encoding="utf-8")
         for l in fh:

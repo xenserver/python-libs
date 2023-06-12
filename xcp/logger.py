@@ -48,7 +48,7 @@ FORMAT = logging.Formatter(
         "%(levelname)- 9.9s[%(asctime)s] %(message)s",
         "%F %T")
 
-our_handlers = []
+our_handlers = []  # type: list[logging.Handler]
 
 def openLog(lfile, level=logging.INFO):
     # type:(Union[str, TextIO], int) -> bool

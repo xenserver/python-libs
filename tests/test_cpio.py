@@ -80,6 +80,7 @@ class TestCpio(unittest.TestCase):
             assert cpio_header[:100] == xcp.cpiofile.CpioInfo.frombuf(cpio_header).tobuf()[:100]
 
             if f.isfile():
+                assert f.name == b"archive/data"
                 data = arc.extractfile(f).read()
                 self.assertEqual(len(data), f.size)
                 self.assertEqual(self.md5data, md5(data).hexdigest())

@@ -1273,7 +1273,7 @@ class CpioFile(six.Iterator):
         if stat.S_ISLNK(stmd):
             cpioinfo.linkname = os.readlink(name)
         cpioinfo.namesize = len(arcname)
-        cpioinfo.name = arcname
+        cpioinfo.name = six.ensure_str(arcname)
 
         return cpioinfo
 
@@ -1705,11 +1705,12 @@ class CpioFile(six.Iterator):
             cpioinfo = CpioInfo.frombuf(buf)
             total_header_len = self._word(HEADERSIZE_SVR4 + cpioinfo.namesize)
             name_buf = self.fileobj.read(total_header_len - HEADERSIZE_SVR4)
-            cpioinfo.name = name_buf.rstrip(NUL)
+            name = name_buf.rstrip(NUL)
 
-            if cpioinfo.name == TRAILER_NAME:
+            if name == TRAILER_NAME:
                 self.offset += total_header_len
                 return None
+            cpioinfo.name = six.ensure_str(name)
 
             # Set the CpioInfo object's offset to the current position of the
             # CpioFile and set self.offset to the position where the data blocks
@@ -1781,7 +1782,7 @@ class CpioFile(six.Iterator):
         else:
             end = members.index(cpioinfo)
 
-        encoded_name = six.ensure_binary(name)
+        encoded_name = six.ensure_str(name)
         for i in range(end - 1, -1, -1):
             if encoded_name == members[i].name:
                 return members[i]

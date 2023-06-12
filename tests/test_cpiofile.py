@@ -69,13 +69,13 @@ def check_archive_mode(archive_mode, fs):
     archive = CpioFile.open(fileobj=bytesio, mode="r" + archive_mode)
     archive.extractall()
     pyfakefs_verify_filesystem(fs)
-    assert archive.getnames() == [b"dirname", b"dirname/filename", b"dir2/symlink"]
+    assert archive.getnames() == ["dirname", "dirname/filename", "dir2/symlink"]
     dirs = [cpioinfo.name for cpioinfo in archive.getmembers() if cpioinfo.isdir()]
     files = [cpioinfo.name for cpioinfo in archive.getmembers() if cpioinfo.isreg()]
     symlinks = [cpioinfo.name for cpioinfo in archive.getmembers() if cpioinfo.issym()]
-    assert dirs == [b"dirname"]
-    assert files == [b"dirname/filename"]
-    assert symlinks == [b"dir2/symlink"]
+    assert dirs == ["dirname"]
+    assert files == ["dirname/filename"]
+    assert symlinks == ["dir2/symlink"]
     assert archive.getmember(symlinks[0]).linkname == "symlink_target"
     archive.close()
 

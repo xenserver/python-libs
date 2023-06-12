@@ -42,7 +42,9 @@ class TestCpio(unittest.TestCase):
         writeRandomFile('archive/data', 10491)
         with open('archive/data', 'rb') as fd:
             self.md5data = md5(fd.read()).hexdigest()
+        os.symlink("data", "archive/linkname")
         # fixed timestamps for cpio reproducibility
+        os.utime('archive/linkname', (0, 0))
         os.utime('archive/data', (0, 0))
         os.utime('archive', (0, 0))
 
@@ -167,6 +169,7 @@ class TestCpio(unittest.TestCase):
         arc = CpioFileCompat(fn, mode="w", compression={"": CPIO_PLAIN,
                                                         "gz": CPIO_GZIPPED}[comp])
         arc.write('archive/data')
+        arc.write('archive/linkname')
         arc.close()
         self.archiveExtract(fn)
 

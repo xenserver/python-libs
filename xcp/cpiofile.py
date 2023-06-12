@@ -545,7 +545,8 @@ class _CMPProxy(object):
         if self.mode == "w":
             raw = self.cmpobj.flush()
             self.fileobj.write(raw)
-        self.fileobj.close()
+        if not isinstance(self.fileobj, io.BytesIO):  # BytesIO() would free the archive on close()
+            self.fileobj.close()
 # class _CMPProxy
 
 

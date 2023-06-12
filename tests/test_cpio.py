@@ -70,6 +70,13 @@ class TestCpio(unittest.TestCase):
         arc = CpioFile.open(fn, fmt)
         found = False
         for f in arc:
+            # Cover CpioInfo.frombuf() and .tobuf():
+            f.linkname = "test_linkname_tobuf"
+            cpio_header = f.tobuf()
+
+            # CpioInfo.frombuf() returns a CpioInfo obj but does not set names from the header:
+            assert cpio_header[:100] == xcp.cpiofile.CpioInfo.frombuf(cpio_header).tobuf()[:100]
+
             if f.isfile():
                 data = arc.extractfile(f).read()
                 self.assertEqual(len(data), f.size)

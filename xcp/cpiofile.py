@@ -1021,6 +1021,13 @@ class CpioFile(six.Iterator):
 
         if not name and not fileobj:
             raise ValueError("nothing to open")
+        if fileobj:
+            if sys.version_info < (3, 0):
+                if isinstance(fileobj, io.StringIO):
+                    raise TypeError("CpioFile.fileobj does not support io.StringIO()")
+            else:
+                if not isinstance(fileobj, io.IOBase) or isinstance(fileobj, io.TextIOBase):
+                    raise TypeError("CpioFile.fileobj needs to be IO[bytes] or io.BytesIO()")
 
         if mode in ("r", "r:*"):
             # Find out which *open() is appropriate for opening the file.

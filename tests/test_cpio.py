@@ -96,12 +96,9 @@ class TestCpio(unittest.TestCase):
         if os.path.exists(fn):
             os.unlink(fn)
         arc = CpioFile.open(fn, fmt)
-        f = arc.getcpioinfo('archive/data')
-        with open('archive/data', 'rb') as fd:
-            arc.addfile(f, fd)
-        # test recursively add "."
+        # Recursively add "." as directory "archive"
         os.chdir('archive')
-        arc.add(".")
+        arc.add(".", "archive")
         os.chdir("..")
         # TODO add self crafted file
         arc.close()

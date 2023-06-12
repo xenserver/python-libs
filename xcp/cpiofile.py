@@ -846,8 +846,7 @@ class CpioInfo(object):
         return cpioinfo
 
     def tobuf(self):
-        """Return a cpio header as a string.
-        """
+        """Return a cpio header as bytes"""
         buf = b"%06X" % MAGIC_NEWC
         buf += b"%08X" % self.ino
         buf += b"%08X" % self.mode
@@ -871,7 +870,7 @@ class CpioInfo(object):
             buf += (WORDSIZE - remainder) * NUL
 
         if self.linkname != '':
-            buf += self.linkname
+            buf += six.ensure_binary(self.linkname)
             _, remainder = divmod(len(buf), WORDSIZE)
             if remainder != 0:
                 # pad to next word
@@ -1712,7 +1711,7 @@ class CpioFile(six.Iterator):
 
             if cpioinfo.issym():
                 linkname_buf = self.fileobj.read(self._word(cpioinfo.size))
-                cpioinfo.linkname = linkname_buf.rstrip(NUL)
+                cpioinfo.linkname = six.ensure_text(linkname_buf.rstrip(NUL))
                 self.offset += self._word(cpioinfo.size)
                 cpioinfo.size = 0
 

@@ -25,10 +25,14 @@
 
 """accessor - provide common interface to access methods"""
 
+# pyre-ignore-all-errors[6,16]
 import ftplib
+import io
 import os
+import sys
 import tempfile
 import errno
+from contextlib import contextmanager
 from typing import cast, TYPE_CHECKING
 
 from six.moves import urllib  # pyright: ignore
@@ -36,6 +40,7 @@ from six.moves import urllib  # pyright: ignore
 from xcp import logger, mount
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
     from typing import IO
     from typing_extensions import Literal
 
@@ -69,6 +74,22 @@ class Accessor(object):
             return False
 
         return True
+
+    @contextmanager
+    def openText(self, address):
+        # type:(str) -> Generator[IO[str] | Literal[False], None, None]
+        """Context manager to read text from address using 'with'. Yields IO[str] or False"""
+        readbuffer = self.openAddress(address)
+
+        if readbuffer and sys.version_info >= (3, 0):
+            textiowrapper = io.TextIOWrapper(readbuffer, encoding="utf-8")
+            yield textiowrapper
+            textiowrapper.close()
+        else:
+            yield cast(io.TextIOWrapper, readbuffer)
+
+        if readbuffer:
+            readbuffer.close()
 
     def openAddress(self, address):
         # type:(str) -> IO[bytes] | Literal[False]

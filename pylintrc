@@ -61,16 +61,12 @@ disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141,
     consider-using-dict-items,
     consider-using-enumerate,
     consider-using-ternary,
-    import-outside-toplevel,
     len-as-condition,
-    multiple-imports,
-    no-else-raise,
     no-else-return,
     raise-missing-from,
     too-many-branches,
     too-many-nested-blocks,
-    unnecessary-pass,
-    wrong-import-position,
+    too-many-statements,
 
 
 [REPORTS]
@@ -158,7 +154,7 @@ notes=FIXME,XXX,TODO
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=116
 
 # Maximum number of lines in a module
 max-module-lines=5000

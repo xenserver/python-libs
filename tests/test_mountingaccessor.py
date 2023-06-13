@@ -63,6 +63,8 @@ def check_binary_read(accessor, location, fs):
     assert fs.create_file(path, contents=cast(str, binary_data))
 
     assert accessor.access(name)
+    assert accessor.access("nonexisting filename") is False
+    assert accessor.lastError == 404
 
     binary_file = accessor.openAddress(name)
     assert not isinstance(binary_file, bool)

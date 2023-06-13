@@ -30,13 +30,13 @@ Python function using 'ip' for convenience
 __version__ = "1.0.1"
 __author__ = "Andrew Cooper"
 
+from os import environ
 from subprocess import Popen, PIPE
 
 from xcp.logger import LOG
 
 # Deal with lack of environment more sensibly than hard coding /sbin/ip
 # which happens to be false in the installer.
-from os import environ
 paths = environ["PATH"].split(":")
 if "/sbin" not in paths:
     environ["PATH"] += ":/sbin"
@@ -97,8 +97,7 @@ def ip_link_set_name(src_name, dst_name):
 
         if link_up.returncode != 0:
             LOG.error("Unable to bring link %s back up. (Exit %d)"
-                      % (src_name, link_down.returncode))
+                      % (src_name, link_up.returncode))  # pragma: no cover
             return
 
     LOG.info("Succesfully renamed link %s to %s" % (src_name, dst_name))
-

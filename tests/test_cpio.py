@@ -5,6 +5,7 @@ import os
 import sys
 import shutil
 import subprocess
+import tempfile
 import unittest
 import warnings
 
@@ -32,8 +33,21 @@ def check_call(cmd):
         raise Exception('error executing command')
 
 class TestCpio(unittest.TestCase):
+    orig_dir = os.getcwd()
+    work_dir = ""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.work_dir = tempfile.mkdtemp()
+        os.chdir(cls.work_dir)
+
+    @classmethod
+    def tearDownClass(cls):
+        os.chdir(cls.orig_dir)
+        shutil.rmtree(cls.work_dir)
+
     def setUp(self):
-        self.doXZ = False
+        self.doXZ = True
         self.md5data = ''
 
         # create some archive from scratch
@@ -79,7 +93,7 @@ class TestCpio(unittest.TestCase):
         self.assertTrue(found)
         # extract with extractall and compare
         arc = CpioFile.open(fn, fmt)
-        check_call("rm -rf archive2")
+        shutil.rmtree('archive2', True)
         os.rename('archive', 'archive2')
         arc.extractall()
         check_call("diff -rq archive2 archive")

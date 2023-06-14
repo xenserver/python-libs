@@ -30,7 +30,7 @@ def writeRandomFile(fn, size, start=b'', add=b'a'):
 def check_call(cmd):
     r = subprocess.call(cmd, shell=True)
     if r != 0:
-        raise Exception('error executing command')
+        raise RuntimeError('error executing command')
 
 class TestCpio(unittest.TestCase):
     def setUp(self):
@@ -67,8 +67,6 @@ class TestCpio(unittest.TestCase):
     def tearDown(self):
         check_call("rm -rf archive archive.cpio* archive2 archive2.cpio*")
 
-    # TODO check with file (like 'r:*')
-    # TODO use cat to check properly for pipes
     def archiveExtract(self, fn, fmt='r|*'):
         arc = CpioFile.open(fn, fmt)
         names = []
@@ -88,7 +86,7 @@ class TestCpio(unittest.TestCase):
                 self.assertEqual(self.md5data, md5(data).hexdigest())
                 names.append(f.name)
         arc.close()
-        assert names == ["archive/data", "archive/linkname"]
+        assert sorted(names) == ["archive/data", "archive/linkname"]
         # extract with extractall and compare
         arc = CpioFile.open(fn, fmt)
         check_call("rm -rf archive2")
@@ -105,7 +103,6 @@ class TestCpio(unittest.TestCase):
         os.chdir('archive')
         arc.add(".", "archive")
         os.chdir("..")
-        # TODO add self crafted file
         arc.close()
         # special case for XZ, test check type (crc32)
         if fmt.endswith('xz'):

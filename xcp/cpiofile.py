@@ -46,6 +46,7 @@ __credits__ = "Lars Gustäbel, Gustavo Niemeyer, Niels Gustäbel, Richard Townse
 # Imports
 #---------
 import bz2
+import gzip
 import sys
 import os
 import shutil
@@ -1083,15 +1084,6 @@ class CpioFile(six.Iterator):
         """
         if len(mode) > 1 or mode not in "rw":
             raise ValueError("mode must be 'r' or 'w'")
-
-        try:
-            import gzip
-            # gzip.GzipFile
-            if not hasattr(gzip, "GzipFile"):
-                raise AttributeError
-        except (ImportError, AttributeError):
-            raise CompressionError("gzip module is not available")
-
         try:
             t = cls.cpioopen(name, mode, gzip.GzipFile(name, mode + "b", compresslevel, fileobj))
         except IOError:

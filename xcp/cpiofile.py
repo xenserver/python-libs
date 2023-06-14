@@ -55,13 +55,13 @@ import time
 import struct
 import copy
 import io
-from typing import IO, TYPE_CHECKING, Any, cast
+from typing import IO, TYPE_CHECKING, Any, List, Optional, cast
 
 import six
 
 if TYPE_CHECKING:
-    from bz2 import _ReadBinaryMode, _WriteBinaryMode
     from gzip import GzipFile
+    from typing_extensions import Literal
 
 if sys.platform == 'mac':
     # This module needs work for MacOS9, especially in the area of pathname
@@ -558,7 +558,7 @@ class _BZ2Proxy(_CMPProxy):
     """
 
     def __init__(self, fileobj, mode):
-        # type:(IO[Any], _ReadBinaryMode | _WriteBinaryMode) -> None
+        # type:(IO[Any], str) -> None
         _CMPProxy.__init__(self, fileobj, mode)
         self.init()
 
@@ -951,7 +951,7 @@ class CpioFile(six.Iterator):
 
         # Init datastructures
         self.closed = False
-        self.members = []       # list of members as CpioInfo objects
+        self.members = []       # type:list[CpioInfo]
         self._loaded = False    # flag if all members have been read
         self.offset = 0        # current position in the archive file
         self.inodes = {}        # dictionary caching the inodes of
@@ -1070,9 +1070,8 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def cpioopen(cls, name, mode="r", fileobj=None):
-        # type:(str, _ReadBinaryMode | _WriteBinaryMode, IO[Any] | GzipFile | None) -> CpioFile
-        """Open uncompressed cpio archive name for reading or writing.
-        """
+        # type:(str, str, Optional[GzipFile | IO[bytes]]) -> CpioFile
+        """Open uncompressed cpio archive name for reading or writing."""
         if len(mode) > 1 or mode not in "raw":
             raise ValueError("mode must be 'r', 'a' or 'w'")
         return cls(name, mode, fileobj)
@@ -1102,10 +1101,8 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def bz2open(cls, name, mode="r", fileobj=None, compresslevel=9):
-        # type:(str, _ReadBinaryMode | _WriteBinaryMode, IO[Any] | None, int) -> CpioFile
-        """Open bzip2 compressed cpio archive name for reading or writing.
-           Appending is not allowed.
-        """
+        # type:(str, Literal["r", "w"], Optional[IO[bytes]], int) -> CpioFile
+        """Open bzip2 compressed cpio archive name for reading or writing, no appending"""
         if len(mode) > 1 or mode not in "rw":
             raise ValueError("mode must be 'r' or 'w'.")
 
@@ -1123,6 +1120,7 @@ class CpioFile(six.Iterator):
 
     @classmethod
     def xzopen(cls, name, mode="r", fileobj=None, compresslevel=6):
+        # type:(str, Literal["r", "w"], Optional[IO[bytes]], int) -> CpioFile
         """
         Open xz compressed cpio archive name for reading or writing.
         Appending is not allowed.
@@ -1142,7 +1140,7 @@ class CpioFile(six.Iterator):
             kwargs["options"] = {"level": compresslevel}
         elif "w" in mode:
             kwargs["preset"] = compresslevel
-        fileobj = lzma.LZMAFile(name, mode, **kwargs)
+        fileobj = lzma.LZMAFile(name, mode, **cast(Any, kwargs))
         try:
             t = cls.cpioopen(name, mode, fileobj)
         except IOError:
@@ -1191,6 +1189,7 @@ class CpioFile(six.Iterator):
         return cpioinfo
 
     def getmembers(self):
+        # type:() -> List[CpioInfo]
         """Return the members of the archive as a list of CpioInfo objects. The
            list has the same order as the members in the archive.
         """

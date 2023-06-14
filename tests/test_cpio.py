@@ -71,23 +71,24 @@ class TestCpio(unittest.TestCase):
     # TODO use cat to check properly for pipes
     def archiveExtract(self, fn, fmt='r|*'):
         arc = CpioFile.open(fn, fmt)
-        found = False
+        names = []
         for f in arc:
-            # Cover CpioInfo.frombuf() and .tobuf():
-            f.linkname = "test_linkname_tobuf"
-            cpio_header = f.tobuf()
-
-            # CpioInfo.frombuf() returns a CpioInfo obj but does not set names from the header:
-            assert cpio_header[:100] == xcp.cpiofile.CpioInfo.frombuf(cpio_header).tobuf()[:100]
+            if f.issym():
+                assert f.name == "archive/linkname"
+                assert f.linkname == "data"
+                cpio_header = f.tobuf()
+                # CpioInfo.frombuf() returns a CpioInfo obj but does not set names from the header:
+                assert cpio_header[:100] == xcp.cpiofile.CpioInfo.frombuf(cpio_header).tobuf()[:100]
+                names.append(f.name)
 
             if f.isfile():
                 assert f.name == "archive/data"
                 data = cast(xcp.cpiofile.ExFileObject, arc.extractfile(f)).read()
                 self.assertEqual(len(data), f.size)
                 self.assertEqual(self.md5data, md5(data).hexdigest())
-                found = True
+                names.append(f.name)
         arc.close()
-        self.assertTrue(found)
+        assert names == ["archive/data", "archive/linkname"]
         # extract with extractall and compare
         arc = CpioFile.open(fn, fmt)
         check_call("rm -rf archive2")

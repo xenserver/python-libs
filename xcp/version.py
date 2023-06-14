@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (c) 2013, 2017 Citrix Inc.
 # All rights reserved.
 #

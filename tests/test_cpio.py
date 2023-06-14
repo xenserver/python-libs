@@ -42,7 +42,9 @@ class TestCpio(unittest.TestCase):
         writeRandomFile('archive/data', 10491)
         with open('archive/data', 'rb') as fd:
             self.md5data = md5(fd.read()).hexdigest()
+        os.symlink("data", "archive/linkname")
         # fixed timestamps for cpio reproducibility
+        os.utime('archive/linkname', (0, 0))
         os.utime('archive/data', (0, 0))
         os.utime('archive', (0, 0))
 
@@ -70,7 +72,15 @@ class TestCpio(unittest.TestCase):
         arc = CpioFile.open(fn, fmt)
         found = False
         for f in arc:
+            # Cover CpioInfo.frombuf() and .tobuf():
+            f.linkname = "test_linkname_tobuf"
+            cpio_header = f.tobuf()
+
+            # CpioInfo.frombuf() returns a CpioInfo obj but does not set names from the header:
+            assert cpio_header[:100] == xcp.cpiofile.CpioInfo.frombuf(cpio_header).tobuf()[:100]
+
             if f.isfile():
+                assert f.name == "archive/data"
                 data = arc.extractfile(f).read()
                 self.assertEqual(len(data), f.size)
                 self.assertEqual(self.md5data, md5(data).hexdigest())
@@ -89,12 +99,9 @@ class TestCpio(unittest.TestCase):
         if os.path.exists(fn):
             os.unlink(fn)
         arc = CpioFile.open(fn, fmt)
-        f = arc.getcpioinfo('archive/data')
-        with open('archive/data', 'rb') as fd:
-            arc.addfile(f, fd)
-        # test recursively add "."
+        # Recursively add "." as directory "archive"
         os.chdir('archive')
-        arc.add(".")
+        arc.add(".", "archive")
         os.chdir("..")
         # TODO add self crafted file
         arc.close()
@@ -163,6 +170,7 @@ class TestCpio(unittest.TestCase):
         arc = CpioFileCompat(fn, mode="w", compression={"": CPIO_PLAIN,
                                                         "gz": CPIO_GZIPPED}[comp])
         arc.write('archive/data')
+        arc.write('archive/linkname')
         arc.close()
         self.archiveExtract(fn)
 

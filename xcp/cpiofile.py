@@ -546,7 +546,8 @@ class _CMPProxy(object):
         if self.mode == "w":
             raw = self.cmpobj.flush()
             self.fileobj.write(raw)
-        self.fileobj.close()
+        if not isinstance(self.fileobj, io.BytesIO):  # BytesIO() would free the archive on close()
+            self.fileobj.close()
 # class _CMPProxy
 
 
@@ -847,8 +848,7 @@ class CpioInfo(object):
         return cpioinfo
 
     def tobuf(self):
-        """Return a cpio header as a string.
-        """
+        """Return a cpio header as bytes"""
         buf = b"%06X" % MAGIC_NEWC
         buf += b"%08X" % self.ino
         buf += b"%08X" % self.mode
@@ -872,7 +872,7 @@ class CpioInfo(object):
             buf += (WORDSIZE - remainder) * NUL
 
         if self.linkname != '':
-            buf += self.linkname
+            buf += six.ensure_binary(self.linkname)
             _, remainder = divmod(len(buf), WORDSIZE)
             if remainder != 0:
                 # pad to next word
@@ -1023,6 +1023,13 @@ class CpioFile(six.Iterator):
 
         if not name and not fileobj:
             raise ValueError("nothing to open")
+        if fileobj:
+            if sys.version_info < (3, 0):
+                if isinstance(fileobj, io.StringIO):
+                    raise TypeError("CpioFile.fileobj does not support io.StringIO()")
+            else:
+                if not isinstance(fileobj, io.IOBase) or isinstance(fileobj, io.TextIOBase):
+                    raise TypeError("CpioFile.fileobj needs to be IO[bytes] or io.BytesIO()")
 
         if mode in ("r", "r:*"):
             # Find out which *open() is appropriate for opening the file.
@@ -1257,7 +1264,7 @@ class CpioFile(six.Iterator):
         if stat.S_ISLNK(stmd):
             cpioinfo.linkname = os.readlink(name)
         cpioinfo.namesize = len(arcname)
-        cpioinfo.name = arcname
+        cpioinfo.name = six.ensure_str(arcname)
 
         return cpioinfo
 
@@ -1689,11 +1696,12 @@ class CpioFile(six.Iterator):
             cpioinfo = CpioInfo.frombuf(buf)
             total_header_len = self._word(HEADERSIZE_SVR4 + cpioinfo.namesize)
             name_buf = self.fileobj.read(total_header_len - HEADERSIZE_SVR4)
-            cpioinfo.name = name_buf.rstrip(NUL)
+            name = name_buf.rstrip(NUL)
 
-            if cpioinfo.name == TRAILER_NAME:
+            if name == TRAILER_NAME:
                 self.offset += total_header_len
                 return None
+            cpioinfo.name = six.ensure_str(name)
 
             # Set the CpioInfo object's offset to the current position of the
             # CpioFile and set self.offset to the position where the data blocks
@@ -1703,7 +1711,7 @@ class CpioFile(six.Iterator):
 
             if cpioinfo.issym():
                 linkname_buf = self.fileobj.read(self._word(cpioinfo.size))
-                cpioinfo.linkname = linkname_buf.rstrip(NUL)
+                cpioinfo.linkname = six.ensure_text(linkname_buf.rstrip(NUL))
                 self.offset += self._word(cpioinfo.size)
                 cpioinfo.size = 0
 
@@ -1765,7 +1773,7 @@ class CpioFile(six.Iterator):
         else:
             end = members.index(cpioinfo)
 
-        encoded_name = six.ensure_binary(name)
+        encoded_name = six.ensure_str(name)
         for i in range(end - 1, -1, -1):
             if encoded_name == members[i].name:
                 return members[i]

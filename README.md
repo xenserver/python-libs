@@ -1,3 +1,8 @@
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![](https://img.shields.io/badge/python-2.7_%7C_3.6_%7C_3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11+-blue.svg)](https://www.python.org/downloads/)
+[![codecov](https://codecov.io/gh/xenserver/python-libs/branch/master/graph/badge.svg?token=6WKVLDXJFN)](https://codecov.io/gh/xenserver/python-libs)
+[![](https://img.shields.io/badge/License-BSD--2--Cause%20%26%20MIT-brightgreen)](https://github.com/xenserver/python-libs/blob/master/LICENSE)
+
 Common XenServer/XCP-ng Python classes
 ======================================
 
@@ -5,7 +10,7 @@ The `xcp` directory contains the Common XenServer and XCP-ng Python packages.
 They are intented for use in XenServer and XCP-ng Dom0 only and deal with logging,
 Hardware/PCI, networking, and other Dom0 tasks.
 
-The pip package name is `python-libs` which is also the rpm package name in XenServer.
+The package name is `python-libs` which is also the `rpm` package name in XenServer.
 XCP-ng packages it as [xcp-python-libs](https://github.com/xcp-ng-rpms/xcp-python-libs)
 ([koji](https://koji.xcp-ng.org/packageinfo?packageID=400)).
 
@@ -86,6 +91,22 @@ are:
 - `cov`: runs `pytest --cov` and generates `XML` and `HTML` reports in `.tox/py<ver>-cov/logs/`
 - `mypy`: runs `mypy`
 - `fox`: runs like `cov` but then opens the `HTML` reports in Firefox!
+
+## Recommended `pytest` plugins for development
+
+When changing existing tests or developing new code with new test coverage, we might want to
+ignore all other tests. This can be achieved with an exciting plugin called `pytest-picked`:
+`pytest --picked` will collect all test modules that were newly created or changed but not
+yet committed in a Git repository and run only them.
+
+`pytest-sugar` is a plugin that, once installed, automatically changes the format of the
+`pytest` standard output to include a graphical %-progress bar when running the test suite.
+
+For nicer diffs of dictionaries, arrays and the like, use `pytest-clarity` or `pytest-icdiff`.
+For more information to debug pytest test suites see: https://stribny.name/blog/pytest/
+```py
+pip install "pytest<7" pytest-picked pytest-sugar pytest-clarity
+```
 
 Example development workflow
 ----------------------------

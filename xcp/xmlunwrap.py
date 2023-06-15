@@ -55,7 +55,7 @@ def getElementsByTagName(el, tags, mandatory = False):
 
 def getStrAttribute(el, attrs, default = '', mandatory = False):
     # type:(Element, list[str], str | None, Optional[bool]) -> str | None
-    matching = []
+    matching = []  # type: list[str]
     for attr in attrs:
         val = el.getAttribute(attr)
         if not isinstance(val, str):  # Python 2 only, otherwise it would return unicode

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import unittest
 import warnings
+from typing import cast
 
 import xcp.cpiofile
 from xcp.cpiofile import CpioFile, CpioFileCompat, CPIO_PLAIN, CPIO_GZIPPED
@@ -29,7 +30,7 @@ def writeRandomFile(fn, size, start=b'', add=b'a'):
 def check_call(cmd):
     r = subprocess.call(cmd, shell=True)
     if r != 0:
-        raise Exception('error executing command')
+        raise RuntimeError('error executing command')
 
 class TestCpio(unittest.TestCase):
     def setUp(self):
@@ -66,27 +67,26 @@ class TestCpio(unittest.TestCase):
     def tearDown(self):
         check_call("rm -rf archive archive.cpio* archive2 archive2.cpio*")
 
-    # TODO check with file (like 'r:*')
-    # TODO use cat to check properly for pipes
     def archiveExtract(self, fn, fmt='r|*'):
         arc = CpioFile.open(fn, fmt)
-        found = False
+        names = []
         for f in arc:
-            # Cover CpioInfo.frombuf() and .tobuf():
-            f.linkname = "test_linkname_tobuf"
-            cpio_header = f.tobuf()
-
-            # CpioInfo.frombuf() returns a CpioInfo obj but does not set names from the header:
-            assert cpio_header[:100] == xcp.cpiofile.CpioInfo.frombuf(cpio_header).tobuf()[:100]
+            if f.issym():
+                assert f.name == "archive/linkname"
+                assert f.linkname == "data"
+                cpio_header = f.tobuf()
+                # CpioInfo.frombuf() returns a CpioInfo obj but does not set names from the header:
+                assert cpio_header[:100] == xcp.cpiofile.CpioInfo.frombuf(cpio_header).tobuf()[:100]
+                names.append(f.name)
 
             if f.isfile():
                 assert f.name == "archive/data"
-                data = arc.extractfile(f).read()
+                data = cast(xcp.cpiofile.ExFileObject, arc.extractfile(f)).read()
                 self.assertEqual(len(data), f.size)
                 self.assertEqual(self.md5data, md5(data).hexdigest())
-                found = True
+                names.append(f.name)
         arc.close()
-        self.assertTrue(found)
+        assert sorted(names) == ["archive/data", "archive/linkname"]
         # extract with extractall and compare
         arc = CpioFile.open(fn, fmt)
         check_call("rm -rf archive2")
@@ -103,7 +103,6 @@ class TestCpio(unittest.TestCase):
         os.chdir('archive')
         arc.add(".", "archive")
         os.chdir("..")
-        # TODO add self crafted file
         arc.close()
         # special case for XZ, test check type (crc32)
         if fmt.endswith('xz'):

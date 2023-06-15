@@ -45,12 +45,11 @@ def default_memory_v2(host_mem_kib):
 
     if gb < 24:
         return 752 * 1024
-    elif gb < 48:
+    if gb < 48:
         return 2 * 1024 * 1024
-    elif gb < 64:
+    if gb < 64:
         return 3 * 1024 * 1024
-    else:
-        return 4 * 1024 * 1024
+    return 4 * 1024 * 1024
 
 def default_memory_v3(host_mem_kib):
     """Return the default for the amount of dom0 memory for the
@@ -91,7 +90,7 @@ def default_memory(host_mem_kib):
                 break
 
     if not platform_version:
-        raise Exception('Could not find PLATFORM_VERSION from inventory.')
+        raise RuntimeError('Could not find PLATFORM_VERSION from inventory.')
 
     return default_memory_for_version(host_mem_kib, platform_version)
 

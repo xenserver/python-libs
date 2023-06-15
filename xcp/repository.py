@@ -38,6 +38,7 @@ class Package(object):          # pylint: disable=too-few-public-methods
     def __init__(self, *args):
         pass
 
+# pylint: disable=super-init-not-called
 class BzippedPackage(Package):
     def __init__(self, repository, label, size, md5sum, optional, fname, root):
         (

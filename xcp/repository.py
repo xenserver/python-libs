@@ -35,7 +35,8 @@ if TYPE_CHECKING:
     from xml.dom.minidom import Element
 
 class Package(object):          # pylint: disable=too-few-public-methods
-    pass
+    def __init__(self, *args):
+        pass
 
 class BzippedPackage(Package):
     def __init__(self, repository, label, size, md5sum, optional, fname, root):

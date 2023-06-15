@@ -300,11 +300,11 @@ class Repository(BaseRepository):
             repo_node = xmlunwrap.getElementsByTagName(xmldoc, ['repository'], mandatory = True)
 
             attrs = ('originator', 'name', 'product', 'version', 'build')
-            optional_attrs = ('build')
+            optional_attr = 'build'
 
             for attr in attrs:
-                self.__dict__[attr] = xmlunwrap.getStrAttribute(repo_node[0], [attr], default = None,
-                                                                mandatory = (attr not in optional_attrs))
+                self.__dict__[attr] = xmlunwrap.getStrAttribute(repo_node[0], [attr], default=None,
+                                                                mandatory = attr != optional_attr)
 
             desc_node = xmlunwrap.getElementsByTagName(xmldoc, ['description'], mandatory = True)
             self.description = xmlunwrap.getText(desc_node[0])

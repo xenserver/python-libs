@@ -3,6 +3,8 @@ from mock import patch, Mock
 
 from xcp.dom0 import default_memory, parse_mem, default_vcpus
 
+
+# pylint: disable=invalid-name
 class TestDom0(unittest.TestCase):
 
     def test_default_memory(self):
@@ -33,7 +35,7 @@ class TestDom0(unittest.TestCase):
         with patch("xcp.dom0.open_with_codec_handling") as open_mock:
             for host_gib, dom0_mib, _ in test_values:
                 mock_version(open_mock, '2.8.0')
-                expected = dom0_mib * 1024;
+                expected = dom0_mib * 1024
                 calculated = default_memory(host_gib * 1024 * 1024)
                 self.assertEqual(calculated, expected)
 
@@ -42,7 +44,7 @@ class TestDom0(unittest.TestCase):
         with patch("xcp.dom0.open_with_codec_handling") as open_mock:
             for host_gib, _, dom0_mib in test_values:
                 mock_version(open_mock, '2.9.0')
-                expected = dom0_mib * 1024;
+                expected = dom0_mib * 1024
                 calculated = default_memory(host_gib * 1024 * 1024)
                 self.assertEqual(calculated, expected)
 

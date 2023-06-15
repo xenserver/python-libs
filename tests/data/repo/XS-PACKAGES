@@ -1,0 +1,11 @@
+<xml version="1.0" encoding="UTF-8">
+    <package type="driver-rpm" label="DriverRPMPackage" size="1" md5="md5sum" kernel="kernel">
+        Driver.rpm
+    </package>
+    <package type="rpm" label="cover_create_DriverRPMPackage" size="1234" md5="md5sum">
+        Name-version.rpm
+    </package>
+    <package type="tbz2" label="cover_create_BzippedPackage" size="8" md5="md5sum" root="/">
+        Name-version.tar.bz2
+    </package>
+</xml>

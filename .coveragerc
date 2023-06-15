@@ -6,6 +6,8 @@ source =
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
+    # Don't complain if tests don't hit catch-all exception handlers:
+    except Exception
     # Have to re-enable the standard pragma
     pragma: no cover
 

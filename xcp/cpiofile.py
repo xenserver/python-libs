@@ -924,6 +924,7 @@ class CpioFile(six.Iterator):
     fileobject = ExFileObject
 
     def __init__(self, name=None, mode="r", fileobj=None):
+        # type:(str | None, str, Optional[IO[bytes] | GzipFile | _Stream]) -> None
         """Open an (uncompressed) cpio archive `name'. `mode' is either 'r' to
            read from an existing archive, 'a' to append data to an existing
            file or 'w' to create a new file overwriting an existing one. `mode'
@@ -938,13 +939,14 @@ class CpioFile(six.Iterator):
         self.mode = {"r": "rb", "a": "r+b", "w": "wb"}[mode]
 
         if not fileobj:
+            assert name
             fileobj = bltn_open(name, self.mode)
             self._extfileobj = False
         else:
             if name is None and hasattr(fileobj, "name"):
                 name = fileobj.name
             if hasattr(fileobj, "mode"):
-                self.mode = fileobj.mode
+                self.mode = cast(str, fileobj.mode)
             self._extfileobj = True
         self.name = None
         if name:

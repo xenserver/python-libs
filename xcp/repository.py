@@ -369,11 +369,16 @@ class Repository(BaseRepository):
         """
         args = [ self ]  # type: list[Repository | str | None]
         ptype = xmlunwrap.getStrAttribute(node, ['type'], mandatory = True)
+        assert ptype  #  Static analyis doesn't know that mandatory=True means raise() if not found
         for attr in self.constructor_map[ptype][1]:
             if attr == 'fname':
                 args.append(xmlunwrap.getText(node))
             else:
-                args.append(xmlunwrap.getStrAttribute(node, [attr], mandatory = attr not in self.optional_attrs))
+                args.append(
+                    xmlunwrap.getStrAttribute(
+                        node, [attr], mandatory=attr not in self.optional_attrs
+                    )
+                )
         return self.constructor_map[ptype][0](*args)
 
     @classmethod

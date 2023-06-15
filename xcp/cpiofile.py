@@ -506,8 +506,8 @@ class _CMPProxy(object):
         self.fileobj = fileobj
         self.mode = mode
         self.cmpobj = None
-        self.buf = None
-        self.pos = None
+        self.buf = b""
+        self.pos = 0
 
     def read(self, size):
         b = [self.buf]
@@ -515,6 +515,7 @@ class _CMPProxy(object):
         while x < size:
             try:
                 raw = self.fileobj.read(self.blocksize)
+                assert self.cmpobj
                 data = self.cmpobj.decompress(raw)
                 b.append(data)
             except EOFError:
@@ -541,11 +542,13 @@ class _CMPProxy(object):
 
     def write(self, data):
         self.pos += len(data)
+        assert self.cmpobj
         raw = self.cmpobj.compress(data)
         self.fileobj.write(raw)
 
     def close(self):
         if self.mode == "w":
+            assert self.cmpobj
             raw = self.cmpobj.flush()
             self.fileobj.write(raw)
         if not isinstance(self.fileobj, io.BytesIO):  # BytesIO() would free the archive on close()

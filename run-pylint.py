@@ -32,10 +32,10 @@ from glob import glob
 from io import StringIO, TextIOWrapper
 from typing import List
 
-from pylint.lint import Run  # type: ignore
-from pylint.reporters import JSONReporter  # tpe: ignore
+from pylint.lint import Run  # type: ignore[import]
+from pylint.reporters import JSONReporter  # type: ignore[import]
 
-import pandas as pd
+import pandas as pd  # type: ignore[import]
 
 
 def del_dict_keys(r, *args):
@@ -63,19 +63,26 @@ def cleanup_results_dict(r, sym):
     r["obj"] = r["obj"][dotpos:][:16]
 
 
-suppress_msg = ["Consi", "Unnec", "Unuse", "Use l", "Unkno", "Unrec", "Insta"]
-suppress_sym = [
+suppress_msg = ["Unused variable 'e'"]  # type: list[str]
+suppress_sym = ["fixme", "wrong-import-order", "wrong-import-position"]  # type: list[str]
+error_syms = [
+    "no-value-for-parameter",
+    "unexpected-keyword-arg",
+]
+notice_syms = [
     "attribute-defined-outside-init",
     "bare-except",
     "broad-exception-raised",
-    # "duplicate-except",
+    "duplicate-code",
+    "duplicate-except",
     "super-init-not-called",
-]
-notice_syms = [
     "fixme",
     "no-member",
-    "unexpected-keyword-arg",
-    "assignment-from-no-return",
+    "pointless-string-statement",
+    "unnecessary-lambda",
+    "unnecessary-semicolon",
+    "unused-import",
+    "unused-variable",
 ]
 
 #
@@ -104,14 +111,16 @@ pylint_options: List[str] = [
     "--load-plugins", "pylint.extensions.eq_without_hash",
 ]
 
-def pylint_project(module_path: str, errorlog: TextIOWrapper, branch_url: str):
+def pylint_project(check_dirs: List[str], errorlog: TextIOWrapper, branch_url: str):
 
     pylint_overview = []
     pylint_results = []
-    glob_pattern = os.path.join(module_path, "**", "*.py")
+    pylint_paths = []
+    check_patterns = [p + "/**/*.py" for p in check_dirs]
+    list(map(lambda x: pylint_paths.extend(glob(x, recursive=True)), check_patterns))
     score_sum = 0.0
     smells_total = 0
-    for path in glob(glob_pattern, recursive=True):
+    for path in pylint_paths:
         filename = path.rsplit("/", maxsplit=1)[-1]
         if filename in ["__init__.py", "pylintrc"]:
             continue
@@ -126,10 +135,10 @@ def pylint_project(module_path: str, errorlog: TextIOWrapper, branch_url: str):
         if not file_results:
             continue
         filtered_file_results = []
-        error_summary = {}
+        message_ids = {}
         linktext = filename.split(".")[0]
         for r in file_results:
-            type = r["type"]
+            cls = r["type"]
             sym = r["symbol"]
             msg = r["message"]
             msg_id = r["message-id"]
@@ -137,17 +146,30 @@ def pylint_project(module_path: str, errorlog: TextIOWrapper, branch_url: str):
             # Write errors in the format for diff-quality to check against regressions:
             errorlog.write(f"{path}:{lineno}: [{msg_id}({sym}), {r['obj']}] {msg}\n")
             # For suggestions to fix existing warnings, be more focussed on serverity:
-            if not msg or type in ("convention", "refactor"):
+            if not msg:
                 continue
-            if sym in suppress_sym or msg[:5] in suppress_msg:
+
+            if sym in suppress_sym or msg in suppress_msg:
                 continue
-            if sym in notice_syms:
-                type = "notice"
-            else:  # For errors, collect the seen symbolic message ids as .keys()
-                error_summary[sym] = 0
+
+            if sym in error_syms:
+                msg = "Error: " + msg
+                cls = "error"
+
+            elif sym in notice_syms:
+                msg = "Notice: " + msg
+                cls = "notice"
+
+            elif cls in ("convention", "refactor"):
+                msg = cls.title() + ": " + msg
+                cls = "notice"
+
+            message_ids[sym] = ""  # Populate a dict of the pylint message symbols seen in this file
             # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-notice-message
+            endline = r['endLine']
+            end = f",endLine={endline}" if endline and endline != lineno else ""
             print(
-                f"::{type} file={path},line={lineno},endLine={r['endLine']},"
+                f"::{cls} file={path},line={lineno}{end},"
                 f"title=pylint {msg_id}: {sym}::{msg}"
             )
             r["path"] = f"[{linktext}]({branch_url}/{path}#L{lineno})"
@@ -163,11 +185,11 @@ def pylint_project(module_path: str, errorlog: TextIOWrapper, branch_url: str):
             {
                 "filepath": f"[`{path[4:]}`]({branch_url}/{path})",
                 "smells": smells_count,
-                "symbols": " ".join(error_summary.keys()),
+                "symbols": " ".join(message_ids.keys()),
                 "score": float(round(score, 1)),  # There are some ints among the floats
             }
         )
-    avg_score = score_sum / len(pylint_overview)
+    avg_score = score_sum / len(pylint_overview) if pylint_overview else 10.0
     pylint_overview.append(
         {
             "filepath": "total",
@@ -176,10 +198,10 @@ def pylint_project(module_path: str, errorlog: TextIOWrapper, branch_url: str):
             "score": round(avg_score, 1),
         }
     )
-    return pd.DataFrame(pylint_overview), pd.DataFrame(pylint_results)  # , avg_score
+    return pd.DataFrame(pylint_overview), pd.DataFrame(pylint_results)
 
 
-def main(module_dir: str, output_file: str, pylint_txt: str, branch_url: str):
+def main(dirs: List[str], output_file: str, pylint_logfile: str, branch_url: str):
     """Send pylint errors, warnings, notices to stdout. Github shows 10 of each type
 
     Args:
@@ -187,8 +209,8 @@ def main(module_dir: str, output_file: str, pylint_txt: str, branch_url: str):
         output_file (str): output file path for the markdown summary table
         branch_url (str): _url of the branch for file links in the summary table
     """
-    with open(pylint_txt, "w", encoding="utf-8") as txt_out:
-        panda_overview, panda_results = pylint_project(module_dir, txt_out, branch_url)
+    with open(pylint_logfile, "w", encoding="utf-8") as txt_out:
+        panda_overview, panda_results = pylint_project(dirs, txt_out, branch_url)
 
     # Write the panda dable to a markdown output file:
     summary_file = output_file or os.environ.get("GITHUB_STEP_SUMMARY")
@@ -211,14 +233,11 @@ if __name__ == "__main__":
     repository = os.environ.get("GITHUB_REPOSITORY", None)
     if server_url and repository:
         # https://github.com/orgs/community/discussions/5251 only set on Pull requests:
-        branch = os.environ.get("GITHUB_HEAD_REF", None)
-        if not branch:
-            # Always set but set to num/merge on PR, but to branch on pushes:
-            branch = os.environ.get("GITHUB_REF_NAME", None)
+        branch = os.environ.get("GITHUB_HEAD_REF", None) or os.environ.get("GITHUB_REF_NAME", None)
         ghblob_url = f"{server_url}/{repository}/blob/{branch}"
 
     # Like the previous run-pylint.sh, check the xcp module by default:
-    py_module_dir = sys.argv[1] if len(sys.argv) > 1 else "xcp"
+    dirs_to_check = sys.argv[1:] if len(sys.argv) > 1 else ["xcp", "tests"]
 
     # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
     step_summary = os.environ.get("GITHUB_STEP_SUMMARY", ".tox/pylint-summary-table.md")
@@ -230,5 +249,5 @@ if __name__ == "__main__":
     #
     pylint_txt = os.environ.get("ENVLOGDIR", ".tox") + "/pylint.txt"
 
-    print("Checking:", py_module_dir + ", Writing report to:", step_summary)
-    main(py_module_dir, step_summary, pylint_txt, ghblob_url)
+    print("Checking:", str(dirs_to_check) + "; Writing report to:", step_summary)
+    main(dirs_to_check, step_summary, pylint_txt, ghblob_url)

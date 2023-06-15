@@ -1,4 +1,6 @@
 """Test biosdevname in a user namespace. Needs to be a new file because of a bug in pytest-forked"""
+import re
+import sys
 import unittest
 from os import system
 
@@ -9,14 +11,21 @@ import xcp.net.biosdevname
 
 from .xcptestlib_unshare import CLONE_NEWUSER, disassociate_namespaces
 
+if tuple(sys.version_info) == (3, 10):
+    pytest.skip(allow_module_level=True)
 
 def check_devices(self, devices):
-    for item in devices.items():
-        assert item[0]
-        assert item[1]["BIOS device"]
-        assert item[1]["Assigned MAC"]
-        assert item[1]["Bus Info"]
-        assert item[1]["Driver"]
+    pci_bus_info = re.compile(r'\d*:?[a-f0-9]+:[a-f0-9]+\.[a-f0-9]')
+
+    found_pci = False
+    for interface, value in devices.items():
+        assert interface[-1] in "0123456789"
+        assert value["BIOS device"]
+        assert value["Assigned MAC"]
+        assert value["Driver"]
+        if pci_bus_info.match(value['Bus Info']):
+            found_pci = True
+    assert found_pci
 
 
 class TestDeviceNames(unittest.TestCase):

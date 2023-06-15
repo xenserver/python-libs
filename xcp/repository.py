@@ -341,6 +341,8 @@ class Repository(BaseRepository):
             pkg = self._create_package(pkg_node)
             self.packages.append(pkg)
 
+    # Dictionary to map file extensions to tuples containing a class and a tuple of attribute names.
+    # _create_package() uses it to instantiate package objects for packages of these classes.
     constructor_map = {
         'tbz2': [ BzippedPackage, ( 'label', 'size', 'md5', 'optional', 'fname', 'root' ) ],
         'rpm': [ RPMPackage, ( 'label', 'size', 'md5', 'optional', 'fname', 'options' ) ],
@@ -350,10 +352,19 @@ class Repository(BaseRepository):
         'firmware': [ FirmwarePackage, ('label', 'size', 'md5', 'fname') ]
         }
 
-    optional_attrs = ['optional', 'options']
+    optional_attrs = ["optional", "options"]  # attribute names that are considered optional
 
     def _create_package(self, node):
-        args = [ self ]
+        # type:(Element) -> Package
+        """
+        Return a package object matching the XML "type" attribute of the passed
+        XML node, instantiated by calling the matching Package constructor using
+        the other XML attributes as arguments.
+
+        :param node: An XML element for package of a certain type with associated attributes
+        :return: New instance of the corresponding `Package` class
+        """
+        args = [ self ]  # type: list[Repository | str | None]
         ptype = xmlunwrap.getStrAttribute(node, ['type'], mandatory = True)
         for attr in self.constructor_map[ptype][1]:
             if attr == 'fname':

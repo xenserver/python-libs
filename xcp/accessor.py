@@ -367,16 +367,17 @@ class HTTPAccessor(Accessor):
         super(HTTPAccessor, self).__init__(ro)
         self.url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
 
+        assert self.url_parts.hostname
         if self.url_parts.username:
             username = self.url_parts.username
             if username is not None:
                 username = urllib.parse.unquote(self.url_parts.username)
             password = self.url_parts.password
             if password is not None:
-                password = urllib.parse.unquote(self.url_parts.password)
+                password = urllib.parse.unquote(password)
             self.passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
             self.passman.add_password(None, self.url_parts.hostname,
-                                      username, password)
+                                      username, password or "")
             self.authhandler = urllib.request.HTTPBasicAuthHandler(self.passman)
             self.opener = urllib.request.build_opener(self.authhandler)
             urllib.request.install_opener(self.opener)

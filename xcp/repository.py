@@ -25,11 +25,14 @@ from hashlib import md5
 import os.path
 import xml.dom.minidom
 import configparser
+from typing import TYPE_CHECKING, Type
 
 import six
 
-import xcp.version as version
-import xcp.xmlunwrap as xmlunwrap
+from xcp import version, xmlunwrap
+
+if TYPE_CHECKING:
+    from xml.dom.minidom import Element
 
 class Package(object):          # pylint: disable=too-few-public-methods
     pass
@@ -344,13 +347,13 @@ class Repository(BaseRepository):
     # Dictionary to map file extensions to tuples containing a class and a tuple of attribute names.
     # _create_package() uses it to instantiate package objects for packages of these classes.
     constructor_map = {
-        'tbz2': [ BzippedPackage, ( 'label', 'size', 'md5', 'optional', 'fname', 'root' ) ],
-        'rpm': [ RPMPackage, ( 'label', 'size', 'md5', 'optional', 'fname', 'options' ) ],
-        'driver-rpm': [ DriverRPMPackage, ( 'label', 'size', 'md5', 'fname', 'kernel', 'options' ) ],
+        "tbz2": (BzippedPackage, ("label", "size", "md5", "optional", "fname", "root")),
+        "rpm": (RPMPackage, ("label", "size", "md5", "optional", "fname", "options")),
+        "driver-rpm": (DriverRPMPackage, ("label", "size", "md5", "fname", "kernel", "options")),
         # obsolete
-        'driver': [ DriverPackage, ( 'label', 'size', 'md5', 'fname', 'root' ) ],
-        'firmware': [ FirmwarePackage, ('label', 'size', 'md5', 'fname') ]
-        }
+        "driver": (DriverPackage, ("label", "size", "md5", "fname", "root")),
+        "firmware": (FirmwarePackage, ("label", "size", "md5", "fname")),
+    }  # type: dict[str, tuple[Type[Package], tuple[str, ...]]]
 
     optional_attrs = ["optional", "options"]  # attribute names that are considered optional
 

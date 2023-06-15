@@ -110,7 +110,7 @@ def _parse_size_and_unit(s):
         val *= 1024*1024*1024
     elif unit == "m":
         val *= 1024*1024
-    elif unit == "k" or unit == "": # default to KiB
+    elif unit in ("k", ""):
         val *= 1024
 
     return val

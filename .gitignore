@@ -7,6 +7,10 @@ __pycache__/
 # Vim swap files
 *.swp
 
+# diff/patch files
+*.diff
+*.patch
+
 # python coverage data
 .coverage
 
@@ -21,7 +25,18 @@ __pycache__/
 # Tox {workdir} directory
 .tox/
 
+# private vscode workspace settings:
+.vscode/settings.json
+
+# temporary file from tests/test_cpio.py (to be fixed later)
+/data
+# Output from mypy --txt-report
+/index.txt
+
 htmlcov/
 
 # Pip editable install directory
 python_libs.egg-info/
+
+# pytest logfile
+test.log

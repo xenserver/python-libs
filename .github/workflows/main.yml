@@ -25,27 +25,29 @@ jobs:
       matrix:
         include:
         - python-version: '3.11'
-          os: ubuntu-latest
-        # This tests with Python 2.7 and with Ubuntu-20.04's Python 3.8 for combined py2+3 coverage:
+          os: ubuntu-22.04
+        # This tests with Python 2.7 and the stock Python 3.10 for combined py2+3 coverage:
         - python-version: '2.7'
-          os: ubuntu-20.04
-        - python-version: '3.10'
-          os: ubuntu-latest
-        - python-version: '3.9'
-          os: ubuntu-latest
-        - python-version: '3.7'
-          os: ubuntu-latest
+          os: ubuntu-22.04
+        - python-version: '3.8'
+          os: ubuntu-22.04
         - python-version: '3.6'
-          os: ubuntu-20.04
+          os: ubuntu-22.04
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Needed by diff-cover to get the changed lines: origin/master..HEAD
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        # setup-python stopped supporting Python 2.7, use https://github.com/MatteoH2O1999/setup-python
+        # This action tries to build all Python versions that actions/setup-python does not support.
+        # It caches built versions, so that after the first run, installation time is really low.
+        uses: MatteoH2O1999/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
+          allow-build: info
+          cache-build: true
+          cache: pip
 
       - name: Run of tox on ubuntu-latest
         if: ${{ startsWith(matrix.python-version, '3.') && matrix.python-version != 3.6 }}
@@ -55,26 +57,26 @@ jobs:
 
       # tox >= 4.0.0 is needed for using optional-dependencies from pyproject.toml, which is
       # is not available for python <= 3.6, so use the python3.8 of Ubuntu-20.04 to install it:
-      - name: Install of tox on ubuntu-20.04 (to support optional-dependencies from pyproject.toml)
+      - name: Install of tox on ubuntu-22.04 (to support optional-dependencies from pyproject.toml)
         if: ${{ matrix.python-version == 2.7 || matrix.python-version == 3.6 }}
         run: |
           set -xv;curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-          python3.8 get-pip.py
-          python3.8 -m pip install 'virtualenv<20.22' 'tox>=4.5.1' tox-gh-actions
+          python3.10 get-pip.py
+          python3.10 -m pip install 'virtualenv<20.22' 'tox>=4.5.1' tox-gh-actions
 
-      - name: Run tox4 with Python 3.8(to support optional-dependencies from pyproject.toml) for Python3.6
+      - name: Run tox4 with Python 3.10(to support optional-dependencies from pyproject.toml) for Python3.6
         if: ${{ matrix.python-version == 3.6 }}
         run: tox --workdir .github/workflows/.tox --recreate -e py36-lint
 
-      - name: Generate combined test-coverage with Python 2.7 and 3.8 for Upload
+      - name: Generate combined test-coverage with Python 2.7 and 3.10 for Upload
         if: ${{ matrix.python-version == 2.7 }}
-        run: tox --workdir .github/workflows/.tox --recreate -e py38-covcombine
+        run: tox --workdir .github/workflows/.tox --recreate -e py310-covcombine-check
 
       - name: Upload coverage reports to Codecov
         if: ${{ matrix.python-version == 2.7 }}
         uses: codecov/codecov-action@v3
         with:
-          directory: .github/workflows/.tox/py38-covcombine/log
+          directory: .github/workflows/.tox/py310-covcombine-check/log
           env_vars: OS,PYTHON
           fail_ci_if_error: true
           flags: unittest

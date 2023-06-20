@@ -247,6 +247,10 @@ class Repository(BaseRepository):
         self._md5 = md5()
         self.requires = []
         self.packages = []
+        self.name = ""
+        self.version = ""
+        self.build = ""
+        self.originator = ""
 
         access.start()
 
@@ -379,7 +383,7 @@ class Repository(BaseRepository):
                 if r.identifier == cls.XCP_MAIN_IDENT:
                     repo_ver = r.product_version
                     break
-        except:
+        except Exception:
             pass
 
         return repo_ver

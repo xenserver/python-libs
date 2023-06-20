@@ -22,6 +22,8 @@ exclude_lines =
     if 0:
     if __name__ == .__main__.:
     if TYPE_CHECKING:
+    # skip any line with a `pass` (such as may be used for @abstractmethod or @suffixed_method)
+    pass
 
 precision = 1
 include =

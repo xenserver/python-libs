@@ -25,15 +25,20 @@ from hashlib import md5
 import os.path
 import xml.dom.minidom
 import configparser
+from typing import TYPE_CHECKING, Type
 
 import six
 
-import xcp.version as version
-import xcp.xmlunwrap as xmlunwrap
+from xcp import version, xmlunwrap
+
+if TYPE_CHECKING:
+    from xml.dom.minidom import Element
 
 class Package(object):          # pylint: disable=too-few-public-methods
-    pass
+    def __init__(self, *args):
+        pass
 
+# pylint: disable=super-init-not-called
 class BzippedPackage(Package):
     def __init__(self, repository, label, size, md5sum, optional, fname, root):
         (
@@ -345,25 +350,41 @@ class Repository(BaseRepository):
             pkg = self._create_package(pkg_node)
             self.packages.append(pkg)
 
+    # Dictionary to map file extensions to tuples containing a class and a tuple of attribute names.
+    # _create_package() uses it to instantiate package objects for packages of these classes.
     constructor_map = {
-        'tbz2': [ BzippedPackage, ( 'label', 'size', 'md5', 'optional', 'fname', 'root' ) ],
-        'rpm': [ RPMPackage, ( 'label', 'size', 'md5', 'optional', 'fname', 'options' ) ],
-        'driver-rpm': [ DriverRPMPackage, ( 'label', 'size', 'md5', 'fname', 'kernel', 'options' ) ],
+        "tbz2": (BzippedPackage, ("label", "size", "md5", "optional", "fname", "root")),
+        "rpm": (RPMPackage, ("label", "size", "md5", "optional", "fname", "options")),
+        "driver-rpm": (DriverRPMPackage, ("label", "size", "md5", "fname", "kernel", "options")),
         # obsolete
-        'driver': [ DriverPackage, ( 'label', 'size', 'md5', 'fname', 'root' ) ],
-        'firmware': [ FirmwarePackage, ('label', 'size', 'md5', 'fname') ]
-        }
+        "driver": (DriverPackage, ("label", "size", "md5", "fname", "root")),
+        "firmware": (FirmwarePackage, ("label", "size", "md5", "fname")),
+    }  # type: dict[str, tuple[Type[Package], tuple[str, ...]]]
 
-    optional_attrs = ['optional', 'options']
+    optional_attrs = ["optional", "options"]  # attribute names that are considered optional
 
     def _create_package(self, node):
-        args = [ self ]
+        # type:(Element) -> Package
+        """
+        Return a package object matching the XML "type" attribute of the passed
+        XML node, instantiated by calling the matching Package constructor using
+        the other XML attributes as arguments.
+
+        :param node: An XML element for package of a certain type with associated attributes
+        :return: New instance of the corresponding `Package` class
+        """
+        args = [ self ]  # type: list[Repository | str | None]
         ptype = xmlunwrap.getStrAttribute(node, ['type'], mandatory = True)
+        assert ptype  #  Static analyis doesn't know that mandatory=True means raise() if not found
         for attr in self.constructor_map[ptype][1]:
             if attr == 'fname':
                 args.append(xmlunwrap.getText(node))
             else:
-                args.append(xmlunwrap.getStrAttribute(node, [attr], mandatory = attr not in self.optional_attrs))
+                args.append(
+                    xmlunwrap.getStrAttribute(
+                        node, [attr], mandatory=attr not in self.optional_attrs
+                    )
+                )
         return self.constructor_map[ptype][0](*args)
 
     @classmethod

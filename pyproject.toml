@@ -82,8 +82,9 @@ pytype = [
 tox = [
     # The latest versions of tox need 'py>=1.11.0' and this is not stated in the deps of tox-4.5.1.
     "py>=1.11.0",
-    # tox>=4 is needed in order to fix reading the python2.7 deps from pyproject.toml
-    "tox>=4.5.1; python_version >= '3.7'",
+    # Use tox==4.5.1: tox>=4 is needed for reading the extras from pyproject.toml
+    # while tox>=4.5.2 depends on virutalenv>=20.23, which breaks Python 2.7:
+    "tox==4.5.1; python_version >= '3.7'",
     "tox-gh-actions; python_version >= '3.7'",
     # virtualenv-20.22 breaks using python2.7 for the `py27` virtualenv with tox and newer
     # versions even break py36(which is also EOL) because py36 does not support

@@ -56,68 +56,17 @@ open a recent workflow run the latest and scroll down until you see the tables!
 - `.github/act-serial.yaml`: Configuration for the jobs run by the local GitHub actions runner `act`
 - `pylintrc`: Configuration file of `Pylint`
 
-## Testing locally and in GitHub CI using `tox`
+## Installation and Setup of a development environment
 
-`pytest` runs tests, checks by `pylint` and `mypy`. With `tox`, developers can
-run the full test suite for Python 2.7 and 3.x. Unit tests are passing, but there are
-many Python3 issues which it does not uncover yet.
+For the installation of the general development dependencies, visit [INSTALL.md](INSTALL.md)
 
-> _"Intro: Managing a Project's Virtualenvs with tox -
-> A comprehensive beginner's introduction to tox":_
-> https://www.seanh.cc/2018/09/01/tox-tutorial/
+### Updating tests using `pytest-watch` (`ptw`)
 
-To run the tests for all supported and installed python versions, run:
-
-```yaml
-pip3 install --user --upgrade 'py>=1.11.0' 'virtualenv<20.22' 'tox>=4.5.1'; hash -r; tox
-```
-
-- `tox>=4` is needed in order to fix reading the python2.7 deps from `pyproject.toml`
-- The latest versions of `tox` need `'py>=1.11.0'`. Ensure that it is at least 1.11.
-- `virtualenv-20.22` breaks using python2.7 for the `py27` virtualenv with tox,
-  therefore it has to be downgraded thus `'virtualenv<20.22'`.
-
-Using pip-tools, you can also extract the requirements and extras from `pyptoject.toml`:
-
-```bash
-PYTHON=python3.10
-$PYTHON -m pip install pip-tools
-$PYTHON -m piptools compile --extra=.,test,mypy,pyre,pytype,tox -o - pyproject.toml |
-    $PYTHON -m pip install -r /dev/stdin --no-warn-conflicts
-```
-
-With this, you can run most of the CI tests run by `tox` and GitHub CI also from the shell.
-
-You can run `tox` with just the Python versions you have using `tox -e py27-test -e py3.11-mypy`.
-The syntax is `-e py<pvthon-version>-<factor1>[-factor2]` The currently supported factors
-are:
-
-- `test`: runs `pytest`
-- `cov`: runs `pytest --cov` and generates `XML` and `HTML` reports in `.tox/py<ver>-cov/logs/`
-- `mypy`: runs `mypy`
-- `fox`: runs like `cov` but then opens the `HTML` reports in Firefox!
-
-## Recommended `pytest` plugins for development
-
-When changing existing tests or developing new code with new test coverage, we might want to
-ignore all other tests. This can be achieved with an exciting plugin called `pytest-picked`:
-`pytest --picked` will collect all test modules that were newly created or changed but not
-yet committed in a Git repository and run only them.
-
-`pytest-sugar` is a plugin that, once installed, automatically changes the format of the
-`pytest` standard output to include a graphical %-progress bar when running the test suite.
-
-For nicer diffs of dictionaries, arrays and the like, use `pytest-clarity` or `pytest-icdiff`.
-For more information to debug pytest test suites see: https://stribny.name/blog/pytest/
-
-```py
-pip install "pytest<7" pytest-picked pytest-sugar pytest-clarity
-```
+- `pip install pytest-watch` - `ptw` watches changed files and runs `pytest` after changes are saved.
+  - Then run `ptw` on the code/tests you work on, e.g.: `ptw tests/test_pci_*` and edit the files.
 
 ## Example development workflow
 
-- `pip install pytest-watch` - `ptw` watches changed files and runs pytest after changes are saved.
-  - Then run `ptw` on the code/tests you work on, e.g.: `ptw tests/test_pci_*` and edit the files.
 - Run the tests for at also with `LC_ALL=C python3.6 -m pytest` to check for any `ascii` codec
   issues by Python3.6
 - Test with `python2.7 -m pytest`
@@ -125,7 +74,7 @@ pip install "pytest<7" pytest-picked pytest-sugar pytest-clarity
 - Run `./run-pytype.py`
 - Run `./run-pyre.py`
 - Run `tox -e py36-lint` and fix any `Pylint` warnings
-- Run `tox -e py38-covcombine` and fix any missing diff-coverage.
+- Run `tox -e py310-covcombine-check` and fix any missing diff-coverage.
 - Run `tox` for the full CI test suite
 - Run `act` for the full CI test suite in local containers (similar to GitHub action containers)
 - Commit with `--signoff` on a new branch and push it and check the triggered GitHub Action run succeeds.
@@ -136,37 +85,20 @@ The list of `virtualenvs` configured in tox can be shown using this command: `to
 ```yaml
 $ tox -av
 default environments:
-py311-pyre      -> Run in a py311 virtualenv: Run pyre for static analyis, only passes using: tox -e py311-pyre
-py310-pytype    -> Run in a py310 virtualenv: Run pytype for static analyis, intro: https://youtu.be/abvW0mOrDiY
-py39-check      -> Run in a py39 virtualenv: Run mypy for static analyis
-py38-covcombine -> Run in a py38 virtualenv: Generate combined coverage reports with py27-test coverage merged
-py37-mdreport   -> Run in a py37 virtualenv: Make a test report (which is shown in the GitHub Actions Summary Page)
-py36-lint       -> Run in a py36 virtualenv: Run pylint and fail on warnings remaining on lines in the diff to master
+py36-lint              -> Run in a py36 virtualenv: Run pylint and fail on warnings remaining on lines in the diff to master
+py311-pyre             -> Run in a py311 virtualenv: Run pyre for static analyis, only passes using: tox -e py311-pyre
+py38-pytype            -> Run in a py38 virtualenv: Run pytype for static analyis, intro: https://youtu.be/abvW0mOrDiY
+py310-covcombine-check -> Run in a py310 virtualenv: Generate combined coverage reports with py27-test coverage merged Run mypy for static analyis
 
 additional environments:
-cov             -> Run in a /usr/bin/python3 virtualenv: Generate coverage html reports (incl. diff-cover) for this environment
-covcp           -> Run in a /usr/bin/python3 virtualenv: Copy the generated .converage and coverage.xml to the UPLOAD_DIR dir
-fox             -> Run in a /usr/bin/python3 virtualenv: Generate combined coverage html reports and open them in firefox
-test            -> Run in a /usr/bin/python3 virtualenv: Run pytest in this environment with --cov for use in other stages
+cov                    -> Run in a python virtualenv: Generate coverage html reports (incl. diff-cover) for this environment
+covcp                  -> Run in a python virtualenv: Copy the generated .converage and coverage.xml to the UPLOAD_DIR dir
+fox                    -> Run in a python virtualenv: Generate combined coverage html reports and open them in firefox
+mdreport               -> Run in a python virtualenv: Make a test report (which is shown in the GitHub Actions Summary Page)
+test                   -> Run in a python virtualenv: Run pytest in this environment with --cov for use in other stages
 ```
 
 If you have only one version of Python3, that works too. Use: `tox -e py<ver>-test`
-
-Installation of additional python versions for testing different versions:
-
-- Fedora 37: `sudo dnf install tox` installs all Python versions, even 3.12a7.
-- On Ubuntu, the deadsnakes/ppa is broken(except for 3.12), so conda or pyenv has to be used.
-  For full instructions, see https://realpython.com/intro-to-pyenv/, E.g install on Ubuntu:
-  ```yaml
-  sudo apt-get install -y build-essential libssl-dev zlib1g-dev libbz2-dev
-                          libreadline-dev libsqlite3-dev xz-utils libffi-dev liblzma-dev
-  curl https://pyenv.run | bash # and add the displayed commands to .bashrc
-  pyenv install 3.{6,7,8,9} && pyenv local 3.{6,7,8,9} # builds and adds them
-  ```
-- For testing on newer Ubuntu hosts which have `python2-dev`, but not `pip2`, install `pip2` this way:
-  ```yml
-  curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py;sudo python2 get-pip.py
-  ```
 
 ## Static analysis using mypy, pyre, pyright and pytype
 

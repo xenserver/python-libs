@@ -29,8 +29,8 @@ import json
 import os
 import sys
 from glob import glob
-from io import StringIO, TextIOWrapper
-from typing import List
+from io import StringIO
+from typing import List, TextIO
 
 from pylint.lint import Run  # type: ignore[import]
 from pylint.reporters import JSONReporter  # type: ignore[import]
@@ -111,7 +111,7 @@ pylint_options: List[str] = [
     "--load-plugins", "pylint.extensions.eq_without_hash",
 ]
 
-def pylint_project(check_dirs: List[str], errorlog: TextIOWrapper, branch_url: str):
+def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
 
     pylint_overview = []
     pylint_results = []

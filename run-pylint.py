@@ -218,13 +218,17 @@ def main(dirs: List[str], output_file: str, pylint_logfile: str, branch_url: str
         return
 
     with open(summary_file, "w", encoding="utf-8") as fp:
-        me = os.path.basename(__file__)
-        mylink = f"[{me}]({branch_url}/{me})"
-        # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-markdown-content
-        fp.write(f"### PyLint breakdown from {mylink} on **xcp/\\*\\*/*.py**\n")
-        fp.write(panda_overview.to_markdown())
-        fp.write(f"\n### PyLint results from {mylink} on **xcp/\\*\\*/*.py**\n")
-        fp.write(panda_results.to_markdown())
+        write_results_as_markdown_tables(branch_url, fp, panda_overview, panda_results)
+
+
+def write_results_as_markdown_tables(branch_url, fp, panda_overview, panda_results):
+    me = os.path.basename(__file__)
+    mylink = f"[{me}]({branch_url}/{me})"
+    # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-markdown-content
+    fp.write(f"### PyLint breakdown from {mylink} on **xcp/\\*\\*/*.py**\n")
+    fp.write(panda_overview.to_markdown())
+    fp.write(f"\n### PyLint results from {mylink} on **xcp/\\*\\*/*.py**\n")
+    fp.write(panda_results.to_markdown())
 
 
 if __name__ == "__main__":

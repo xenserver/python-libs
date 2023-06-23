@@ -47,15 +47,14 @@ __version__ = "1.0.0"
 __author__  = "Andrew Cooper"
 
 import re
+
 from xcp.logger import LOG
+from xcp.net.ifrename import VALID_ETH_NAME, util
 from xcp.net.ifrename.macpci import MACPCI
 
 VALID_CUR_STATE_KNAME = re.compile(r"^(?:eth[\d]+|side-[\d]+-eth[\d]+)$")
-VALID_ETH_NAME = re.compile(r"^eth([\d])+$")
 VALID_IBFT_NAME = re.compile(r"^ibft([\d])+$")
 
-# util needs to import VALID_ETH_NAME
-from xcp.net.ifrename import util
 
 class StaticRuleError(RuntimeError):
     """Error with static rules"""

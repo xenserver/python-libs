@@ -25,8 +25,11 @@
 Utility functions for ifrename code
 """
 
-import pprint, random
-from xcp.net.ifrename.logic import VALID_ETH_NAME
+import pprint
+import random
+
+from xcp.net.ifrename import VALID_ETH_NAME
+
 
 def niceformat(obj):
     """conditional pprint"""

@@ -96,6 +96,21 @@ class TestGenerate(unittest.TestCase):
         closeLogs()
         self.logbuf.close()
 
+    def test_label(self):
+        """Cover the label handling of DynamicRules.generate()"""
+        dr = DynamicRules()
+        dr.formulae = {"eth0": ("label", "label1"), "eth1": ("label", "label2")}
+        dr.generate(
+            [
+                MACPCI("00:1E:67:31:59:89", "0000:00:19.0", label="label1"),
+                MACPCI("00:1E:67:31:59:88", "0000:02:00.0", label="label2"),
+            ]
+        )
+        assert set(dr.rules) == {
+            MACPCI("00:1E:67:31:59:89", "0000:00:19.0", tname="label1"),
+            MACPCI("00:1E:67:31:59:88", "0000:02:00.0", tname="label2"),
+        }
+
     def test_ppn_quirks(self):
         # Test case taken from example on CA-75599
 

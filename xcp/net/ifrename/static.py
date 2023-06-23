@@ -40,18 +40,18 @@ Any line starting with '#' is considered to be a comment
 
 from __future__ import unicode_literals
 
-from ...compat import open_with_codec_handling
+from os.path import exists as pathexists
 
 __version__ = "1.1.1"
 __author__  = "Andrew Cooper"
 
 import re
 
+from xcp.compat import open_with_codec_handling
 from xcp.logger import LOG
-from xcp.net.mac import VALID_COLON_MAC as VALID_MAC
 from xcp.net.ifrename.macpci import MACPCI
+from xcp.net.mac import VALID_COLON_MAC as VALID_MAC
 from xcp.pci import VALID_SBDFI as VALID_PCI
-from os.path import exists as pathexists
 from xcp.pci import pci_sbdfi_to_nic
 
 VALID_LINE = re.compile(

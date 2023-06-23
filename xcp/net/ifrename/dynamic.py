@@ -30,7 +30,7 @@ beginning with a # character.
 
 from __future__ import unicode_literals
 
-from ...compat import open_with_codec_handling
+from os.path import exists as pathexists
 
 __version__ = "1.0.0"
 __author__  = "Andrew Cooper"
@@ -45,10 +45,10 @@ except ImportError:
         pass
 
 
+from xcp.compat import open_with_codec_handling
 from xcp.logger import LOG
 from xcp.net.ifrename.macpci import MACPCI
 from xcp.pci import pci_sbdfi_to_nic
-from os.path import exists as pathexists
 
 SAVE_HEADER = (
     "# Automatically adjusted file.  Do not edit unless you are "

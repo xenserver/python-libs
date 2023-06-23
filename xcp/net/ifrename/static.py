@@ -241,7 +241,7 @@ class StaticRules(object):
                                 "the %s static rule" % (value, target))
                 continue
 
-            elif method == "ppn":
+            if method == "ppn":
 
                 if ppn_quirks:
                     LOG.info("Not considering formula for '%s' due to ppn "
@@ -262,7 +262,7 @@ class StaticRules(object):
                                 "%s static rule" % (value, target))
                 continue
 
-            elif method == "pci":
+            if method == "pci":
                 try:
                     nic = pci_sbdfi_to_nic(value, state)
                     rule = MACPCI(nic.mac, nic.pci, tname=target)
@@ -273,7 +273,7 @@ class StaticRules(object):
 
                 continue
 
-            elif method == "label":
+            if method == "label":
 
                 for nic in state:
                     if nic.label == value:
@@ -289,8 +289,7 @@ class StaticRules(object):
                                 "the %s static rule" % (value, target))
                 continue
 
-            else:
-                LOG.critical("Unknown static rule method %s" % method)
+            LOG.critical("Unknown static rule method %s" % method)
 
     def write(self, header = True):
 

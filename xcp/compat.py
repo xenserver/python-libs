@@ -52,9 +52,7 @@ def open_defaults_for_utf8_text(args, kwargs):
         mode = args[0]
     if sys.version_info < (3, 0):
         return mode, other_kwargs
-    if not mode or not isinstance(mode, str):
-        raise ValueError("The mode argument is required! r for text, rb for binary")
     if sys.version_info >= (3, 0) and "b" not in mode:
         kwargs.setdefault("encoding", "utf-8")
         kwargs.setdefault("errors", "replace")
-    return mode, other_kwargs
+    return mode or "r", other_kwargs

@@ -82,17 +82,17 @@ class PCI(object):
                 self.segment = 0
 
             self.bus = int(groups["bus"], 16)
-            if not ( 0 <= self.bus < 2**8 ):
+            if not 0 <= self.bus < 2**8:
                 raise ValueError("Bus '%d' out of range 0 <= bus < 256"
                                  % (self.bus,))
 
             self.device = int(groups["device"], 16)
-            if not ( 0 <= self.device < 2**5):
+            if not 0 <= self.device < 2**5:
                 raise ValueError("Device '%d' out of range 0 <= device < 32"
                                  % (self.device,))
 
             self.function = int(groups["function"], 16)
-            if not ( 0 <= self.function < 2**3):
+            if not 0 <= self.function < 2**3:
                 raise ValueError("Function '%d' out of range 0 <= device "
                                  "< 8" % (self.function,))
 

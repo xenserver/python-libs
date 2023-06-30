@@ -76,7 +76,7 @@ def getBoolAttribute(el, attrs, default = None):
         return default
     return val in ['yes', 'true']
 
-def getIntAttribute(el, attrs, default = None):
+def getIntAttribute(el, attrs, default = None):  # pylint: disable=inconsistent-return-statements
     # type:(Element, list[str], Optional[int]) -> int | None
     mandatory = default is None
     val = getStrAttribute(el, attrs, '', mandatory)

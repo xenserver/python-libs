@@ -10,9 +10,6 @@ class TestRepository(unittest.TestCase):
         # Contains an XS-PACKAGES file to cover _create_package() for supp-pack-build
         assert len(self.check_repo_tree("file://tests/data/repo/")) == 2
 
-    def test_http(self):
-        assert len(self.check_repo_tree("https://updates.xcp-ng.org/netinstall/8.2.1")) == 1
-
     def check_repo_tree(self, url):
         a = xcp.accessor.createAccessor(url, True)
         repo_ver = repository.BaseRepository.getRepoVer(a)

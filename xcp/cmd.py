@@ -25,9 +25,11 @@
 
 import subprocess
 import sys
+from typing import Any, cast
 
 from xcp import logger
 from xcp.compat import open_defaults_for_utf8_text
+
 
 def _encode_command_to_bytes(command):
     # When the locale not an UTF-8 locale, Python3.6 Popen can't deal with ord() >= 128
@@ -44,6 +46,7 @@ def _encode_command_to_bytes(command):
     return command
 
 def runCmd(command, with_stdout=False, with_stderr=False, inputtext=None, **kwargs):
+    # type: (bytes | str | list[str], bool, bool, bytes | str | None, Any) -> Any
     # sourcery skip: assign-if-exp, hoist-repeated-if-condition, reintroduce-else
 
     if inputtext is not None:
@@ -59,12 +62,12 @@ def runCmd(command, with_stdout=False, with_stderr=False, inputtext=None, **kwar
 
     # pylint: disable-next=unexpected-keyword-arg
     cmd = subprocess.Popen(command, bufsize=(1 if sys.version_info < (3, 3) else -1),
-                           stdin=(inputtext and subprocess.PIPE or None),
+                           stdin=cast(int, inputtext and subprocess.PIPE or None),
                            stdout=subprocess.PIPE,
                            stderr=subprocess.PIPE,
                            shell=not isinstance(command, list),
                            **kwargs)
-    (out, err) = cmd.communicate(inputtext)
+    (out, err) = cmd.communicate(cast(str, inputtext))
     rv = cmd.returncode
 
     l = "ran %s; rc %d" % (str(command), rv)

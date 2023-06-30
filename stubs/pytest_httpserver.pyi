@@ -1,19 +1,17 @@
 import abc
-from _typeshed import Incomplete
 from enum import Enum
 from ssl import SSLContext
-from typing import Any, Callable, Iterable, List, Mapping, MutableMapping, Optional, Pattern, Tuple, Union
-from werkzeug.datastructures import MultiDict
+from typing import Any, Callable, Iterable, Mapping, MutableMapping, Optional, Pattern, Tuple, Union
+
+# pylint: disable=import-error, no-name-in-module, super-init-not-called, multiple-statements, too-few-public-methods, invalid-name, line-too-long
+from _typeshed import Incomplete
+
 from werkzeug.wrappers import Request, Response
 
 URI_DEFAULT: str
 METHOD_ALL: str
 HEADERS_T = Union[Mapping[str, Union[str, Iterable[str]]], Iterable[Tuple[str, str]]]
 HVMATCHER_T = Callable[[str, Optional[str], str], bool]
-
-class Undefined: ...
-
-UNDEFINED: Incomplete
 
 class Error(Exception): ...
 class NoHandlerError(Error): ...

@@ -7,30 +7,61 @@ from mock import patch
 from pyfakefs.fake_filesystem import FakeFileOpen, FakeFilesystem
 
 import xcp.accessor
+import xcp.mount
 
 from .test_httpaccessor import UTF8TEXT_LITERAL
+
+if sys.version_info >= (3, 6):
+    from pytest_subprocess.fake_process import FakeProcess
+else:
+    import pytest
+
+    pytest.skip(allow_module_level=True)
 
 binary_data = b"\x00\x1b\x5b\x95\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xcc\xdd\xee\xff"
 
 
-def test_device_accessor(fs):
-    # type: (FakeFilesystem) -> None
+def expect(fp, mount):
+    fp.register_subprocess(mount)  # type: ignore[arg-type]
+
+
+def test_device_accessor(fs, fp):
+    # type: (FakeFilesystem, FakeProcess) -> None
+    assert isinstance(fp, FakeProcess)
+
+    # Test xcp.mount.bindMount()
+    mount = [b"/bin/mount", b"--bind", b"src", b"mountpoint_dest"]
+    fp.register_subprocess(mount)  # type: ignore[arg-type]
+    assert xcp.mount.bindMount("src", "mountpoint_dest") is None
+
+    expect(fp, [b"/bin/mount", b"-t", b"iso9660", b"-o", b"ro", b"/dev/device", b"/tmp"])
     accessor = xcp.accessor.createAccessor("dev:///dev/device", False)
-    check_mounting_accessor(accessor, fs)
+    check_mounting_accessor(accessor, fs, fp)
 
 
-def test_nfs_accessor(fs):
-    # type: (FakeFilesystem) -> None
+def test_nfs_accessor(fs, fp):
+    # type: (FakeFilesystem, FakeProcess) -> None
+    assert isinstance(fp, FakeProcess)
+    mount = [
+        b"/bin/mount",
+        b"-t",
+        b"nfs",
+        b"-o",
+        b"tcp,timeo=100,retrans=1,retry=0",
+        b"server/path",
+        b"/tmp",
+    ]
+    expect(fp, mount)
     accessor = xcp.accessor.createAccessor("nfs://server/path", False)
-    check_mounting_accessor(accessor, fs)
+    check_mounting_accessor(accessor, fs, fp)
 
 
-def check_mounting_accessor(accessor, fs):
-    # type: (xcp.accessor.MountingAccessor, FakeFilesystem) -> None
+def check_mounting_accessor(accessor, fs, fp):
+    # type: (xcp.accessor.MountingAccessor, FakeFilesystem, FakeProcess) -> None
     """Test subclasses of MountingAccessor (with xcp.cmd.runCmd in xcp.mount mocked)"""
 
-    with patch("xcp.cmd.runCmd") as mount_runcmd:
-        mount_runcmd.return_value = (0, "", "")
+    with patch("tempfile.mkdtemp") as tempfile_mkdtemp:
+        tempfile_mkdtemp.return_value = "/tmp"
         accessor.start()
 
     assert accessor.location
@@ -48,8 +79,9 @@ def check_mounting_accessor(accessor, fs):
     if sys.version_info.major >= 3:
         fs.mount_points.pop(location)
 
-    with patch("xcp.cmd.runCmd"):
-        accessor.finish()
+    umount = [b"/bin/umount", b"-d", b"/tmp"]
+    fp.register_subprocess(umount)  # type: ignore[arg-type]
+    accessor.finish()
 
     assert not fs.exists(location)
 

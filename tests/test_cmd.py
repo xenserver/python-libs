@@ -65,10 +65,13 @@ class TestCache(unittest.TestCase):
     def test_fileContents_pciids_binstr(self):
         contents_bytes = self.c.fileContents("tests/data/pci.ids", mode="rb")
         contents_string = self.c.fileContents("tests/data/pci.ids", mode="r")
+        contents_default = self.c.fileContents("tests/data/pci.ids")
         self.assertIsInstance(contents_bytes, bytes)
         self.assertIsInstance(contents_string, str)
+        self.assertIsInstance(contents_default, str)
         self.assertEqual(contents_bytes, six.ensure_binary(contents_string))
         self.assertEqual(contents_string, six.ensure_str(contents_bytes))
+        self.assertEqual(contents_default, six.ensure_str(contents_bytes))
 
     def test_runCmd(self):
         output_data = "line1\nline2\n"

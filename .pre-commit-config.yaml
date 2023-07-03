@@ -50,6 +50,7 @@ repos:
         additional_dependencies:
         -   six
         -   mock
+        -   pandas
 -   repo: local
     hooks:
     -   id: run-pyre

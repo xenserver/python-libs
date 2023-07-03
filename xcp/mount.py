@@ -45,7 +45,7 @@ def mount(dev, mountpoint, options = None, fstype = None, label = None):
     if label:
         cmd += ['-L', "%s" % label]
     else:
-        assert(dev)
+        assert dev
         cmd.append(dev)
     cmd.append(mountpoint)
 
@@ -66,8 +66,7 @@ def umount(mountpoint, force = False):
         cmd.append('-f')
     cmd.append(mountpoint)
 
-    rc = xcp.cmd.runCmd(cmd)
-    return rc
+    return xcp.cmd.runCmd(cmd)
 
 class TempMount(object):
     def __init__(self, device, tmp_prefix, options = None, fstype = None,

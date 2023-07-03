@@ -78,12 +78,13 @@ class Version(object):
 
     @classmethod
     def arc_cmp(cls, l, r):
+        # type:(int, int) -> int
         return l - r
 
     @classmethod
     def ver_cmp(cls, l, r):
-        assert type(l) is list
-        assert type(r) is list
+        # type:(list[int], list[int]) -> int
+        assert isinstance(l, list) and isinstance(r, list)
 
         # iterate over arcs in turn, zip() returns min(len(l), len(r)) tuples
         for la, ra in zip(l, r):

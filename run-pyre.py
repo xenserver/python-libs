@@ -41,7 +41,7 @@ command = (
     "--search-path",
     ".",
     "--search-path",
-    os.path.dirname(mock.__path__[0]),  # pyright: ignore
+    os.path.dirname(mock.__file__),
     "--typeshed",
     pyre_typesched,
     "check",
@@ -51,7 +51,7 @@ print(me, "Running:", cmd)
 start_time = time.time()
 ret = os.system(cmd)
 duration = time.time() - start_time
-r = os.waitstatus_to_exitcode(ret)
+r = os.waitstatus_to_exitcode(ret)  # type: ignore[module-addr] # newer versions have it
 if r == 0:
     print(me, f"OK pyre took: {duration:.1f}s")
 else:

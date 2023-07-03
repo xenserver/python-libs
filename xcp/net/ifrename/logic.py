@@ -47,15 +47,14 @@ __version__ = "1.0.0"
 __author__  = "Andrew Cooper"
 
 import re
+
 from xcp.logger import LOG
+from xcp.net.ifrename import VALID_ETH_NAME, util
 from xcp.net.ifrename.macpci import MACPCI
 
 VALID_CUR_STATE_KNAME = re.compile(r"^(?:eth[\d]+|side-[\d]+-eth[\d]+)$")
-VALID_ETH_NAME = re.compile(r"^eth([\d])+$")
 VALID_IBFT_NAME = re.compile(r"^ibft([\d])+$")
 
-# util needs to import VALID_ETH_NAME
-from xcp.net.ifrename import util
 
 class StaticRuleError(RuntimeError):
     """Error with static rules"""
@@ -241,14 +240,13 @@ def rename_logic( static_rules,
                 # has moved and this current nic is new.
                 LOG.info("nic '%s' displaced older nic '%s' which is still "
                          "present.  Considering this nic new" % (nic, lastnic))
-                continue
             else:
                 # No - the displaced nic is no longer present so consider it
                 # replaced
                 LOG.info("nic '%s' has replaced older nic '%s'"
                          % (nic, lastnic))
                 __rename_nic(nic, lastnic.tname, transactions, cur_state)
-                continue
+            continue
 
         # have we ever seen this nic before?
         lastnic = util.get_nic_with_mac(old_state, nic.mac)
@@ -261,11 +259,10 @@ def rename_logic( static_rules,
                 LOG.info("old nic '%s' returned and its name is free"
                          % (nic,))
                 __rename_nic(nic, lastnic.tname, transactions, cur_state)
-                continue
             else:
                 LOG.info("old nic '%s' returned but its name is taken. "
                          "Treating it as new" % (nic,))
-                continue
+            continue
 
         LOG.info("nic '%s' seems brand new.  Defering until later for renaming"
                  % (nic,))

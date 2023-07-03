@@ -52,7 +52,7 @@ jobs:
       - name: Run of tox on ubuntu-latest
         if: ${{ startsWith(matrix.python-version, '3.') && matrix.python-version != 3.6 }}
         run: |
-          pip install 'virtualenv<20.22' 'tox>=4.5.1' tox-gh-actions
+          pip install 'virtualenv<20.22' 'tox==4.5.1' tox-gh-actions
           tox --workdir .github/workflows/.tox --recreate
 
       # tox >= 4.0.0 is needed for using optional-dependencies from pyproject.toml, which is
@@ -62,7 +62,9 @@ jobs:
         run: |
           set -xv;curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
           python3.10 get-pip.py
-          python3.10 -m pip install 'virtualenv<20.22' 'tox>=4.5.1' tox-gh-actions
+          # Use tox==4.5.1: tox>=4 is needed for reading the extras from pyproject.toml
+          # while tox>=4.5.2 depends on virutalenv>=20.23, which breaks Python 2.7:
+          python3.10 -m pip install 'virtualenv<20.22' 'tox==4.5.1' tox-gh-actions
 
       - name: Run tox4 with Python 3.10(to support optional-dependencies from pyproject.toml) for Python3.6
         if: ${{ matrix.python-version == 3.6 }}

@@ -30,7 +30,7 @@ beginning with a # character.
 
 from __future__ import unicode_literals
 
-from ...compat import open_with_codec_handling
+from os.path import exists as pathexists
 
 __version__ = "1.0.0"
 __author__  = "Andrew Cooper"
@@ -45,10 +45,10 @@ except ImportError:
         pass
 
 
+from xcp.compat import open_with_codec_handling
 from xcp.logger import LOG
 from xcp.net.ifrename.macpci import MACPCI
 from xcp.pci import pci_sbdfi_to_nic
-from os.path import exists as pathexists
 
 SAVE_HEADER = (
     "# Automatically adjusted file.  Do not edit unless you are "
@@ -188,7 +188,7 @@ class DynamicRules(object):
                                 "the %s dynamic rule" % (value, target))
                 continue
 
-            elif method == "ppn":
+            if method == "ppn":
 
                 if ppn_quirks:
                     LOG.info("Not considering formula for '%s' due to ppn "
@@ -209,7 +209,7 @@ class DynamicRules(object):
                                 "%s dynamic rule" % (value, target))
                 continue
 
-            elif method == "pci":
+            if method == "pci":
                 try:
                     nic = pci_sbdfi_to_nic(value, state)
                     rule = MACPCI(nic.mac, nic.pci, tname=target)
@@ -220,7 +220,7 @@ class DynamicRules(object):
 
                 continue
 
-            elif method == "label":
+            if method == "label":
 
                 for nic in state:
                     if nic.label == value:
@@ -236,8 +236,7 @@ class DynamicRules(object):
                                 "the %s dynamic rule" % (value, target))
                 continue
 
-            else:
-                LOG.critical("Unknown dynamic rule method %s" % method)
+            LOG.critical("Unknown dynamic rule method %s" % method)
 
 
     def write(self, header = True):

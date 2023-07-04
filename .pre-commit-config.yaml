@@ -48,6 +48,7 @@ repos:
             ]
         log_file: ".git/pre-commit-pylint.log"
         additional_dependencies:
+        -   pyfakefs
         -   six
         -   mock
         -   pandas

@@ -35,14 +35,6 @@ class TestAccessor(unittest.TestCase):
         self.assertEqual(a.lastError, 404)
         a.finish()
 
-    def test_http_accessor_access(self):
-        """Test HTTPAccessor.access()"""
-
-        # Temporary: To be obsoleted by a dedicated test case using a pytest-native
-        # httpd which will cover code paths like HTTP Basic Auth in an upcoming commit:
-        a = xcp.accessor.createAccessor("https://updates.xcp-ng.org/netinstall/8.2.1", True)
-        self.check_repo_access(a)
-
     def test_filesystem_accessor_access(self):
         """Test FilesystemAccessor.access()"""
 

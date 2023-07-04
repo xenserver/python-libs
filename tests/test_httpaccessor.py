@@ -2,37 +2,19 @@
 # -*- coding: utf-8 -*-
 import base64
 import sys
-import unittest
 from contextlib import contextmanager
-
-import pytest
+from typing import IO, Generator, Tuple
 
 from xcp.accessor import HTTPAccessor, createAccessor
 
-# Skip the tests in this module if Python <= 3.6 (pytest_httpserver requires Python >= 3.7):
-try:
-    from http.client import HTTPResponse
+from .httpserver_testcase import ErrorHandler, HTTPServerTestCase, Response
 
-    from pytest_httpserver import HTTPServer
-    from werkzeug.wrappers import Response
-except ImportError:
-    pytest.skip(allow_module_level=True)
-
+HTTPAccessorGenerator = Generator[Tuple[HTTPAccessor, IO[bytes]], None, None]
 
 UTF8TEXT_LITERAL = "✋Hello accessor from the 🗺, download and verify me! ✅"
 
-class HTTPAccessorTestCase(unittest.TestCase):
+class HTTPAccessorTestCase(HTTPServerTestCase):
     document_root = "tests/"
-    httpserver = HTTPServer()  # pyright: ignore[reportUnboundVariable]
-
-    @classmethod
-    def setUpClass(cls):
-        cls.httpserver.start()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.httpserver.check_assertions()
-        cls.httpserver.stop()
 
     def test_404(self):
         self.httpserver.expect_request("/404").respond_with_data("", status=404)
@@ -41,25 +23,11 @@ class HTTPAccessorTestCase(unittest.TestCase):
         self.httpserver.check_assertions()
         self.assertEqual(httpaccessor.lastError, 404)
 
-    @classmethod
-    def serve_a_get_request(cls, testdata_repo_subdir, read_file, error_handler):
-        """Expect a GET request and handle it using the local pytest_httpserver.HTTPServer"""
-
-        def handle_get(request):
-            """Handle a GET request for the local pytest_httpserver.HTTPServer fixture"""
-            if error_handler:
-                response = error_handler(request)
-                if response:
-                    return response
-            with open(testdata_repo_subdir + read_file, "rb") as local_testdata_file:
-                return Response(local_testdata_file.read())
-
-        cls.httpserver.expect_request("/" + read_file).respond_with_handler(handle_get)
-
     @contextmanager
     def http_get_request_data(self, url, read_file, error_handler):
+        # type:(str, str, ErrorHandler) -> HTTPAccessorGenerator
         """Serve a GET request, assert that the accessor returns the content of the GET Request"""
-        self.serve_a_get_request(self.document_root, read_file, error_handler)
+        self.serve_file(self.document_root, read_file, error_handler)
 
         httpaccessor = createAccessor(url, True)
         self.assertEqual(type(httpaccessor), HTTPAccessor)
@@ -68,10 +36,11 @@ class HTTPAccessorTestCase(unittest.TestCase):
             yield httpaccessor, ref
 
     def assert_http_get_request_data(self, url, read_file, error_handler):
+        # type:(str, str, ErrorHandler) -> HTTPAccessor
         with self.http_get_request_data(url, read_file, error_handler) as (httpaccessor, ref):
             http_accessor_filehandle = httpaccessor.openAddress(read_file)
             if sys.version_info >= (3, 0):
-                assert isinstance(http_accessor_filehandle, HTTPResponse)
+                assert isinstance(http_accessor_filehandle, self.HTTPResponse)
 
             self.assertEqual(http_accessor_filehandle.read(), ref.read())
             self.httpserver.check_assertions()
@@ -81,7 +50,9 @@ class HTTPAccessorTestCase(unittest.TestCase):
 
     @staticmethod
     def httpserver_basic_auth_handler(login):
+        # type(str) -> Callable[[Request], Response | None]
         def basic_auth_handler_func(request):
+            # type(Request) -> Response | None
             key = base64.b64encode(login.encode()).decode()
             authorization = request.headers.get("Authorization", None)
             # When no valid Authorization header is received, tell the client the ream for it:

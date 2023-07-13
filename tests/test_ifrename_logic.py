@@ -1,4 +1,5 @@
 # pyright: reportGeneralTypeIssues=false
+# pytype: disable=attribute-error
 from __future__ import print_function
 from __future__ import unicode_literals
 import logging

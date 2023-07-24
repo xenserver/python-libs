@@ -70,6 +70,7 @@ mypy = [
     "types-mock",
     "types-simplejson",
     "types-six",
+    "types-toml",
 ]
 pyre = [
     "pyre-check",

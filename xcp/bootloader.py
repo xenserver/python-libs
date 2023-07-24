@@ -30,7 +30,7 @@ import tempfile
 import copy
 from typing import cast
 
-import branding
+import branding  # pytype: disable=import-error
 
 import xcp.cmd
 

@@ -57,7 +57,9 @@ def openLog(lfile, level=logging.INFO):
         if isinstance(lfile, str):
             h = open_with_codec_handling(lfile, "a")
             if h.isatty():
+                # pytype: disable=wrong-arg-types   # False positive in pytype-2023.07.21
                 handler = logging.StreamHandler(h)  # type: LoggingStreamHandler
+                # pytype: enable=wrong-arg-types
             else:
                 h.close()
                 handler = logging.handlers.RotatingFileHandler(lfile,

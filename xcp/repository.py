@@ -32,7 +32,7 @@ import six
 from xcp import version, xmlunwrap
 
 if TYPE_CHECKING:
-    from xml.dom.minidom import Element
+    from xml.dom.minidom import Element  # pytype: disable=pyi-error
 
 class Package(object):          # pylint: disable=too-few-public-methods
     def __init__(self, *args):
@@ -299,7 +299,7 @@ class Repository(BaseRepository):
 
         # build xml doc object
         try:
-            xmldoc = xml.dom.minidom.parseString(repofile_contents)
+            xmldoc = xml.dom.minidom.parseString(repofile_contents)  # pytype: disable=pyi-error
         except Exception as e:
             six.raise_from(RepoFormatError("%s not in XML" % self.REPOSITORY_FILENAME), e)
 
@@ -342,7 +342,7 @@ class Repository(BaseRepository):
 
         # build xml doc object
         try:
-            xmldoc = xml.dom.minidom.parseString(pkgfile_contents)
+            xmldoc = xml.dom.minidom.parseString(pkgfile_contents)  # pytype: disable=pyi-error
         except Exception as e:
             six.raise_from(RepoFormatError("%s not in XML" % self.PKGDATA_FILENAME), e)
 

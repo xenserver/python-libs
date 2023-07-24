@@ -202,3 +202,12 @@ reportPrivateUsage = true
 reportPropertyTypeMismatch = true
 reportUnnecessaryTypeIgnoreComment = false
 stubPath = "stubs"
+
+[tool.pytype]
+inputs = ["xcp", "tests", "./*.py"]
+keepgoing = true
+platform = "linux"
+python_version = "3.10"
+disable = ["ignored-type-comment"]
+overriding_parameter_count_checks = true
+use_enum_overlay = true

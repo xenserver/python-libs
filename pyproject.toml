@@ -101,6 +101,9 @@ repository = "https://github.com/xenserver/python-libs/"
 requires = ["setuptools>=42", "setuptools_scm[toml]"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+# This section is needed (can be empty) for setuptools_scm to be used by "pip install ."
+
 [tool.setuptools]
 packages = ["xcp", "xcp.net", "xcp.net.ifrename"]
 

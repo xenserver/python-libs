@@ -70,6 +70,7 @@ mypy = [
     "types-mock",
     "types-simplejson",
     "types-six",
+    "types-toml",
 ]
 pyre = [
     "pyre-check",
@@ -99,6 +100,9 @@ repository = "https://github.com/xenserver/python-libs/"
 [build-system]
 requires = ["setuptools>=42", "setuptools_scm[toml]"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+# This section is needed (can be empty) for setuptools_scm to be used by "pip install ."
 
 [tool.setuptools]
 packages = ["xcp", "xcp.net", "xcp.net.ifrename"]
@@ -202,3 +206,12 @@ reportPrivateUsage = true
 reportPropertyTypeMismatch = true
 reportUnnecessaryTypeIgnoreComment = false
 stubPath = "stubs"
+
+[tool.pytype]
+inputs = ["xcp", "tests", "./*.py"]
+keepgoing = true
+platform = "linux"
+python_version = "3.10"
+disable = ["ignored-type-comment"]
+overriding_parameter_count_checks = true
+use_enum_overlay = true

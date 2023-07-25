@@ -34,6 +34,7 @@ from typing import List, TextIO
 
 from pylint.lint import Run  # type: ignore[import]
 from pylint.reporters import JSONReporter  # type: ignore[import]
+from toml import load
 
 import pandas as pd  # type: ignore[import]
 
@@ -60,11 +61,10 @@ def cleanup_results_dict(r, sym):
         dotpos = r["obj"].rindex(".") + 1
     except ValueError:
         dotpos = 0
-    r["obj"] = r["obj"][dotpos:][:16]
+    r["obj"] = r["obj"][dotpos:].split("test_")[-1][:16]
 
 
 suppress_msg = ["Unused variable 'e'"]  # type: list[str]
-suppress_sym = ["fixme", "wrong-import-order", "wrong-import-position"]  # type: list[str]
 error_syms = [
     "no-value-for-parameter",
     "unexpected-keyword-arg",
@@ -116,6 +116,9 @@ def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
     pylint_overview = []
     pylint_results = []
     pylint_paths = []
+    config = load("pyproject.toml")
+    pylint = config["tool"].get("github_pylint")
+    suppress_sym = pylint.get("suppressed_syms", []) if pylint else []
     check_patterns = [p + "/**/*.py" for p in check_dirs]
     list(map(lambda x: pylint_paths.extend(glob(x, recursive=True)), check_patterns))
     score_sum = 0.0
@@ -183,7 +186,7 @@ def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
 
         pylint_overview.append(
             {
-                "filepath": f"[`{path[4:]}`]({branch_url}/{path})",
+                "filepath": f"[`{path.split('/')[-1]}`]({branch_url}/{path})",
                 "smells": smells_count,
                 "symbols": " ".join(message_ids.keys()),
                 "score": float(round(score, 1)),  # There are some ints among the floats

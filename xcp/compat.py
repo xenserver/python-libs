@@ -2,6 +2,7 @@
 # pyright: strict
 # pyright: reportTypeCommentUsage=false
 # pyright: reportUnknownParameterType=false
+# pytype: disable=bad-return-type,ignored-type-comment,invalid-function-type-comment
 # See README-Unicode.md for Details
 import sys
 from typing import TYPE_CHECKING

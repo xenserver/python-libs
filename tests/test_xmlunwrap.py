@@ -10,7 +10,8 @@ class TestXmlUnwrap(unittest.TestCase):
         <fred>text1</fred>
         <fred>text2</fred>
         </installation>"""
-        xmldoc = xml.dom.minidom.parseString(a_text)
+        xmldoc = xml.dom.minidom.parseString(a_text)  # pytype: disable=pyi-error
+
         self.top_el = xmldoc.documentElement
 
     def test(self):

@@ -17,6 +17,12 @@ repos:
         entry: Binaries are not allowed in this repository, generate data if needed
         types: [binary]
         language: fail
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+    -   id: no-commit-to-branch
+        args: [--branch, master]
+        always_run: true
 -   repo: https://github.com/akaihola/darker
     rev: 1.7.1
     hooks:
@@ -68,7 +74,6 @@ repos:
         verbose: true
         language: python
         language_version: python3.8
-        args: ["--config=.github/workflows/pytype.cfg"]
         require_serial: true
         additional_dependencies: [pytype]
     -   id: pytest
@@ -101,6 +106,3 @@ repos:
     -   id: mixed-line-ending
         args: ['--fix=lf']
         description: Replace line endings with LF
-    -   id: no-commit-to-branch
-        args: [--branch, master]
-        always_run: true

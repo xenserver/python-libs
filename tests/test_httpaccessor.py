@@ -5,6 +5,8 @@ import sys
 from contextlib import contextmanager
 from typing import IO, Generator, Tuple
 
+from six.moves import urllib  # pyright: ignore
+
 from xcp.accessor import HTTPAccessor, createAccessor
 
 from .httpserver_testcase import ErrorHandler, HTTPServerTestCase, Response
@@ -12,6 +14,7 @@ from .httpserver_testcase import ErrorHandler, HTTPServerTestCase, Response
 HTTPAccessorGenerator = Generator[Tuple[HTTPAccessor, IO[bytes]], None, None]
 
 UTF8TEXT_LITERAL = "✋Hello accessor from the 🗺, download and verify me! ✅"
+
 
 class HTTPAccessorTestCase(HTTPServerTestCase):
     document_root = "tests/"
@@ -53,11 +56,12 @@ class HTTPAccessorTestCase(HTTPServerTestCase):
         # type(str) -> Callable[[Request], Response | None]
         def basic_auth_handler_func(request):
             # type(Request) -> Response | None
-            key = base64.b64encode(login.encode()).decode()
+            key = base64.b64encode(urllib.parse.unquote(login).encode()).decode()
             authorization = request.headers.get("Authorization", None)
-            # When no valid Authorization header is received, tell the client the ream for it:
+            # If the client didn't send the "Authorization: Basic" header, tell it to use Basic Auth
             if not authorization or authorization != "Basic " + key:
-                basic_realm = {"WWW-Authenticate": 'Basic realm="BasicAuthTestRealm"'}
+                # Hint: The realm is an ID for the pages for which the same login is valid:
+                basic_realm = {"WWW-Authenticate": 'Basic realm="Realm"'}
                 return Response("not authorized", status=401, headers=basic_realm)
             return None
 
@@ -71,7 +75,7 @@ class HTTPAccessorTestCase(HTTPServerTestCase):
         self.assertTrue(access.access("data/repo/.treeinfo"))
 
     def test_basic_auth(self):
-        login = "user:passwd"
+        login = "Tan%u0131m:%E4%B8%8A%E6%B5%B7%2B%E4%B8%AD%E5%9C%8B"  # URL-encoded Unicode
 
         # Insert the login into the URL for the test server: http://user:passwd@localhost/path
         url = self.httpserver.url_for("").split("//")

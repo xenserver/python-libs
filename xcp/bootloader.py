@@ -586,11 +586,7 @@ class Bootloader(object):
                 if text:
                     print("\n".join(text), file=fh)
 
-            extra = ' '
-            try:
-                extra = m.extra
-            except AttributeError:
-                pass
+            extra = m.extra if m.extra else ' '
             print("menuentry '%s'%s{" % (m.title, extra), file=fh)
 
             try:

@@ -212,6 +212,7 @@ inputs = ["xcp", "tests", "./*.py"]
 keepgoing = true
 platform = "linux"
 python_version = "3.10"
+pythonpath = ".:stubs"
 disable = ["ignored-type-comment"]
 overriding_parameter_count_checks = true
 use_enum_overlay = true

@@ -21,18 +21,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import print_function
-from __future__ import division
+from __future__ import division, print_function
+
+import copy
 import os
 import os.path
 import re
 import tempfile
-import copy
 from typing import cast
 
-import xcp.branding as branding  # pytype: disable=import-error
-
 import xcp.cmd
+
+# pyre-ignore-all-errors[21]
+try:  # xenserver-release.rpm puts a branding.py into our xcp installation directory:
+    from xcp import branding  # type:ignore[attr-defined] # pytype: disable=import-error
+except ImportError:  # For CI, use stubs/branding.py (./stubs is added to pythonpath)
+    import branding
 
 from .compat import open_textfile
 

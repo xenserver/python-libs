@@ -21,10 +21,10 @@ Installation of additional python versions for testing different versions:
 - If `deadsnakes/ppa` does not work, e.g. for Python 3.6, `conda` or `pyenv` can be used.
   For instructions, see https://realpython.com/intro-to-pyenv:
   ```yaml
-  sudo apt install -y build-essential xz-utils zlib1g-dev
+  sudo apt install -y build-essential xz-utils zlib1g-dev \
                       lib{bz2,ffi,lzma,readline,ssl,sqlite3}-dev
   curl https://pyenv.run | bash  # add displayed commands to .bashrc
-  pyenv install 3.{6,8,11} && pyenv local 3.{6,8,11} # builds them
+  ~/.pyenv/bin/pyenv install 3.{6,8,11} && ~/.pyenv/bin/pyenv local 3.{6,8,11} # builds them
   ```
 - For testing on newer Ubuntu which has `python2-dev`, but not `pip2`, install `pip2` this way:
   ```yml
@@ -79,8 +79,8 @@ Using pip-tools, you can extract the requirements and extras from `pyptoject.tom
 ```bash
 PYTHON=python3.10
 EXTRAS=.,test,mypy,pyre,pytype,tox
-PFLAGS="--no-warn-conflicts --resolver=backtracking"
-$PYTHON -m pip install pip-tools
+PFLAGS="--no-warn-conflicts"
+$PYTHON -m pip install pip-tools==7.3.0
 $PYTHON -m piptools compile --extra=$EXTRAS -o - pyproject.toml |
     $PYTHON -m pip install -r /dev/stdin $PFLAGS
 ```

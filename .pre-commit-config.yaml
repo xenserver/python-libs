@@ -1,11 +1,40 @@
-# Installation as pre-commit hook:
-# $ pip install pre-commit
+#
+# This is the configuration file of the pre-commit framework for this repository:
+# https://pypi.org/project/pre-commit
+#
+# pre-commit runs in the GitHub Workflow of this project on each push and PR.
+# Additionally, you can run it locally for faster fixing of issues using
+# $ pip3 install pre-commit -r requirements-dev.txt
+#
+# On the initial run, pre-commit downloads its checkers, subsequent runs are fast:
+#
+# $ pre-commit run    # automatically checks which checks are needed.
+# $ pre-commit run -a # runs all fixes and checks, even when not needed
+#
+# When this works, you can enable it as the pre-commit hook for this git clone:
 # $ pre-commit install
+# $ pre-commit install --hook-type pre-push
+#
 # Global installation as a git-template (for new clones):
 # $ git config --global init.templateDir ~/.git-template
 # $ pre-commit init-templatedir ~/.git-template
-# See: https://pre-commit.com/#automatically-enabling-pre-commit-on-repositories
-# All hooks: https://pre-commit.com/hooks.html
+#
+# You can skip checks if you commit very often you don't want them to run, e.g:
+# export SKIP=mypy,pylint;git commit -m "quick save" (or for --amend)
+#
+# For more customisation, see https://pre-commit.com/#temporarily-disabling-hooks
+# and https://pre-commit.com/#confining-hooks-to-run-at-certain-stages (e.g push)
+#
+# After this, the pre-commit fixes and checks run when you commit an update.
+#
+# Install pre-commit as a global pre-commit hook(for all repos with a config):
+# $ git config --global init.templateDir ~/.git-template
+# $ pre-commit init-templatedir ~/.git-template
+#
+# Detailed Usage information for all possible situations:
+# https://github.com/pre-commit/pre-commit.com/blob/main/sections/advanced.md
+# Cheat sheet on the config file keywords:
+# https://github.com/dexpota/cheatsheets/blob/master/pre-commit
 exclude: "^tests/data"
 fail_fast: true
 default_stages: [commit]
@@ -40,6 +69,7 @@ repos:
         pass_filenames: true
     -   id: shellcheck
     -   id: mdformat-check
+        exclude: README-Unicode.md
 -   repo: https://github.com/pycqa/pylint
     rev: v2.17.4
     hooks:
@@ -50,7 +80,7 @@ repos:
                 --rcfile=pylintrc,
                 --load-plugins=pylint.extensions.eq_without_hash,
                 --ignore-imports=yes,
-                "--disable=duplicate-code,superfluous-parens,line-too-long",
+                "--disable=duplicate-code,line-too-long",
             ]
         log_file: ".git/pre-commit-pylint.log"
         additional_dependencies:
@@ -58,6 +88,8 @@ repos:
         -   six
         -   mock
         -   pandas
+        -   pytest_forked
+        -   toml
 -   repo: local
     hooks:
     -   id: run-pyre

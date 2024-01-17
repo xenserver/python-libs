@@ -131,7 +131,7 @@ def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
         results = Run(
             [path] + pylint_options,
             reporter=JSONReporter(reporter_buffer),
-            do_exit=False,
+            exit=False,
         )
         score = results.linter.stats.global_note
         file_results = json.loads(reporter_buffer.getvalue())

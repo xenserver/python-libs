@@ -23,15 +23,15 @@
 
 """accessor - provide common interface to access methods"""
 
+import errno
 # pyre-ignore-all-errors[6,16]
 import ftplib
 import io
 import os
 import sys
 import tempfile
-import errno
 from contextlib import contextmanager
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Union, cast
 
 from six.moves import urllib  # pyright: ignore
 
@@ -39,7 +39,8 @@ from xcp import logger, mount
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-    from typing import IO
+    from typing import IO, List, Tuple
+
     from typing_extensions import Literal
 
 # maps errno codes to HTTP error codes
@@ -393,15 +394,60 @@ class HTTPAccessor(Accessor):
     def __repr__(self):
         return "<HTTPAccessor: %s>" % self.baseAddress
 
-SUPPORTED_ACCESSORS = {'nfs': NFSAccessor,
-                       'http': HTTPAccessor,
-                       'https': HTTPAccessor,
-                       'ftp': FTPAccessor,
-                       'file': FileAccessor,
-                       'dev': DeviceAccessor,
-                      }
+
+# Tuple passed in tests to isinstanc(val, ...Types) to check types:
+MountingAccessorTypes = (DeviceAccessor, NFSAccessor)
+"""Tuple for type checking in unit tests testing subclasses of MountingAccessor"""
+
+# Tuple passed in tests to isinstanc(val, ...Types) to check types:
+LocalTypes = (DeviceAccessor, NFSAccessor, FileAccessor)
+
+
+Mount = Union[DeviceAccessor, NFSAccessor]
+"""Type alias for static typing or unit tests testing subclasses of MountingAccessor"""
+
+AnyAccessor = Union[
+    HTTPAccessor,
+    FTPAccessor,
+    FileAccessor,
+    Mount,
+]
+"""Type alias for static typing the Accessor object returned by createAccessor()"""
+
+SUPPORTED_ACCESSORS = {
+    "nfs": NFSAccessor,
+    "http": HTTPAccessor,
+    "https": HTTPAccessor,
+    "ftp": FTPAccessor,
+    "file": FileAccessor,
+    "dev": DeviceAccessor,
+}  # type: dict[str, type[AnyAccessor]]
+"""Dict of supported accessors. The key is the URL scheme"""
 
 def createAccessor(baseAddress, *args):
+    # type: (str, bool | Tuple[bool, List[str]]) -> Literal[False] | AnyAccessor
+    """
+    Return instance of the appropriate Accessor subclass based on the baseAddress.
+
+    :param baseAddress (str): The base address for the accessor.
+    :param args (tuple): Additional argument(s) to be passed to the accessor constructor
+    :returns Accessor (object | Literal[False]): Accessor object or Literal[False]
+    :raises AssertionError: If the scheme of the baseAddress is not supported.
+
+    Also raises AssertionError when baseAddress is file:///filename/
+    but the final / is omitted. The final terminating / is compulsory.
+
+    For all Accessors, the 1st arg after the address is type bool for ro (readonly flag)
+    The DeviceAccessor accepts a 3rd argument: a List[] of filesystem names
+
+    Examples:
+        accessor = createAccessor("http://example.com", True)
+        accessor = createAccessor("dev://example.com", True, ['iso9660', 'ext3'])
+        if not accessor:
+            fatal()
+        else:
+            accessor.read()
+    """
     url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
 
     assert url_parts.scheme in SUPPORTED_ACCESSORS

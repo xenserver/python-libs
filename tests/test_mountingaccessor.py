@@ -1,7 +1,7 @@
 """pytest tests testing subclasses of xcp.accessor.MountingAccessor using pyfakefs"""
 import sys
 from io import BytesIO
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from mock import patch
 from pyfakefs.fake_filesystem import FakeFileOpen, FakeFilesystem
@@ -13,6 +13,9 @@ from .test_httpaccessor import UTF8TEXT_LITERAL
 
 if sys.version_info >= (3, 6):
     from pytest_subprocess.fake_process import FakeProcess
+
+    if TYPE_CHECKING:
+        from typing_extensions import Literal
 else:
     import pytest
 
@@ -36,6 +39,8 @@ def test_device_accessor(fs, fp):
 
     expect(fp, [b"/bin/mount", b"-t", b"iso9660", b"-o", b"ro", b"/dev/device", b"/tmp"])
     accessor = xcp.accessor.createAccessor("dev:///dev/device", False)
+
+    assert isinstance(accessor, xcp.accessor.MountingAccessorTypes)
     check_mounting_accessor(accessor, fs, fp)
 
 
@@ -53,13 +58,15 @@ def test_nfs_accessor(fs, fp):
     ]
     expect(fp, mount)
     accessor = xcp.accessor.createAccessor("nfs://server/path", False)
+    assert isinstance(accessor, xcp.accessor.NFSAccessor)
     check_mounting_accessor(accessor, fs, fp)
 
 
 def check_mounting_accessor(accessor, fs, fp):
-    # type: (xcp.accessor.MountingAccessor, FakeFilesystem, FakeProcess) -> None
+    # type: (Literal[False] | xcp.accessor.Mount, FakeFilesystem, FakeProcess) -> None
     """Test subclasses of MountingAccessor (with xcp.cmd.runCmd in xcp.mount mocked)"""
 
+    assert isinstance(accessor, xcp.accessor.MountingAccessorTypes)
     with patch("tempfile.mkdtemp") as tempfile_mkdtemp:
         tempfile_mkdtemp.return_value = "/tmp"
         accessor.start()
@@ -89,9 +96,10 @@ def check_mounting_accessor(accessor, fs, fp):
 
 
 def check_binary_read(accessor, location, fs):
-    # type: (xcp.accessor.MountingAccessor, str, FakeFilesystem) -> bool
-    """Test the openAddress() method of subclasses of xcp.accessor.MountingAccessor"""
+    # type: (Literal[False] | xcp.accessor.AnyAccessor, str, FakeFilesystem) -> bool
+    """Test the openAddress() method of different types of local Accessor classes"""
 
+    assert isinstance(accessor, xcp.accessor.LocalTypes)
     name = "binary_file"
     path = location + "/" + name
 
@@ -109,9 +117,10 @@ def check_binary_read(accessor, location, fs):
 
 
 def check_binary_write(accessor, location, fs):
-    # type: (xcp.accessor.MountingAccessor, str, FakeFilesystem) -> bool
-    """Test the writeFile() method of subclasses of xcp.accessor.MountingAccessor"""
+    # type: (Literal[False] | xcp.accessor.AnyAccessor, str, FakeFilesystem) -> bool
+    """Test the writeFile() method of different types of local Accessor classes"""
 
+    assert isinstance(accessor, xcp.accessor.LocalTypes)
     name = "binary_file_written_by_accessor"
     accessor.writeFile(BytesIO(binary_data), name)
 
@@ -122,8 +131,10 @@ def check_binary_write(accessor, location, fs):
 
 
 def open_text(accessor, location, fs, text):
-    # type: (xcp.accessor.MountingAccessor, str, FakeFilesystem, str) -> str
+    # type: (Literal[False] | xcp.accessor.AnyAccessor, str, FakeFilesystem, str) -> str
     """Test the openText() method of subclasses of xcp.accessor.MountingAccessor"""
+
+    assert isinstance(accessor, xcp.accessor.MountingAccessorTypes)
     name = "textfile"
     path = location + "/" + name
     assert fs.create_file(path, contents=text)

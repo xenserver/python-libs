@@ -234,6 +234,7 @@ class PCIIds(object):
         for f in ['/usr/share/hwdata/pci.ids']:
             if os.path.exists(f):
                 return cls(f)
+        # pylint: disable-next=broad-exception-raised
         raise Exception('Failed to open PCI database')
 
     def findVendor(self, vendor):

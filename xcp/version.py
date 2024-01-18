@@ -102,7 +102,7 @@ class Version(object):
     # is implemented:
     # https://docs.python.org/3/reference/datamodel.html#object.__hash__
     # Example:https://github.com/swagger-api/swagger-codegen/issues/6475
-    # Python2 pylint --py3k warns about it, and Pylint3 with out pylintrc
+    # Python2 pylint --py3k warns about it, and Pylint3 without .pylintrc
     # now too:
     def __hash__(self):  # type:() -> int
         return hash(str(self.ver))

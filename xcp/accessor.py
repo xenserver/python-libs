@@ -128,7 +128,7 @@ class FilesystemAccessor(Accessor):
             else:
                 self.lastError = mapError(e.errno)
             return False
-        except Exception as e:
+        except Exception:
             self.lastError = 500
             return False
         return filehandle
@@ -245,7 +245,7 @@ class FileAccessor(Accessor):
             else:
                 self.lastError = mapError(e.errno)
             return False
-        except Exception as e:
+        except Exception:
             self.lastError = 500
             return False
         return reader
@@ -332,7 +332,7 @@ class FTPAccessor(Accessor):
             else:
                 self.lastError = mapError(e.errno)
             return False
-        except Exception as e:
+        except Exception:
             self.lastError = 500
             return False
 

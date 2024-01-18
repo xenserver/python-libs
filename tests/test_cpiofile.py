@@ -30,9 +30,10 @@ def test_cpiofile_modes(fs):
     assert exc_info.type == TypeError
     if sys.version_info < (3, 0):
         # Test Python2 pattern from host-upgrade-plugin:/etc/xapi.d/plugins/prepare_host_upgrade.py
-        import StringIO
+        # Import the Python2-only StringIO.StringIO module, imported as Py2StringIO:
+        from StringIO import Py2StringIO  # pylint: disable=import-outside-toplevel
 
-        stringio = StringIO.StringIO()
+        stringio = Py2StringIO()
         archive = CpioFile.open(fileobj=stringio, mode="w|gz")  # type: ignore[arg-type]
         archive.hardlinks = False
         archive.close()

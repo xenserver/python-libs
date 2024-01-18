@@ -37,7 +37,7 @@ You may want to install `pytype` in your user environment to run it directly wit
 # On Python != 3.8, pytype can't import xml.dom.minidom, use 3.8:
 python3.8 -m pip install pytype
 python -m pip install tabulate
-./run-pytype.py
+./pytype_runner.py
 ```
 
 ## Installation of dependencies using `pip`

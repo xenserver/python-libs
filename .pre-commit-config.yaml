@@ -77,7 +77,6 @@ repos:
         args:
             [
                 -sn, # Don't display the score
-                --rcfile=pylintrc,
                 --load-plugins=pylint.extensions.eq_without_hash,
                 --ignore-imports=yes,
                 "--disable=duplicate-code,line-too-long",
@@ -94,7 +93,7 @@ repos:
     hooks:
     -   id: run-pyre
         name: run-pyre
-        entry: python run-pyre.py
+        entry: python pyre_runner.py
         types: [python]
         language: python
         log_file: ".git/pre-commit-pyre.log"

@@ -28,7 +28,7 @@ $(MY_OUTPUT_DIR)/python-libs.inc: $(MY_OUTPUT_DIR)/.dirstamp Makefile
 
 .PHONY: pylint
 pylint:
-	run-pylint.sh $(PYTHON_LIBS_SOURCES)
+	pylint_runner.sh $(PYTHON_LIBS_SOURCES)
 
 .PHONY: sources
 sources: $(RPM_SRPMSDIR)/$(PYTHON_LIB_SRPM)

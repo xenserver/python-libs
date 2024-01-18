@@ -32,11 +32,10 @@ from glob import glob
 from io import StringIO
 from typing import List, TextIO
 
+import pandas as pd  # type: ignore[import]
 from pylint.lint import Run  # type: ignore[import]
 from pylint.reporters import JSONReporter  # type: ignore[import]
 from toml import load
-
-import pandas as pd  # type: ignore[import]
 
 
 def del_dict_keys(r, *args):
@@ -108,11 +107,11 @@ notice_syms = [
 # https://pylint.readthedocs.io/en/latest/user_guide/messages/warning/eq-without-hash.html
 #
 pylint_options: List[str] = [
-    "--load-plugins", "pylint.extensions.eq_without_hash",
+    "--load-plugins", "pylint.extensions.eq_without_hash"
 ]
 
-def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
 
+def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
     pylint_overview = []
     pylint_results = []
     pylint_paths = []
@@ -125,7 +124,7 @@ def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
     smells_total = 0
     for path in pylint_paths:
         filename = path.rsplit("/", maxsplit=1)[-1]
-        if filename in ["__init__.py", "pylintrc"]:
+        if filename in ["__init__.py", ".pylintrc"]:
             continue
         reporter_buffer = StringIO()
         results = Run(
@@ -169,11 +168,11 @@ def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
 
             message_ids[sym] = ""  # Populate a dict of the pylint message symbols seen in this file
             # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-a-notice-message
-            endline = r['endLine']
+            endline = r["endLine"]
             end = f",endLine={endline}" if endline and endline != lineno else ""
             print(
                 f"::{cls} file={path},line={lineno}{end},"
-                f"title=pylint {msg_id}: {sym}::{msg}"
+                f"title=pylint {msg_id}: {sym}::{msg}",
             )
             r["path"] = f"[{linktext}]({branch_url}/{path}#L{lineno})"
             cleanup_results_dict(r, sym)

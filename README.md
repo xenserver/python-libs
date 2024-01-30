@@ -27,13 +27,13 @@ The Continuous Integration Tests feature:
 - Automatic Upload of the combined coverage to CodeCov (from the GitHub Workflow)
 - Checking of the combined coverage against the diff to master: Fails if changes are not covered!
 - Pylint report in the GitHub Action Summary page, with Warning and Error annotatios, even in the code review.
-- Check that changes don't generate pylint warnings (if warning classes which are enabled in pylintrc)
+- Check that changes don't generate pylint warnings (if warning classes which are enabled in .pylintrc)
 - Static analysis using `mypy`, `pyre` and `pytype`
 
 This enforces that any change (besides whitespace):
 
 - has code coverage and
-- does not introduce a `pylint` warning which is not disabled in `pylintrc`
+- does not introduce a `pylint` warning which is not disabled in `.pylintrc`
 - does not introduce a type of static analysis warning which is currently suppressed.
 
 ## Status Summary
@@ -54,7 +54,7 @@ open a recent workflow run the latest and scroll down until you see the tables!
 - `pytest.ini`: The defaults used by `pytest` unless overruled by command line options
 - `.github/workflows/main.yml`: Configuration of the GitHub CI matrix jobs and coverage upload
 - `.github/act-serial.yaml`: Configuration for the jobs run by the local GitHub actions runner `act`
-- `pylintrc`: Configuration file of `Pylint`
+- `.pylintrc`: Configuration file of `Pylint`
 
 ## Installation and Setup of a development environment
 
@@ -71,8 +71,8 @@ For the installation of the general development dependencies, visit [INSTALL.md]
   issues by Python3.6
 - Test with `python2.7 -m pytest`
 - Run `mypy` (without any arguments - The configuration is in `pyproject.toml`)
-- Run `./run-pytype.py`
-- Run `./run-pyre.py`
+- Run `./pytype_runner.py`
+- Run `./pyre_runner.py`
 - Run `tox -e py36-lint` and fix any `Pylint` warnings
 - Run `tox -e py310-covcombine-check` and fix any missing diff-coverage.
 - Run `tox` for the full CI test suite

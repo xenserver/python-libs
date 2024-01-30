@@ -137,6 +137,7 @@ def run_pytype_and_parse_annotations(xfail_files: List[str], branch_url: str):
             print("No errors in", xfail_file)
     return err_code or len(results), results
 
+
 def to_markdown(me, fp, returncode, results, branch_url):
     mylink = f"[{me}]({branch_url}/{me}.py)"
     pytype_link = "[pytype](https://google.github.io/pytype)"
@@ -162,7 +163,7 @@ def setup_and_run_pytype_action(scriptname: str):
         branch = os.environ.get("GITHUB_HEAD_REF", None) or os.environ.get("GITHUB_REF_NAME", None)
         filelink_baseurl = f"{server_url}/{repository}/blob/{branch}"
     retcode, results = run_pytype_and_parse_annotations(xfail_files, filelink_baseurl)
-        # Write the panda dable to a markdown output file:
+    # Write the panda dable to a markdown output file:
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY", None)
     if summary_file:
         with open(summary_file, "w", encoding="utf-8") as fp:
@@ -174,4 +175,4 @@ def setup_and_run_pytype_action(scriptname: str):
 if __name__ == "__main__":
     script_basename = os.path.basename(__file__).split(".")[0]
     basicConfig(format=script_basename + ": %(message)s", level=INFO)
-    sys.exit(setup_and_run_pytype_action(scriptname = script_basename))
+    sys.exit(setup_and_run_pytype_action(scriptname=script_basename))

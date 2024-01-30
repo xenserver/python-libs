@@ -11,6 +11,7 @@ def test_file_accessor(fs):
     # type:(FakeFilesystem) -> None
     """Test FileAccessor.writeFile(), .openAddress and .access using pyfakefs"""
     accessor = xcp.accessor.createAccessor("file://repo/", False)
+    assert isinstance(accessor, xcp.accessor.FileAccessor)
     check_binary_read(accessor, "/repo", fs)
     check_binary_write(accessor, "/repo", fs)
 

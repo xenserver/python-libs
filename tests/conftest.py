@@ -6,8 +6,9 @@ This module is run automatically by pytest to define and enable fixtures.
 """
 
 # pyre-ignore-all-errors[21]
-import pytest  # pyre does not find the module when run by tox -e py311-pyre
 import warnings
+
+import pytest  # pyre does not find the module when run by tox -e py311-pyre
 
 @pytest.fixture(autouse=True)
 def set_warnings():

@@ -3,15 +3,16 @@
 import base64
 import sys
 from contextlib import contextmanager
-from typing import IO, Generator, Tuple
+from io import BufferedReader, TextIOWrapper
+from typing import Generator, Tuple
 
 from six.moves import urllib  # pyright: ignore
 
-from xcp.accessor import HTTPAccessor, createAccessor
+from xcp.accessor import createAccessor, HTTPAccessor
 
 from .httpserver_testcase import ErrorHandler, HTTPServerTestCase, Response
 
-HTTPAccessorGenerator = Generator[Tuple[HTTPAccessor, IO[bytes]], None, None]
+HTTPAccessorGenerator = Generator[Tuple[HTTPAccessor, BufferedReader], None, None]
 
 UTF8TEXT_LITERAL = "✋Hello accessor from the 🗺, download and verify me! ✅"
 
@@ -22,6 +23,7 @@ class HTTPAccessorTestCase(HTTPServerTestCase):
     def test_404(self):
         self.httpserver.expect_request("/404").respond_with_data("", status=404)
         httpaccessor = createAccessor(self.httpserver.url_for("/"), True)
+        assert isinstance(httpaccessor, HTTPAccessor)
         self.assertFalse(httpaccessor.access("404"))
         self.httpserver.check_assertions()
         self.assertEqual(httpaccessor.lastError, 404)
@@ -33,7 +35,7 @@ class HTTPAccessorTestCase(HTTPServerTestCase):
         self.serve_file(self.document_root, read_file, error_handler)
 
         httpaccessor = createAccessor(url, True)
-        self.assertEqual(type(httpaccessor), HTTPAccessor)
+        assert isinstance(httpaccessor, HTTPAccessor)
 
         with open(self.document_root + read_file, "rb") as ref:
             yield httpaccessor, ref
@@ -98,5 +100,7 @@ class HTTPAccessorTestCase(HTTPServerTestCase):
         """Get text containing UTF-8 and compare the returned decoded string contents"""
         self.httpserver.expect_request("/textfile").respond_with_data(UTF8TEXT_LITERAL)
         accessor = createAccessor(self.httpserver.url_for("/"), True)
+        assert isinstance(accessor, HTTPAccessor)
         with accessor.openText("textfile") as textfile:
+            assert isinstance(textfile, TextIOWrapper)
             assert textfile.read() == UTF8TEXT_LITERAL

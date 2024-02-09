@@ -101,7 +101,7 @@ def __rename_nic(nic, name, transactions, cur_state):
     else:
         # Another nic is in the way for applying the rule.  Move it sideways
 
-        # Old comment from 2012: given new assertions, will this ever be nessesary?
+        # Old comment from 2012: given new assertions, will this ever be necessary?
         if aliased.kname[:5] == "side-":
             aliased_eth = aliased.kname.split('-')[2]
         else:
@@ -371,7 +371,7 @@ def rename( static_rules,
             old_state ):
     """
     Rename current state based on the rules and past state.
-    This function sanitises the input and delgates the renaming logic to
+    This function sanitises the input and delegates the renaming logic to
     __rename.
     @param static_rules
         List of MACPCI objects representing rules
@@ -384,7 +384,7 @@ def rename( static_rules,
 
     @throws StaticRuleError, CurrentStateError, LastStateError, TypeError
 
-    @returns list of tuples of name changes requred
+    @returns list of tuples of name changes required
     """
 
     if len(static_rules):

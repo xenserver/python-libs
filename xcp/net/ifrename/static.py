@@ -330,7 +330,7 @@ class StaticRules(object):
                     fd = open_with_codec_handling(self.path, "w")
                     fd.write(self.write(header))
 
-                # else if we were given a file descriptor, just read it
+                # else if we were given a file descriptor, just write to it
                 elif self.fd:
                     self.fd.write(self.write(header))
 

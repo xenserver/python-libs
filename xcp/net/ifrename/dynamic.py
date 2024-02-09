@@ -238,7 +238,6 @@ class DynamicRules(object):
 
             LOG.critical("Unknown dynamic rule method %s" % method)
 
-
     def write(self, header = True):
         """
         Write the dynamic rules to a string

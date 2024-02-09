@@ -292,6 +292,9 @@ class StaticRules(object):
             LOG.critical("Unknown static rule method %s" % method)
 
     def write(self, header = True):
+        """
+        Write the static rules to a string
+        """
 
         res = ""
 
@@ -320,6 +323,10 @@ class StaticRules(object):
         return res
 
     def save(self, header = True):
+        """
+        Save the static rules to a file/path.
+        Returns boolean indicating success or failure.
+        """
 
         fd = None
 

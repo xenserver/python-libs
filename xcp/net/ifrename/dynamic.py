@@ -128,7 +128,7 @@ class DynamicRules(object):
             return False
         # The installer has no json.
         except NameError:
-            LOG.warning("Module json not available.  Cant parse dynamic rules.")
+            LOG.warning("Module json not available.  Can't parse dynamic rules.")
             return False
 
         if "lastboot" in info:

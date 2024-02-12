@@ -31,18 +31,10 @@ beginning with a # character.
 from __future__ import unicode_literals
 
 from os.path import exists as pathexists
+import json
 
 __version__ = "1.0.0"
 __author__  = "Andrew Cooper"
-
-try:
-    import json
-except ImportError:
-    try:
-        import simplejson as json  # type: ignore[no-redef]  # pragma: no cover
-    # The installer has no json.  In the meantime, there is a workaround
-    except ImportError:
-        pass
 
 
 from xcp.compat import open_with_codec_handling
@@ -125,10 +117,6 @@ class DynamicRules(object):
             info = json.loads(data)
         except ValueError:
             LOG.warning("Dynamic rules appear to be corrupt")
-            return False
-        # The installer has no json.
-        except NameError:
-            LOG.warning("Module json not available.  Cant parse dynamic rules.")
             return False
 
         if "lastboot" in info:
@@ -264,15 +252,8 @@ class DynamicRules(object):
         lastboot = [x for x in self.lastboot if validate(x)]
         old = [x for x in self.old if validate(x)]
 
-        try:
-            res += json.dumps({"lastboot": lastboot, "old": old},
-                              indent=4, sort_keys=True)
-            # Installer has no json.  This will do in the meantime
-        except NameError:
-            res += ('{"lastboot":%s,"old":%s}'
-                    % ( ("%s" % (lastboot,)).replace("'", '"'),
-                        ("%s" % (old,)).replace("'", '"'))
-                    )
+        res += json.dumps({"lastboot": lastboot, "old": old},
+                          indent=4, sort_keys=True)
 
         return res
 

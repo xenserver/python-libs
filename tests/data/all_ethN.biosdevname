@@ -66,3 +66,11 @@ VPD Port: 4
 VPD Index: 1
 VPD PCI master: 0000:07:00.1
 
+BIOS device: eth4
+Kernel name: eth4
+Permanent MAC: 40:54:00:12:34:56
+Assigned MAC : 40:54:00:12:34:56
+Driver: cdc_ether
+Driver version: 22-Aug-2005
+Firmware version: CDC Ethernet Device
+Bus Info: usb-0000:00:02.0-1

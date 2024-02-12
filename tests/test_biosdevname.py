@@ -53,3 +53,7 @@ class TestDeviceNames(unittest.TestCase):
 
         self.assertEqual(devices['eth0']['BIOS device'],
                          {'all_ethN': 'eth0', 'physical': 'em1'})
+
+        self.assertEqual(devices['eth4']['BIOS device'],
+                         {'all_ethN': 'eth4', 'physical': ''})
+        self.assertEqual(devices['eth4']['Bus Info'], '0000:00:02.0')

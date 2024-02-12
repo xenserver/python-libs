@@ -74,6 +74,10 @@ def all_devices_all_names():
                  "BIOS device" not in dinfo ):
                 continue
 
+            # Treat USB devices the PCI device of their host adapter
+            if dinfo.get("Bus Info", "").startswith("usb-"):
+                dinfo["Bus Info"] = dinfo["Bus Info"].split('-')[1]
+
             kname = dinfo["Kernel name"]
 
             if kname in devices:

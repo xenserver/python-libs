@@ -68,7 +68,6 @@ mypy = [
     "mypy-extensions",
     "typing_extensions",
     "types-mock",
-    "types-simplejson",
     "types-six",
     "types-toml",
 ]

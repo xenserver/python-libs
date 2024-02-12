@@ -86,8 +86,8 @@ def ip_link_set_name(src_name, dst_name):
     if isup:
 
         # Performace note: if we are doing an intermediate rename to
-        # move a device sideways, we shouldnt bring it back until it has
-        # its final name.  However, i cant think of a non-hacky way of doing
+        # move a device sideways, we shouldn't bring it back until it has
+        # its final name.  However, I can't think of a non-hacky way of doing
         # this with the current implementation
 
         link_up = Popen(["ip", "link", "set", dst_name, "up"], universal_newlines=True)

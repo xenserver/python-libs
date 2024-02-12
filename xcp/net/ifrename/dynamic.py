@@ -117,7 +117,7 @@ class DynamicRules(object):
                            if len(l.strip()) and l.strip()[0] != '#' ]
                          )
 
-        # If the data is empty, dont pass it to json
+        # If the data is empty, don't pass it to json
         if not len( data.strip() ):
             return True
 
@@ -237,7 +237,6 @@ class DynamicRules(object):
                 continue
 
             LOG.critical("Unknown dynamic rule method %s" % method)
-
 
     def write(self, header = True):
         """

@@ -24,7 +24,7 @@
 """
 MACPCI object.
 
-Used extensivly for interface rename logic.
+Used extensively for interface rename logic.
 """
 
 __version__ = "1.0.1"

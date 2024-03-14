@@ -75,7 +75,7 @@ def all_devices_all_names():
                 continue
 
             # Treat USB devices the PCI device of their host adapter
-            if dinfo.get("Bus Info", "").startswith("usb-"):
+            if dinfo.get("Bus Info", "").startswith("usb-") and "eth" in dinfo["Kernel name"]:
                 dinfo["Bus Info"] = dinfo["Bus Info"].split('-')[1]
 
             kname = dinfo["Kernel name"]

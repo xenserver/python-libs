@@ -53,20 +53,28 @@ repos:
         args: [--branch, master]
         always_run: true
 -   repo: https://github.com/akaihola/darker
-    rev: 1.7.1
+    rev: 1.7.3
     hooks:
     -   id: darker
-        args: [--isort, -tpy33]
+        args: [--isort, -S, -tpy36]
         verbose: true
         additional_dependencies:
-          - black
           - isort
+
+
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+    -   id: mypy
+        additional_dependencies:
+        - pytest-subprocess
+        - types-mock
+        - types-six
+
+
 -   repo: https://github.com/rcmdnk/pyproject-pre-commit
     rev: v0.0.12
     hooks:
-    -   id: mypy
-        args: [--ignore-missing-imports] # --config-file, "mypy.ini"(config is in pyproject.toml)
-        pass_filenames: true
     -   id: shellcheck
     -   id: mdformat-check
         exclude: README-Unicode.md

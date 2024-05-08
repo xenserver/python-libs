@@ -20,8 +20,8 @@ class TestLoadAndParse(unittest.TestCase):
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):
-        self.logbuf.close()
         closeLogs()
+        self.logbuf.close()
 
     def test_null(self):
 
@@ -91,7 +91,6 @@ class TestGenerate(unittest.TestCase):
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):
-
         closeLogs()
         self.logbuf.close()
 
@@ -167,7 +166,6 @@ class TestSave(unittest.TestCase):
         openLog(self.logbuf, logging.NOTSET)
 
     def tearDown(self):
-
         closeLogs()
         self.logbuf.close()
 

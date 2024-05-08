@@ -107,7 +107,7 @@ build-backend = "setuptools.build_meta"
 packages = ["xcp", "xcp.net", "xcp.net.ifrename"]
 
 [tool.black]
-line-length = 96
+line-length = 92
 
 [tool.mypy]
 pretty = true

@@ -24,12 +24,15 @@ class TestLoadAndParse(unittest.TestCase):
         self.logbuf.close()
 
     def test_null(self):
+        self.assertLoadDynamicRules("")
 
-        fd = StringIO("")
-        dr = DynamicRules(fd=fd)
-
+    def loadDynamicRules(self, rules):
+        dr = DynamicRules(fd=StringIO(rules))
         self.assertTrue(dr.load_and_parse())
+        return dr
 
+    def assertLoadDynamicRules(self, rules):
+        dr = self.loadDynamicRules(rules)
         self.assertEqual(dr.lastboot, [])
         self.assertEqual(dr.old, [])
 
@@ -46,40 +49,21 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(dr.old, [])
 
     def test_one_invalid(self):
-
-        fd = StringIO(
-            '{"lastboot":[["","",""]],"old":[]}'
-            )
-        dr = DynamicRules(fd=fd)
-
-        self.assertTrue(dr.load_and_parse())
-
-        self.assertEqual(dr.lastboot, [])
-        self.assertEqual(dr.old, [])
+        self.assertLoadDynamicRules('{"lastboot":[["","",""]],"old":[]}')
 
     def test_one_valid_lastboot(self):
-
-        fd = StringIO(
+        dr = self.loadDynamicRules(
             '{"lastboot":[["01:23:45:67:89:0a","00:10.2","eth2"]],"old":[]}'
-            )
-        dr = DynamicRules(fd=fd)
-
-        self.assertTrue(dr.load_and_parse())
-
-        self.assertEqual(dr.lastboot,
-                         [MACPCI("01:23:45:67:89:0a","00:10.2", tname="eth2")])
+        )
+        self.assertEqual(
+            dr.lastboot, [MACPCI("01:23:45:67:89:0a", "00:10.2", tname="eth2")]
+        )
         self.assertEqual(dr.old, [])
 
-
     def test_one_valid_lastboot2(self):
-
-        fd = StringIO(
+        dr = self.loadDynamicRules(
             '{"lastboot":[],"old":[["01:23:45:67:89:0a","00:10.2","eth2"]]}'
-            )
-        dr = DynamicRules(fd=fd)
-
-        self.assertTrue(dr.load_and_parse())
-
+        )
         self.assertEqual(dr.lastboot, [])
         self.assertEqual(dr.old,
                          [MACPCI("01:23:45:67:89:0a","00:10.2", tname="eth2")])

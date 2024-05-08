@@ -40,7 +40,7 @@ def __run_all_devices(policy = "physical"):
     """
 
     proc = Popen(["/sbin/biosdevname", "--policy", policy,
-                  "-d"], stdout=PIPE, stderr=PIPE, universal_newlines=True)
+                  "-d", "-x"], stdout=PIPE, stderr=PIPE, universal_newlines=True)
 
     stdout, stderr = proc.communicate()
 

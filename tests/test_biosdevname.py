@@ -45,8 +45,8 @@ class TestDeviceNames(unittest.TestCase):
         # check after the fact that we mocked the proper calls
         self.assertEqual(popen_mock.call_count, 2)
         calls = popen_mock.call_args_list
-        self.assertEqual(calls[0].args[0], ['/sbin/biosdevname', '--policy', 'physical', '-d'])
-        self.assertEqual(calls[1].args[0], ['/sbin/biosdevname', '--policy', 'all_ethN', '-d'])
+        self.assertEqual(calls[0].args[0], ['/sbin/biosdevname', '--policy', 'physical', '-d', '-x'])
+        self.assertEqual(calls[1].args[0], ['/sbin/biosdevname', '--policy', 'all_ethN', '-d', '-x'])
         popen_kwargs = {"stdout": PIPE, "stderr": PIPE, "universal_newlines": True}
         self.assertEqual(calls[0].kwargs, popen_kwargs)
         self.assertEqual(calls[1].kwargs, popen_kwargs)

@@ -36,11 +36,11 @@ jobs:
           os: ubuntu-22.04
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Needed by diff-cover to get the changed lines: origin/master..HEAD
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -73,13 +73,59 @@ jobs:
           python3.8 -m pip install 'virtualenv<20.22' 'tox==4.5.1' tox-gh-actions
           tox --workdir .github/workflows/.tox --recreate
 
-      - name: Upload coverage reports to Codecov
-        if: ${{ matrix.os == 'ubuntu-20.04' && github.actor != 'nektos/act'}}
+
+      # The new reliable Codecov upload requires Codecov to query the GitHub API to check
+      # the repo and the commit. The repo (or organisation) owner needs to login to
+      # codev, generated the CODECOV_TOKEN and save it as a secret in the ORG or the repo:
+      # https://docs.codecov.com/docs/adding-the-codecov-token
+
+      # Links to get and set the token:
+      # Get the CODECOV_TOKEN: https://app.codecov.io/gh/xenserver/python-libs/settings
+      # Set the CODE_COV_TOKEN: https://github.com/xenserver/python-libs/settings/secrets/actions
+
+      # Without it, the API calls are rate-limited by GitHub, and the upload may fail:
+      # https://github.com/codecov/feedback/issues/126#issuecomment-1932658904
+      #
+      - name: Upload coverage reports to Codecov (fallback, legacy Node.js 16 action)
+        # If CODECOV_TOKEN is not set, use the legacy tokenless Codecov action:
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        if: |
+          !env.CODECOV_TOKEN && !cancelled() &&
+          matrix.os == 'ubuntu-20.04' && github.actor != 'nektos/act' &&
+          ( github.event.pull_request.number || github.ref == 'refs/heads/master' )
         uses: codecov/codecov-action@v3
         with:
           directory: .github/workflows/.tox/py38-covcombine-check/log
           env_vars: OS,PYTHON
-          fail_ci_if_error: true
+          # Use fail_ci_if_error: false as explained the big comment above:
+          # Not failing this job in this case is ok because the tox CI checks also contain
+          # a diff-cover check which would fail on changed lines missing coverage.
+          fail_ci_if_error: false
           flags: unittest
           name: py27-py38-combined
           verbose: true
+
+      - name: Upload coverage reports to Codecov (used when secrets.CODECOV_TOKEN is set)
+        # If CODECOV_TOKEN is set, use the new Codecov CLI to upload the coverage reports
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        if: |
+          env.CODECOV_TOKEN && !cancelled() && github.actor != 'nektos/act' &&
+          ( github.event.pull_request.number || github.ref == 'refs/heads/master' )
+        run: >
+          set -euxv;
+          mv .github/workflows/.tox/py38-covcombine-check/log/coverage.xml cov.xml;
+          curl -O https://cli.codecov.io/latest/linux/codecov; sudo chmod +x codecov;
+          ./codecov upload-process --report-type coverage
+          --name "CLI Upload for ${{ env.PYTHON_VERSION }}"
+          --git-service github --fail-on-error --file cov.xml --disable-search
+          --flag python${{ env.PYTHON_VERSION }}
+        continue-on-error: false  # Fail the job if the upload with CODECOV_TOKEN fails
+
+
+      - name: Upload coverage reports to Coveralls
+        env:
+          COVERALLS_FLAG_NAME: ${{ format('python{0}', steps.python.outputs.python-version ) }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pip install coveralls && coveralls --service=github && coveralls --finish

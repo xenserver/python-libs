@@ -1,5 +1,6 @@
-"""Test xcp.accessor.HTTPAccessor using a local pure-Python http(s)server fixture"""
 # -*- coding: utf-8 -*-
+"""Test xcp.accessor.HTTPAccessor using a local pure-Python http(s)server fixture"""
+
 import base64
 import sys
 from contextlib import contextmanager
@@ -8,7 +9,7 @@ from typing import Generator, Tuple
 
 from six.moves import urllib  # pyright: ignore
 
-from xcp.accessor import createAccessor, HTTPAccessor
+from xcp.accessor import HTTPAccessor, createAccessor
 
 from .httpserver_testcase import ErrorHandler, HTTPServerTestCase, Response
 
@@ -42,6 +43,7 @@ class HTTPAccessorTestCase(HTTPServerTestCase):
 
     def assert_http_get_request_data(self, url, read_file, error_handler):
         # type:(str, str, ErrorHandler) -> HTTPAccessor
+        # pyre-ignore[23]: silence false positive
         with self.http_get_request_data(url, read_file, error_handler) as (httpaccessor, ref):
             http_accessor_filehandle = httpaccessor.openAddress(read_file)
             if sys.version_info >= (3, 0):

@@ -137,7 +137,7 @@ def open_text(accessor, location, fs, text):
     assert isinstance(accessor, xcp.accessor.MountingAccessorTypes)
     name = "textfile"
     path = location + "/" + name
-    assert fs.create_file(path, contents=text)
+    assert fs.create_file(path, contents=text, encoding="utf-8")
     assert accessor.access(name)
     with accessor.openText(name) as textfile:
         assert not isinstance(textfile, bool)

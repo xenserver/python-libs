@@ -70,6 +70,7 @@ repos:
         - pytest-subprocess
         - types-mock
         - types-six
+        - types-toml
 
 
 -   repo: https://github.com/rcmdnk/pyproject-pre-commit

@@ -71,9 +71,10 @@ mypy = [
     "types-six",
     "types-toml",
 ]
+# pyre introduced two false-postives recently, pin it to prevent further surprises:
 pyre = [
-    "pyre-check",
-    "pyre-extensions",
+    "pyre-check == 0.9.21",
+    "pyre-extensions == 0.0.30",
 ]
 pytype = [
     "pandas",

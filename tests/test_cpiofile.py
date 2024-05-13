@@ -16,7 +16,7 @@ from pyfakefs.fake_filesystem import FakeFileOpen, FakeFilesystem
 
 from xcp.cpiofile import CpioFile
 
-from .test_mountingaccessor import binary_data
+binary_data = b"\x00\x1b\x5b\x95\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xcc\xdd\xee\xff"
 
 
 def test_cpiofile_modes(fs):
@@ -33,7 +33,8 @@ def test_cpiofile_modes(fs):
     if sys.version_info < (3, 0):
         # Test Python2 pattern from host-upgrade-plugin:/etc/xapi.d/plugins/prepare_host_upgrade.py
         # Import the Python2-only StringIO.StringIO module, imported as Py2StringIO:
-        from StringIO import Py2StringIO  # pylint: disable=import-outside-toplevel
+        # pylint: disable-next=import-outside-toplevel
+        from StringIO import StringIO as Py2StringIO
 
         stringio = Py2StringIO()
         archive = CpioFile.open(fileobj=stringio, mode="w|gz")  # type: ignore[arg-type]

@@ -2,11 +2,14 @@ codecov
 covcombine
 coverallsapp
 cpio
+cpiofile
+cpioinfo
 euxv
 ibft
 ifrename
 kname
 lastboot
+linkname
 logbuf
 MACPCI
 nektos

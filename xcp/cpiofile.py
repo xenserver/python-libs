@@ -1463,7 +1463,7 @@ class CpioFile(six.Iterator):
                 self._dbg(1, "cpiofile: %s" % e)
 
     def extractfile(self, member):
-        # type:(CpioInfo) -> ExFileObject | None
+        # type:(CpioInfo | str | bytes) -> ExFileObject | None
         """Extract a member from the archive as a file object. `member' may be
            a filename or a CpioInfo object. If `member' is a regular file, a
            file-like object is returned. If `member' is a link, a file-like
@@ -1489,11 +1489,8 @@ class CpioFile(six.Iterator):
                 # A small but ugly workaround for the case that someone tries
                 # to extract a symlink as a file-object from a non-seekable
                 # stream of cpio blocks.
-                raise StreamError("cannot extract symlink as file object")
-            else:
-                # A symlink's file object is its target's file object.
-                return self.extractfile(self._getmember(cpioinfo.linkname,
-                                                        cpioinfo))  # type: ignore
+                raise StreamError("Need a seekable stream to open() a symlink target!")
+            return self.extractfile(cpioinfo.linkname)
         else:
             # If there's no data associated with the member (directory, chrdev,
             # blkdev, etc.), return None instead of a file object.

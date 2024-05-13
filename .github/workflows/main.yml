@@ -73,10 +73,16 @@ jobs:
           python3.8 -m pip install 'virtualenv<20.22' 'tox==4.5.1' tox-gh-actions
           tox --workdir .github/workflows/.tox --recreate
 
+      - name: Select the coverage file for upload
+        if: |
+          ( matrix.python-version == '3.6' || matrix.python-version == '3.11' ) &&
+          ( !cancelled() && github.actor != 'nektos/act' )
+        id: coverage
+        run: mv $( ls -t .github/workflows/.tox/*/log/.coverage | head -1 ) .coverage
 
       # The new reliable Codecov upload requires Codecov to query the GitHub API to check
       # the repo and the commit. The repo (or organisation) owner needs to login to
-      # codev, generated the CODECOV_TOKEN and save it as a secret in the ORG or the repo:
+      # codecov, generated the CODECOV_TOKEN and save it as a secret in the ORG or the repo:
       # https://docs.codecov.com/docs/adding-the-codecov-token
 
       # Links to get and set the token:
@@ -90,7 +96,13 @@ jobs:
         # If CODECOV_TOKEN is not set, use the legacy tokenless Codecov action:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        # To reduce chances of GitHub's API throttling to hit this upload, only run the
+        # upload for the py38-covcombine-check job running on Ubuntu-20.04, which is the
+        # one we need. And only run it for PRs and the master branch, not for pushes.
+        # This reduces the number of uploads and the chance of hitting the rate limit
+        # by a factor of 6.
         if: |
+          steps.coverage.outcome == 'success' &&
           !env.CODECOV_TOKEN && !cancelled() &&
           matrix.os == 'ubuntu-20.04' && github.actor != 'nektos/act' &&
           ( github.event.pull_request.number || github.ref == 'refs/heads/master' )
@@ -101,6 +113,8 @@ jobs:
           # Use fail_ci_if_error: false as explained the big comment above:
           # Not failing this job in this case is ok because the tox CI checks also contain
           # a diff-cover check which would fail on changed lines missing coverage.
+          # The Codecov CLI is more reliable and should be used if the CODECOV_TOKEN is set.
+          # The Codecov CLI is used in the next step when CODECOV_TOKEN is set.
           fail_ci_if_error: false
           flags: unittest
           name: py27-py38-combined
@@ -112,7 +126,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         if: |
           env.CODECOV_TOKEN && !cancelled() && github.actor != 'nektos/act' &&
-          ( github.event.pull_request.number || github.ref == 'refs/heads/master' )
+          steps.coverage.outcome == 'success' && matrix.os == 'ubuntu-20.04'
         run: >
           set -euxv;
           mv .github/workflows/.tox/py38-covcombine-check/log/coverage.xml cov.xml;
@@ -123,9 +137,23 @@ jobs:
           --flag python${{ env.PYTHON_VERSION }}
         continue-on-error: false  # Fail the job if the upload with CODECOV_TOKEN fails
 
-
-      - name: Upload coverage reports to Coveralls
+      - if: steps.coverage.outcome == 'success'
+        name: Upload coverage reports to Coveralls
         env:
+          COVERALLS_PARALLEL: true
           COVERALLS_FLAG_NAME: ${{ format('python{0}', steps.python.outputs.python-version ) }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pip install coveralls && coveralls --service=github && coveralls --finish
+        run: pip install coveralls && coveralls --service=github
+
+  # For combined coverage of 2.7, 3.8 and 3.11 we upload to Coveralls in parallel mode.
+  # To view the Coveralls results from the PR, click on the "Details" link to the right
+  # of the Coveralls Logo in the Checks section of the PR.
+  finish-coverage-upload:
+    if: github.actor != 'nektos/act'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Finish the coverage upload to Coveralls
+        uses: coverallsapp/github-action@v1
+        with:
+          parallel-finished: true

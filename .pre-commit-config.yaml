@@ -47,23 +47,23 @@ repos:
         types: [binary]
         language: fail
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.6.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, master]
         always_run: true
 -   repo: https://github.com/akaihola/darker
-    rev: 1.7.3
+    rev: v2.1.1
     hooks:
     -   id: darker
-        args: [--isort, -S, -tpy36]
+        args: [--isort, -tpy36]
         verbose: true
         additional_dependencies:
           - isort
 
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+    rev: v1.10.0
     hooks:
     -   id: mypy
         additional_dependencies:
@@ -74,11 +74,12 @@ repos:
 
 
 -   repo: https://github.com/rcmdnk/pyproject-pre-commit
-    rev: v0.0.12
+    rev: v0.1.9
     hooks:
     -   id: shellcheck
     -   id: mdformat-check
         exclude: README-Unicode.md
+        language: python
 -   repo: https://github.com/pycqa/pylint
     rev: v2.17.4
     hooks:
@@ -101,15 +102,15 @@ repos:
 -   repo: local
     hooks:
     -   id: run-pyre
-        name: run-pyre
+        name: run-pyre (expect this to take 30 seconds)
         entry: python pyre_runner.py
         types: [python]
         language: python
         log_file: ".git/pre-commit-pyre.log"
         additional_dependencies: [pyre-check,mock]
     -   id: pytype
-        name: pytype
-        entry: pytype
+        name: pytype (may take up to two minutes)
+        entry: sh -c "pytype >/dev/tty"
         types: [python]
         verbose: true
         language: python
@@ -132,7 +133,7 @@ repos:
     # Sample annotations: # type: ignore[attr-defined] # type: ignore[attr-defined,name-defined]
     -   id: python-check-blanket-type-ignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v4.6.0
     hooks:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer

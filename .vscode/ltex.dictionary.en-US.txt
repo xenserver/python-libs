@@ -23,3 +23,5 @@ tokenless
 virtualenv
 virutalenv
 workdir
+xapi
+xensource

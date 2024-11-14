@@ -315,7 +315,8 @@ class FTPAccessor(Accessor):
             self.cleanup = False
             self.ftp = None
 
-    def access(self, path):  # pylint: disable=arguments-differ,arguments-renamed
+    # pylint: disable-next=arguments-differ,arguments-renamed
+    def access(self, path):  # pyright: ignore[reportIncompatibleMethodOverride]
         try:
             logger.debug("Testing "+path)
             self._cleanup()
@@ -425,7 +426,7 @@ SUPPORTED_ACCESSORS = {
 """Dict of supported accessors. The key is the URL scheme"""
 
 def createAccessor(baseAddress, *args):
-    # type: (str, bool | Tuple[bool, List[str]]) -> Literal[False] | AnyAccessor
+    # type: (str, bool | List[str]) -> Literal[False] | AnyAccessor
     """
     Return instance of the appropriate Accessor subclass based on the baseAddress.
 
@@ -442,7 +443,7 @@ def createAccessor(baseAddress, *args):
 
     Examples:
         accessor = createAccessor("http://example.com", True)
-        accessor = createAccessor("dev://example.com", True, ['iso9660', 'ext3'])
+        accessor = createAccessor("dev://example.com", ['iso9660', 'ext3'])
         if not accessor:
             fatal()
         else:

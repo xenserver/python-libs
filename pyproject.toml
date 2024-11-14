@@ -71,11 +71,6 @@ mypy = [
     "types-six",
     "types-toml",
 ]
-# pyre introduced two false-postives recently, pin it to prevent further surprises:
-pyre = [
-    "pyre-check == 0.9.21",
-    "pyre-extensions == 0.0.30",
-]
 pytype = [
     "pandas",
     "pytype",
@@ -198,7 +193,7 @@ exclude = [
 extraPaths = ["stubs"]
 include = ["xcp", "tests"]
 pythonPlatform = "Linux"
-pythonVersion = "3.6"
+pythonVersion = "3.11"
 reportFunctionMemberAccess = true
 reportGeneralTypeIssues = "warning"
 reportOptionalMemberAccess = "warning"
@@ -211,7 +206,7 @@ stubPath = "stubs"
 inputs = ["xcp", "tests", "./*.py"]
 keepgoing = true
 platform = "linux"
-python_version = "3.10"
+python_version = "3.11"
 pythonpath = ".:stubs"
 disable = ["ignored-type-comment"]
 overriding_parameter_count_checks = true

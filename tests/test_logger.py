@@ -10,7 +10,8 @@ from xcp.compat import open_utf8
 from xcp.logger import openLog
 
 
-def test_openLog_mock_open():
+def test_openLog_mock_open(fs):
+    # type(FakeFilesystem) -> None
     """Cover xcp.logger.openLog.open_with_codec_handling and check the arguments used for open()"""
     fh = StringIO()
     with patch("xcp.compat.open", mock_open()) as open_mock:
@@ -31,3 +32,4 @@ def test_openLog_mock_stdin():
         assert openLog("test.log") is True
         os.close(slave_fd)
         os.close(master_fd)
+        open_mock.assert_called_once_with("test.log", "a", **open_utf8)

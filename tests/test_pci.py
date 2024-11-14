@@ -11,6 +11,8 @@ from xcp.pci import PCI, PCIDevices, PCIIds
 
 if sys.version_info >= (3, 6):
     from pytest_subprocess.fake_process import FakeProcess
+else:
+    pytest.skip(allow_module_level=True)
 
 class TestInvalid(unittest.TestCase):
 
@@ -79,11 +81,16 @@ class TestValid(unittest.TestCase):
     def test_equality(self):
 
         self.assertEqual(PCI("0000:00:00.0"), PCI("00:00.0"))
+        assert PCI("1234:56:01.7[1]") != PCI("1234:56:01.7[2]")
+        assert PCI("1234:56:01.2") >= PCI("1234:56:01.2")
+        assert PCI("1234:56:01.1") <= PCI("1234:56:01.2")
+        assert PCI("1234:56:01.3") > PCI("1234:56:01.2")
+        assert PCI("1234:56:01.1") < PCI("1234:56:02.2")
 
 
 if sys.version_info >= (2, 7):
     def assert_videoclass_devices(ids, devs):  # type: (PCIIds, PCIDevices) -> None
-        """Verification function for checking the otuput of PCIDevices.findByClass()"""
+        """Verification function for checking the output of PCIDevices.findByClass()"""
         video_class = ids.lookupClass('Display controller')
         assert video_class == ["03"]
         sorted_devices = sorted(devs.findByClass(video_class),
@@ -91,6 +98,7 @@ if sys.version_info >= (2, 7):
 
         # Assert devs.findByClass() finding 3 GPUs from tests/data/lspci-mn in our mocked PCIIds DB:
         assert len(sorted_devices) == 3
+        assert len(devs.findByClass("03", "80")) == 2
 
         # For each of the found devices, assert these expected values:
         for (video_dev,
@@ -179,6 +187,7 @@ if sys.version_info >= (3, 0):
     def mock_lspci_using_open_testfile(fp):
         """Mock xcp.pci.PCIDevices.Popen() using open(tests/data/lspci-mn)"""
         with open("tests/data/lspci-mn", "rb") as fake_data:
-            assert isinstance(fp, FakeProcess)
+            if sys.version_info >= (3, 6):
+                assert isinstance(fp, FakeProcess)
             fp.register_subprocess(["lspci", "-mn"], stdout=fake_data.read())
         return PCIDevices()

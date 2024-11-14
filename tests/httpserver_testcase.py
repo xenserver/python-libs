@@ -1,4 +1,5 @@
 import os
+import sys
 import unittest
 from typing import Callable, Optional
 
@@ -11,9 +12,10 @@ try:
     from pytest_httpserver import HTTPServer
     from werkzeug.wrappers import Request, Response
 
-    ErrorHandler = Optional[Callable[[Request], Response]]
+    ErrorHandler = Optional[Callable[[Request], Response | None]]
 except ImportError:
     pytest.skip(allow_module_level=True)
+    sys.exit(0)  # Let pyright know that this is a dead end
 
 
 class HTTPServerTestCase(unittest.TestCase):
@@ -31,7 +33,7 @@ class HTTPServerTestCase(unittest.TestCase):
 
     @classmethod
     def serve_file(cls, root, file_path, error_handler=None, real_path=None):
-        # type:(str, str, Optional[Callable[[Request], Response]], Optional[str]) -> None
+        # type:(str, str, ErrorHandler, Optional[str]) -> None
         """Expect a GET request and handle it using the local pytest_httpserver.HTTPServer"""
 
         def handle_get(request):

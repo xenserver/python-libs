@@ -31,6 +31,7 @@ class TestValid(unittest.TestCase):
 
     def test_null_with_segment(self):
 
+        assert PCI.is_valid("0000:00:00.0") is True
         c = PCI("0000:00:00.0")
 
         self.assertEqual(c.segment, 0)
@@ -43,6 +44,7 @@ class TestValid(unittest.TestCase):
 
     def test_null_without_segment(self):
 
+        assert PCI.is_valid("00:00.0") is True
         c = PCI("00:00.0")
 
         self.assertEqual(c.segment, 0)
@@ -54,12 +56,25 @@ class TestValid(unittest.TestCase):
 
     def test_valid(self):
 
+        assert PCI.is_valid("8765:43:1f.3") is True
         c = PCI("8765:43:1f.3")
 
         self.assertEqual(c.segment, 0x8765)
         self.assertEqual(c.bus, 0x43)
         self.assertEqual(c.device, 0x1f)
         self.assertEqual(c.function, 0x3)
+
+    def test_valid_index(self):
+
+        assert PCI.is_valid("8765:43:1f.3[0]") is True
+        assert PCI.is_valid("1234:56:01.7[1]") is True
+        c = PCI("1234:56:01.7[1]")
+
+        self.assertEqual(c.segment, 0x1234)
+        self.assertEqual(c.bus, 0x56)
+        self.assertEqual(c.device, 0x01)
+        self.assertEqual(c.function, 0x7)
+        self.assertEqual(c.index, 0x1)
 
     def test_equality(self):
 

@@ -3,7 +3,6 @@
 import logging
 import os
 import sys
-import tempfile
 from io import BytesIO
 from typing import TYPE_CHECKING, cast
 
@@ -30,13 +29,6 @@ binary_data = b"\x00\x1b\x5b\x95\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xcc\xdd\xee
 
 def expect(fp, mount):
     fp.register_subprocess(mount)  # type: ignore[arg-type]
-
-
-@pytest.fixture()
-def mount_dir():
-    mount_point = tempfile.mkdtemp(prefix="media-", dir="/tmp")
-    os.rmdir(mount_point)
-    return mount_point.encode()
 
 
 def test_device_accessor(fs, fp, mount_dir, caplog):

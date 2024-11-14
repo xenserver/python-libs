@@ -5,10 +5,20 @@ Pytest auto configuration.
 This module is run automatically by pytest to define and enable fixtures.
 """
 
-# pyre-ignore-all-errors[21]
+import os
+import tempfile
 import warnings
 
-import pytest  # pyre does not find the module when run by tox -e py311-pyre
+import pytest
+
+
+@pytest.fixture()
+def mount_dir():
+    """pytest fixture for getting a temporary name for a temp directory"""
+    mount_point = tempfile.mkdtemp(prefix="media-", dir="/tmp")
+    os.rmdir(mount_point)
+    return mount_point.encode()
+
 
 @pytest.fixture(autouse=True)
 def set_warnings():

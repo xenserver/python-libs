@@ -64,9 +64,10 @@ def openLog(lfile, level=logging.INFO):
                 h.close()
                 handler = logging.handlers.RotatingFileHandler(lfile,
                                                                maxBytes=2**31)
+            # pyre-ignore[16]
             old = fcntl.fcntl(handler.stream.fileno(), fcntl.F_GETFD)
-            fcntl.fcntl(handler.stream.fileno(),
-                        fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)
+            # pyre-ignore[16]
+            fcntl.fcntl(handler.stream.fileno(), fcntl.F_SETFD, old | fcntl.FD_CLOEXEC)
 
         # or if it is not a string, assume its a file-like object
         else:

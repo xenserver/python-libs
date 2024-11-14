@@ -18,6 +18,8 @@ It depends on `six`, and on Python 2.7, also `configparser` and `pyliblzma`.
 
 ## Test-driven Development (TDD) Model
 
+Please see [CONTRIBUTING.md] for installing a local development environment.
+
 This package has CI which can be run locally but is also run in GitHub CI to ensure
 Test-driven development.
 
@@ -173,20 +175,10 @@ Completed in 0.604sec
 
 See https://github.com/xenserver/python-libs/pull/23 for the context of this example.
 
-## Special open TODOs:
+## Guidelines
 
 Charset encoding/string handling:
-See [README-Unicode.md](README-Unicode.md) for details:
-
-- What's more: When code is called from a xapi plugin (such as ACK), when such code
-  attempts to read text files like the `pciids` file, and there is a Unicode char
-  it int, and the locale is not set up to be UTF-8 (because xapi plugins are started
-  from xapi), the UTF-8 decoder has to be explicitly enabled for these files,
-  bese by adding `encoding="utf-8"` to the arguments of these specific `open()` calls,
-  to have valid Unicode text strings, e.g. `xcp.pci`, for regular text processing.
-- TODO: More to be opened for all remaining `open()` and `Popen()` users,
-  as well as ensuring that users of `urllib` are able to work with they bytes
-  it returns (there is no option to use text mode, data may be gzip-encoded!)
+See [README-Unicode.md](README-Unicode.md) for details on Unicode support.
 
 ## Users
 

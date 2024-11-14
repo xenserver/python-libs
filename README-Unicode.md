@@ -1,6 +1,26 @@
 Python3 Unicode migration in the XCP package
 ============================================
 
+Problem
+-------
+
+Python3.6 on XS8 does not have an all-encompassing default UTF-8 mode for I/O.
+
+Newer Python versions have an UTF-8 mode that they even enable by default.
+Python3.6 only enabled UTF-8 for I/O when an UTF-8 locale is used.
+
+For situations where UTF-8 enabled, we have to specify UTF-8 explicitly.
+
+Such sitation happens when LANG or LC_* variables are not set for UTF-8.
+XAPI plugins like auto-cert-kit find themself in this situation.
+
+Example:
+For reading UTF-8 files like the `pciids` file, add `encoding="utf-8"`.
+This applies especailly to `open()` and `Popen()` when files my contain UTF-8.
+
+This also applies when en/decoding to/form `urllib` which uses bytes.
+`urllib` has to use bytes as HTTP data can of course also be binary, e.g. compressed.
+
 Migrating `subprocess.Popen()`
 ------------------------------
 With Python3, the `stdin`, `stdout` and `stderr` pipes for `Popen()` default to `bytes`(binary mode). Binary mode is much safer because it foregoes the encode/decode.

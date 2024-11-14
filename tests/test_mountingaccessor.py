@@ -30,7 +30,8 @@ def expect(fp, mount):
 
 def test_device_accessor(fs, fp):
     # type: (FakeFilesystem, FakeProcess) -> None
-    assert isinstance(fp, FakeProcess)
+    if sys.version_info >= (3, 6):
+        assert isinstance(fp, FakeProcess)
 
     # Test xcp.mount.bindMount()
     mount = [b"/bin/mount", b"--bind", b"src", b"mountpoint_dest"]

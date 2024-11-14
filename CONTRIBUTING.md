@@ -7,7 +7,23 @@ But this `tox` is older, so install `tox==4.5.1` using `pip` (see below)
 sudo dnf install tox;sudo rpm -e tox
 ```
 
+## Development setup on Ubuntu 24.04
+
+Use `sudo apt install pipx` to install test tools like `pytest`, `pylint` and `tox`:
+
+```bash
+sudo apt install pipx
+pipx install tox; pipx install 'pytest<7';pipx install pylint
+pipx inject pytest pytest-{forked,localftpserver,pythonpath,subprocess,timeout} pyfakefs pytest_httpserver six mock
+pipx inject pylint pyfakefs six mock pytest{,_forked,-localftpserver}
+```
+
+Use the `deadsnakes` ppa to install Python versions like 3.8 and 3.11 (see below)
+
 ## Development setup on Ubuntu 22.04
+
+Usage of https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa to install
+other python versions.
 
 ```bash
 sudo apt update

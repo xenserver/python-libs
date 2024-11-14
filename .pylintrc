@@ -67,6 +67,7 @@ disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141,
     raise-missing-from,
     too-many-branches,
     too-many-nested-blocks,
+    too-many-positional-arguments,
     too-many-statements,
 
 

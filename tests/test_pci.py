@@ -161,9 +161,11 @@ if sys.version_info >= (3, 0):
         open_mock.assert_called_once_with("/usr/share/hwdata/pci.ids", encoding="utf-8")
         assert_videoclass_devices(ids, mock_lspci_using_open_testfile(fp))
 
+
     def mock_lspci_using_open_testfile(fp):
         """Mock xcp.pci.PCIDevices.Popen() using open(tests/data/lspci-mn)"""
         with open("tests/data/lspci-mn", "rb") as fake_data:
-            assert isinstance(fp, FakeProcess)
+            if sys.version_info >= (3, 0):
+                assert isinstance(fp, FakeProcess)
             fp.register_subprocess(["lspci", "-mn"], stdout=fake_data.read())
         return PCIDevices()

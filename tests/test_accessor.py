@@ -1,19 +1,20 @@
 import unittest
 
 from pyfakefs.fake_filesystem import FakeFilesystem
+from pytest import LogCaptureFixture
 
 import xcp.accessor
 
 from .test_mountingaccessor import check_binary_read, check_binary_write
 
 
-def test_file_accessor(fs):
-    # type:(FakeFilesystem) -> None
+def test_file_accessor(fs, caplog):
+    # type(FakeFilesystem, LogCaptureFixture) -> None
     """Test FileAccessor.writeFile(), .openAddress and .access using pyfakefs"""
     accessor = xcp.accessor.createAccessor("file://repo/", False)
     assert isinstance(accessor, xcp.accessor.FileAccessor)
     check_binary_read(accessor, "/repo", fs)
-    check_binary_write(accessor, "/repo", fs)
+    check_binary_write(accessor, "/repo", fs, caplog)
 
 
 class TestAccessor(unittest.TestCase):

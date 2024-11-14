@@ -7,7 +7,7 @@ import os
 import sys
 import time
 
-import mock
+from unittest import mock
 
 me = os.path.basename(__file__) + ":"
 

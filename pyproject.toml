@@ -73,7 +73,7 @@ mypy = [
 ]
 # pyre introduced two false-postives recently, pin it to prevent further surprises:
 pyre = [
-    "pyre-check == 0.9.21",
+    "pyre-check == 0.9.23",
     "pyre-extensions == 0.0.30",
 ]
 pytype = [

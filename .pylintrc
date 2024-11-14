@@ -154,6 +154,9 @@ notes=FIXME,XXX,TODO
 
 [FORMAT]
 
+# Maximum number of arguments for a function or method.
+max-args = 10
+
 # Maximum number of characters on a single line.
 max-line-length=116
 

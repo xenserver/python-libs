@@ -35,6 +35,7 @@ class TestAccessor(unittest.TestCase):
         self.assertFalse(a.access('no_such_file'))
         self.assertEqual(a.lastError, 404)
         a.finish()
+        a.finish()  # Cover the code handing a 2nd call of accessor.finish()
 
     def test_filesystem_accessor_access(self):
         """Test FilesystemAccessor.access()"""

@@ -101,13 +101,6 @@ repos:
         -   toml
 -   repo: local
     hooks:
-    -   id: run-pyre
-        name: run-pyre (expect this to take 30 seconds)
-        entry: python pyre_runner.py
-        types: [python]
-        language: python
-        log_file: ".git/pre-commit-pyre.log"
-        additional_dependencies: [pyre-check,mock]
     -   id: pytype
         name: pytype (may take up to two minutes)
         entry: sh -c "pytype >/dev/tty"

@@ -4,18 +4,18 @@
 
 Python3.6 on XS8 does not have an all-encompassing default UTF-8 mode for I/O.
 
-Newer Python versions have an UTF-8 mode that they even enable by default.
-Python3.6 only enabled UTF-8 for I/O when an UTF-8 locale is used.
+Newer Python versions have a UTF-8 mode that they even enable by default.
+Python3.6 only enabled UTF-8 for I/O when a UTF-8 locale is used.
 See below for more background info on the UTF-8 mode.
 
 For situations where UTF-8 enabled, we have to specify UTF-8 explicitly.
 
-Such sitation happens when LANG or LC_* variables are not set for UTF-8.
-XAPI plugins like auto-cert-kit find themself in this situation.
+Such situation happens when LANG or LC_* variables are not set for UTF-8.
+XAPI plugins like auto-cert-kit are in this situation.
 
 Example:
 For reading UTF-8 files like the `pciids` file, add `encoding="utf-8"`.
-This applies especailly to `open()` and `Popen()` when files my contain UTF-8.
+This applies especially to `open()` and `Popen()` when files my contain UTF-8.
 
 This also applies when en/decoding to/form `urllib` which uses bytes.
 `urllib` has to use bytes as HTTP data can of course also be binary, e.g. compressed.
@@ -159,25 +159,26 @@ tests/test_pci.py line 96 in TestPCIIds.test_videoclass_by_mock_calls()
 tests/test_pci.py line 110 in TestPCIIds.mock_lspci_using_open_testfile()
 ```
 
-Of course, `xcp/net/ifrename` won't be affected but it would be good to fix the
+Of course, `xcp/net/ifrename` won't be affected, but it would be good to fix the
 warning for them as well in an intelligent way. See the proposal for that below.
 
 There are a couple of possibilities and Python because 2.7 does not support the
 arguments we need to pass to ensure that all users of open() will work, we need
 to make passing the arguments conditional on Python >= 3.
 
-1. Overriding `open()`, while technically working would not only affect xcp.python but the entire program:
+1. Overriding `open()`.
+   While technically working, it would affect the entire interpreter:
 
     ```py
     if sys.version_info >= (3, 0):
         original_open = __builtins__["open"]
-            def uopen(*args, **kwargs):
+            def utf8_open(*args, **kwargs):
                 if "b" not in (args[1] \
                   if len(args) >= 2 else kwargs.get("mode", "")):
                     kwargs.setdefault("encoding", "UTF-8")
                     kwargs.setdefault("errors", "replace")
                 return original_open(*args, **kwargs)
-            __builtins__["open"] = uopen
+            __builtins__["open"] = utf8_open
     ```
 
 2. This is sufficient but is not very nice:
@@ -188,7 +189,7 @@ to make passing the arguments conditional on Python >= 3.
         open_utf8args = {"encoding": "utf-8", "errors": "replace"}
     else:
         open_utf8args = {}
-    # xcp/{cmd,pci,environ?,logger?}.py tests/test_{pci,biodevname?,...?}.py
+    # xcp/{cmd,pci,environ?,logger?}.py tests/test_{pci,biosdevname?,...?}.py
     + from .utf8mode import open_utf8args
     ...
     - open(filename)
@@ -208,7 +209,7 @@ to make passing the arguments conditional on Python >= 3.
             return open(*args, encoding="utf-8", errors="replace", **kwargs)
     else:
         utf8open = open
-    # xcp/{cmd,pci,environ?,logger?}.py tests/test_{pci,biodevname?,...?}.py
+    # xcp/{cmd,pci,environ?,logger?}.py tests/test_{pci,biosdevname?,...?}.py
     + from .utf8mode import utf8open
     ...
     - open(filename)

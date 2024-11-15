@@ -315,7 +315,8 @@ class FTPAccessor(Accessor):
             self.cleanup = False
             self.ftp = None
 
-    def access(self, path):  # pylint: disable=arguments-differ,arguments-renamed
+    # pylint: disable-next=arguments-differ,arguments-renamed
+    def access(self, path):  # pyright: ignore[reportIncompatibleMethodOverride]
         try:
             logger.debug("Testing "+path)
             self._cleanup()

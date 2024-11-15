@@ -126,7 +126,7 @@ repos:
         types: [python]
         verbose: true
         language: python
-        language_version: python3.8
+        language_version: python3.11
         require_serial: true
         additional_dependencies:
         - pytype

@@ -166,6 +166,7 @@ def setup_and_run_pytype_action(script_name: str):
     # Write the panda table to a markdown output file:
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY", None)
     if summary_file:
+        os.makedirs(os.path.dirname(summary_file), exist_ok=True)
         with open(summary_file, "w", encoding="utf-8") as fp:
             to_markdown(script_name, fp, retcode, results, filelink_baseurl)
     else:

@@ -31,7 +31,7 @@ pipx inject pytest pytest-{forked,localftpserver,pythonpath,subprocess,timeout} 
 pipx inject pylint pyfakefs six mock pytest{,_forked,-localftpserver}
 ```
 
-Use the `deadsnakes` ppa to install Python versions like 3.8 and 3.11 (see below)
+Use the `deadsnakes` PPA to install Python versions like 3.8 and 3.11 (see below)
 
 ## Development setup on Ubuntu 22.04
 
@@ -105,15 +105,14 @@ Explanation:
 
 ## Installation of all development dependencies
 
-Using pip-tools, you can extract the requirements and extras from `pyptoject.toml`:
+Using pip-tools, you can extract the requirements and extras from `pyproject.toml`:
 
 ```bash
 PYTHON=python3.10
 EXTRAS=.,test,mypy,pyright,pytype,tox
-PFLAGS="--no-warn-conflicts"
 $PYTHON -m pip install pip-tools==7.3.0
-$PYTHON -m piptools compile --extra=$EXTRAS -o - pyproject.toml |
-    $PYTHON -m pip install -r /dev/stdin $PFLAGS
+$PYTHON -m pip-compile --extra=$EXTRAS -o - pyproject.toml |
+    $PYTHON -m pip install -r /dev/stdin --no-warn-conflicts"
 ```
 
 With this, you can run most of the CI tests run by `tox` and GitHub CI also from the shell.
@@ -192,7 +191,7 @@ To run `podman` as your user, run these as your user:
 ```bash
 systemctl enable --now --user podman.socket # Only configures the podman socket
 systemctl start --user podman.socket        # Start the docker-compatible unix socket
-# Ubuntu only, Fedora 37 configures it already with more unqualifies search registries:
+# Ubuntu only, Fedora 37 configures it already with more unqualified search registries:
 echo 'unqualified-search-registries = ["docker.io"]' | sudo tee -a /etc/containers/registries.conf
 sudo touch /etc/containers/nodocker         # Quiet the docker emulation notification
 echo "--container-daemon-socket unix://$XDG_RUNTIME_DIR/podman/podman.sock" >>~/.actrc
@@ -215,7 +214,7 @@ Switch to `iptables-legacy` so that Docker will work:
 ### Copy selection on selecting test (without need for Ctrl-C)
 
 On traditional X11 and KDE Plasma, selected text is automatically copied
-to the X selection/clipboard for pasting it. To use this engrained behavior
+to the X selection/clipboard for pasting it. To use this engrained behaviour
 on Windows as well, it seems the only reliable way to have it for all apps
 is a `AutoHotKey` script:
 

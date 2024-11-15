@@ -47,15 +47,18 @@ sudo apt-get install -y python3.{8,11}{,-distutils}
 Installation of additional python versions for testing different versions:
 
 - If `deadsnakes/ppa` does not work, e.g. for Python 3.6, `conda` or `pyenv` can be used.
-  For instructions, see https://realpython.com/intro-to-pyenv:
-  ```yaml
+  For instructions, see <https://realpython.com/intro-to-pyenv>:
+
+  ```bash
   sudo apt install -y build-essential xz-utils zlib1g-dev \
                       lib{bz2,ffi,lzma,readline,ssl,sqlite3}-dev
   curl https://pyenv.run | bash  # add displayed commands to .bashrc
   ~/.pyenv/bin/pyenv install 3.{6,8,11} && ~/.pyenv/bin/pyenv local 3.{6,8,11} # builds them
   ```
+
 - For testing on newer Ubuntu which has `python2-dev`, but not `pip2`, install `pip2` this way:
-  ```yml
+
+  ```bash
   curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py;sudo python2 get-pip.py
   ```
 
@@ -76,14 +79,14 @@ This project uses `tox` to run the tests for different python versions. Intro:
 
 > _"Managing a Project's Virtual environments with `tox` -
 > A comprehensive beginner's introduction to `tox`":_
-> https://www.seanh.cc/2018/09/01/tox-tutorial/
+> <https://www.seanh.cc/2018/09/01/tox-tutorial>
 
-`tox` runs `pytest`, `pylint` and static analysis using `mypy`, `pytype`, and `pyright`.
+`tox` runs `pytest`, `pylint` and static analysis using `mypy`, `pyre`, `pytype`, and `pyright`.
 Links:
 
-- https://mypy.readthedocs.io/en/stable/
-- https://microsoft.github.io/pyright/
-- https://google.github.io/pytype/
+- <https://mypy.readthedocs.io/en/stable>
+- <https://microsoft.github.io/pyright>
+- <https://google.github.io/pytype>
 
 With `tox`, developers can run the full test suite for Python 2.7 and 3.x.
 The same test suite is used in GitHub CI:
@@ -140,13 +143,15 @@ pip install "pytest<7" pytest-picked pytest-sugar pytest-clarity # pytest-icdiff
 ```
 
 To verify or extract the dependencies and extras configured in `pyproject.toml` and `tox.ini`
-for specific `tox` environments, you can use https://pypi.org/project/tox-current-env/:
+for specific `tox` environments, you can use
+<https://pypi.org/project/tox-current-env>:
 
 ```bash
 tox --print-deps-to=pytype-deps.txt --print-extras-to=pytype-extras.txt -e pytype
 ```
 
-For more information to debug `pytest` test suites see: https://stribny.name/blog/pytest/
+For more information to debug `pytest` test suites see
+<https://stribny.name/blog/pytest>:
 
 ## Running GitHub actions locally using `act`
 
@@ -204,7 +209,7 @@ docker run -it --rm alpine:latest grep NAME /etc/os-release
 
 Ubuntu 22.04 LTS uses `iptables-nft` by default.
 Switch to `iptables-legacy` so that Docker will work:
-https://crapts.org/2022/05/15/install-docker-in-wsl2-with-ubuntu-22-04-lts/
+<https://crapts.org/2022/05/15/install-docker-in-wsl2-with-ubuntu-22-04-lts>
 
 ### Copy selection on selecting test (without need for Ctrl-C)
 
@@ -213,11 +218,11 @@ to the X selection/clipboard for pasting it. To use this engrained behavior
 on Windows as well, it seems the only reliable way to have it for all apps
 is a `AutoHotKey` script:
 
-- https://www.ilovefreesoftware.com/30/tutorial/auto-copy-selected-text-clipboard-windows-10.html
+- <https://www.ilovefreesoftware.com/30/tutorial/auto-copy-selected-text-clipboard-windows-10.html>
 
 While individual extensions for VS Code, Firefox, chrome do work partially,
 they either don't cover the Firefox URL bar, the VS Code terminal and so on:
 
-- https://addons.mozilla.org/en-GB/firefox/addon/copy-on-select
-- https://marketplace.visualstudio.com/items?itemName=dinhani.copy-on-select (VS Code)
-- https://www.jackofalladmins.com/knowledge%20bombs/dev%20dungeon/windows-terminal-copy-selection/
+- <https://addons.mozilla.org/en-GB/firefox/addon/copy-on-select-2>
+- <https://marketplace.visualstudio.com/items?itemName=dinhani.copy-on-select> (VS Code)
+- <https://www.jackofalladmins.com/knowledge%20bombs/dev%20dungeon/windows-terminal-copy-selection/>

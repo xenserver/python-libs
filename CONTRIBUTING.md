@@ -50,13 +50,12 @@ This project uses `tox` to run the tests for different python versions. Intro:
 > A comprehensive beginner's introduction to `tox`":_
 > https://www.seanh.cc/2018/09/01/tox-tutorial/
 
-`tox` runs `pytest`, `pylint` and static analysis using `mypy`, `pyre`, `pytype`, and `pyright`.
+`tox` runs `pytest`, `pylint` and static analysis using `mypy`, `pytype`, and `pyright`.
 Links:
 
 - https://mypy.readthedocs.io/en/stable/
 - https://microsoft.github.io/pyright/
 - https://google.github.io/pytype/
-- https://pyre-check.org/
 
 With `tox`, developers can run the full test suite for Python 2.7 and 3.x.
 The same test suite is used in GitHub CI:
@@ -78,7 +77,7 @@ Using pip-tools, you can extract the requirements and extras from `pyptoject.tom
 
 ```bash
 PYTHON=python3.10
-EXTRAS=.,test,mypy,pyre,pytype,tox
+EXTRAS=.,test,mypy,pytype,tox
 PFLAGS="--no-warn-conflicts"
 $PYTHON -m pip install pip-tools==7.3.0
 $PYTHON -m piptools compile --extra=$EXTRAS -o - pyproject.toml |

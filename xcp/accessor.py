@@ -24,7 +24,6 @@
 """accessor - provide common interface to access methods"""
 
 import errno
-# pyre-ignore-all-errors[6,16]
 import ftplib
 import io
 import os
@@ -315,7 +314,8 @@ class FTPAccessor(Accessor):
             self.cleanup = False
             self.ftp = None
 
-    def access(self, path):  # pylint: disable=arguments-differ,arguments-renamed
+    # pylint: disable-next=arguments-differ,arguments-renamed
+    def access(self, path):  # pyright: ignore[reportIncompatibleMethodOverride]
         try:
             logger.debug("Testing "+path)
             self._cleanup()

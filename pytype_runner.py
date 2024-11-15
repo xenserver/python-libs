@@ -18,15 +18,15 @@ def generate_github_annotation(match: re.Match[str], branch_url: str) -> Tuple[s
     func = match.group(3)
     msg = match.group(4)
     assert isinstance(msg, str)
-    msg_splitpos = msg.find(" ", 21)
+    msg_split_pos = msg.find(" ", 21)
     file = match.group(1)
-    linktext = os.path.basename(file).split(".")[0]
-    source_link = f"[`{linktext}`]({branch_url}/{file}#L{lineno})"
+    link_text = os.path.basename(file).split(".")[0]
+    source_link = f"[`{link_text}`]({branch_url}/{file}#L{lineno})"
     row = {
         "Location": source_link,
         "Function": f"`{func}`",
         "Error code": code,
-        "Error message": msg[:msg_splitpos] + "<br>" + msg[msg_splitpos + 1 :],
+        "Error message": msg[:msg_split_pos] + "<br>" + msg[msg_split_pos + 1 :],
         "Error description": "",
     }
     # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-error-message
@@ -49,8 +49,8 @@ def skip_uninteresting_lines(line: str) -> bool:
         return True
     if line[0] == "[":
         pos = line.rfind(os.getcwd())
-        printfrom = pos + len(os.getcwd()) + 1 if pos > 0 else line.index("]") + 2
-        info("PROGRESS: " + line[1:].split("]")[0] + ": " + line[printfrom:])
+        print_from = pos + len(os.getcwd()) + 1 if pos > 0 else line.index("]") + 2
+        info("PROGRESS: " + line[1:].split("]")[0] + ": " + line[print_from:])
         return True
     if line.startswith("ninja: "):
         line = line[7:]
@@ -139,17 +139,17 @@ def run_pytype_and_parse_annotations(xfail_files: List[str], branch_url: str):
 
 
 def to_markdown(me, fp, returncode, results, branch_url):
-    mylink = f"[{me}]({branch_url}/{me}.py)"
+    my_link = f"[{me}]({branch_url}/{me}.py)"
     pytype_link = "[pytype](https://google.github.io/pytype)"
     if len(results) or returncode:
-        fp.write(f"\n#### {mylink} reports these {pytype_link} error messages:\n")
+        fp.write(f"\n#### {my_link} reports these {pytype_link} error messages:\n")
         fp.write(pd.DataFrame(results).to_markdown())
     else:
-        fp.write(f"\n#### Congratulations, {mylink} reports no {pytype_link} errors.\n")
+        fp.write(f"\n#### Congratulations, {my_link} reports no {pytype_link} errors.\n")
     fp.write("\n")
 
 
-def setup_and_run_pytype_action(scriptname: str):
+def setup_and_run_pytype_action(script_name: str):
     config = load("pyproject.toml")
     pytype = config["tool"].get("pytype")
     xfail_files = pytype.get("xfail", []) if pytype else []
@@ -167,12 +167,12 @@ def setup_and_run_pytype_action(scriptname: str):
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY", None)
     if summary_file:
         with open(summary_file, "w", encoding="utf-8") as fp:
-            to_markdown(scriptname, fp, retcode, results, filelink_baseurl)
+            to_markdown(script_name, fp, retcode, results, filelink_baseurl)
     else:
-        to_markdown(scriptname, sys.stdout, retcode, results, filelink_baseurl)
+        to_markdown(script_name, sys.stdout, retcode, results, filelink_baseurl)
 
 
 if __name__ == "__main__":
     script_basename = os.path.basename(__file__).split(".")[0]
     basicConfig(format=script_basename + ": %(message)s", level=INFO)
-    sys.exit(setup_and_run_pytype_action(scriptname=script_basename))
+    sys.exit(setup_and_run_pytype_action(script_name=script_basename))

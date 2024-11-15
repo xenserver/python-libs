@@ -51,10 +51,10 @@ def cleanup_results_dict(r, sym):
     r["symbol"] = sym[:32]
     r["message"] = r["message"][:96]
     try:
-        dotpos = r["obj"].rindex(".") + 1
+        dot_pos = r["obj"].rindex(".") + 1
     except ValueError:
-        dotpos = 0
-    r["obj"] = r["obj"][dotpos:].split("test_")[-1][:16]
+        dot_pos = 0
+    r["obj"] = r["obj"][dot_pos:].split("test_")[-1][:16]
 
 
 suppress_msg = ["Unused variable 'e'"]  # type: list[str]
@@ -218,22 +218,22 @@ def main(dirs: List[str], output_file: str, pylint_logfile: str, branch_url: str
 
 def write_results_as_markdown_tables(branch_url, fp, panda_overview, panda_results):
     me = os.path.basename(__file__)
-    mylink = f"[{me}]({branch_url}/{me})"
+    link = f"[{me}]({branch_url}/{me})"
     # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-markdown-content
-    fp.write(f"### PyLint breakdown from {mylink} on **xcp/\\*\\*/*.py**\n")
+    fp.write(f"### PyLint breakdown from {link} on **xcp/\\*\\*/*.py**\n")
     fp.write(panda_overview.to_markdown())
-    fp.write(f"\n### PyLint results from {mylink} on **xcp/\\*\\*/*.py**\n")
+    fp.write(f"\n### PyLint results from {link} on **xcp/\\*\\*/*.py**\n")
     fp.write(panda_results.to_markdown())
 
 
 if __name__ == "__main__":
-    ghblob_url = "https://github.com/xenserver/python-libs/blob/master"
+    github_blob_url = "https://github.com/xenserver/python-libs/blob/master"
     server_url = os.environ.get("GITHUB_SERVER_URL", None)
     repository = os.environ.get("GITHUB_REPOSITORY", None)
     if server_url and repository:
         # https://github.com/orgs/community/discussions/5251 only set on Pull requests:
         branch = os.environ.get("GITHUB_HEAD_REF", None) or os.environ.get("GITHUB_REF_NAME", None)
-        ghblob_url = f"{server_url}/{repository}/blob/{branch}"
+        github_blob_url = f"{server_url}/{repository}/blob/{branch}"
 
     # Like the previous run-pylint.sh, check the xcp module by default:
     dirs_to_check = sys.argv[1:] if len(sys.argv) > 1 else ["xcp", "tests"]
@@ -249,4 +249,4 @@ if __name__ == "__main__":
     pylint_txt = os.environ.get("ENVLOGDIR", ".tox") + "/pylint.txt"
 
     print("Checking:", str(dirs_to_check) + "; Writing report to:", step_summary)
-    main(dirs_to_check, step_summary, pylint_txt, ghblob_url)
+    main(dirs_to_check, step_summary, pylint_txt, github_blob_url)

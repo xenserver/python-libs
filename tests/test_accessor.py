@@ -1,14 +1,16 @@
 import unittest
-
-from pyfakefs.fake_filesystem import FakeFilesystem
+from typing import TYPE_CHECKING
 
 import xcp.accessor
 
 from .test_mountingaccessor import check_binary_read, check_binary_write
 
+if TYPE_CHECKING:
+    import pyfakefs
+
 
 def test_file_accessor(fs):
-    # type:(FakeFilesystem) -> None
+    # type(pyfakefs.fake_filesystem.FakeFilesystem) -> None
     """Test FileAccessor.writeFile(), .openAddress and .access using pyfakefs"""
     accessor = xcp.accessor.createAccessor("file://repo/", False)
     assert isinstance(accessor, xcp.accessor.FileAccessor)

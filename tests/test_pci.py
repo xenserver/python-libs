@@ -11,6 +11,8 @@ from xcp.pci import PCI, PCIDevices, PCIIds
 
 if sys.version_info >= (3, 6):
     from pytest_subprocess.fake_process import FakeProcess
+else:
+    pytest.skip(allow_module_level=True)
 
 class TestInvalid(unittest.TestCase):
 
@@ -185,6 +187,7 @@ if sys.version_info >= (3, 0):
     def mock_lspci_using_open_testfile(fp):
         """Mock xcp.pci.PCIDevices.Popen() using open(tests/data/lspci-mn)"""
         with open("tests/data/lspci-mn", "rb") as fake_data:
-            assert isinstance(fp, FakeProcess)
+            if sys.version_info >= (3, 6):
+                assert isinstance(fp, FakeProcess)
             fp.register_subprocess(["lspci", "-mn"], stdout=fake_data.read())
         return PCIDevices()

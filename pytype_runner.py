@@ -163,7 +163,7 @@ def setup_and_run_pytype_action(scriptname: str):
         branch = os.environ.get("GITHUB_HEAD_REF", None) or os.environ.get("GITHUB_REF_NAME", None)
         filelink_baseurl = f"{server_url}/{repository}/blob/{branch}"
     retcode, results = run_pytype_and_parse_annotations(xfail_files, filelink_baseurl)
-    # Write the panda dable to a markdown output file:
+    # Write the panda table to a markdown output file:
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY", None)
     if summary_file:
         with open(summary_file, "w", encoding="utf-8") as fp:

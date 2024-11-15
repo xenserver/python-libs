@@ -395,11 +395,11 @@ class HTTPAccessor(Accessor):
         return "<HTTPAccessor: %s>" % self.baseAddress
 
 
-# Tuple passed in tests to isinstanc(val, ...Types) to check types:
+# Tuple passed in tests to isinstance(val, ...Types) to check types:
 MountingAccessorTypes = (DeviceAccessor, NFSAccessor)
 """Tuple for type checking in unit tests testing subclasses of MountingAccessor"""
 
-# Tuple passed in tests to isinstanc(val, ...Types) to check types:
+# Tuple passed in tests to isinstance(val, ...Types) to check types:
 LocalTypes = (DeviceAccessor, NFSAccessor, FileAccessor)
 
 

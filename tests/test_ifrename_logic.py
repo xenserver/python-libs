@@ -77,7 +77,7 @@ class TestSimpleLogic(unittest.TestCase):
     def test_newhw_norules_2eth(self):
         """
         Two previously unrecognised nics, with no other rules.  Expecting
-        them to be renamed to eth0 and 1 respectivly
+        them to be renamed to eth0 and 1 respectively
         """
 
         eth0 = MACPCI("ab:cd:ef:12:34:56","0000:00:0f.0","side-12-eth1")
@@ -96,7 +96,7 @@ class TestSimpleLogic(unittest.TestCase):
 
     def test_newhw_1srule_1eth(self):
         """
-        One previously unrecognised nic with a static rule refering to it.
+        One previously unrecognised nic with a static rule referring to it.
         Expecting it to be named to eth0 as per the static rule.
         """
 
@@ -336,7 +336,7 @@ class TestUseCases(unittest.TestCase):
 
     def test_CA_94279(self):
         """
-        CA-94279 occured because the logic did no honour the order paramater
+        CA-94279 occurred because the logic did no honor the order parameter
         from biosdevname if it was the only deciding factor.  (It appears rare
         for the embedded network cards to have a greater PCI sbdf than the non-
         embedded cards)
@@ -528,11 +528,11 @@ class TestInputSanitisation(unittest.TestCase):
         Set up a lot of MACPCI objects.
 
         This reflection magic creates many self.cXXX objects where XXX
-        represents the indicies of mac, pci and eth names.
+        represents the indices of mac, pci and eth names.
         e.g. self.c123 means the 1st mac, 2nd pci and 3rd eth
              self.c221 means the 2nd mac, 2nd pci and 1st eth
 
-        In addition, set up equivelent self.sXXX objects which have a kname
+        In addition, set up equivalent self.sXXX objects which have a kname
         set to None and a tname set to the 'eth'
         """
 

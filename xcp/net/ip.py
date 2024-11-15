@@ -85,7 +85,7 @@ def ip_link_set_name(src_name, dst_name):
     # if the device was up before, bring it back up
     if isup:
 
-        # Performace note: if we are doing an intermediate rename to
+        # Performance note: if we are doing an intermediate rename to
         # move a device sideways, we shouldn't bring it back until it has
         # its final name.  However, I can't think of a non-hacky way of doing
         # this with the current implementation

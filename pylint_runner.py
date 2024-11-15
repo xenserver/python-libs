@@ -6,21 +6,15 @@ using different formats:
 - Markdown Reports for showing them in the GitHub Actions Summary
 - a pylint.txt for diff-quality to ensure no regressions in diffs.
 
-Pylint for Python2 does not support JSONReporter, so this wrapper only supports
-the native Python3 checks, not the 2to3 conversion checks selected by the --py3k
-options provied only in the Pylint for Python2.
-The older pylint-2.16 could be checked if it supports both.
-
-The output for GitHub of this script is fitered for putting the
-focus on severen warnings for the Python3 transition, expecially
-the encoding warnings are important.
+The output for GitHub of this script is filtered for focussing on severe warnings.
+Especially, the encoding warnings are important.
 
 On stdout, the format used by GitHub to generate error annotations us used.
 These error annotations are shown on the top of the GitHub Action summary page
 and are also shown in the diff view at the their code locations.
 
 It also generates a markdown report including two Markdown
-tables (one for summary, one with the individual erros)
+tables (one for summary, one with the individual errors)
 which can be viewed locally and is also shown in the GitHub
 Action's Summary Report.
 """
@@ -99,7 +93,7 @@ notice_syms = [
 # This is illegal according to:
 # https://docs.python.org/3/reference/datamodel.html#object.__hash__
 #
-# Reference: pylint3 removed the --py3k checker "because the transition is bedind us":
+# Reference: pylint3 removed the --py3k checker "because the transition is behind us":
 # https://github.com/pylint-dev/pylint/blob/main/pylint/extensions/eq_without_hash.py
 #
 # But some checks are still useful in python3 after all, and this is the remnant of it.
@@ -147,7 +141,6 @@ def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
             lineno = r["line"]
             # Write errors in the format for diff-quality to check against regressions:
             errorlog.write(f"{path}:{lineno}: [{msg_id}({sym}), {r['obj']}] {msg}\n")
-            # For suggestions to fix existing warnings, be more focussed on serverity:
             if not msg:
                 continue
 
@@ -214,7 +207,7 @@ def main(dirs: List[str], output_file: str, pylint_logfile: str, branch_url: str
     with open(pylint_logfile, "w", encoding="utf-8") as txt_out:
         panda_overview, panda_results = pylint_project(dirs, txt_out, branch_url)
 
-    # Write the panda dable to a markdown output file:
+    # Write the panda table to a markdown output file:
     summary_file = output_file or os.environ.get("GITHUB_STEP_SUMMARY")
     if not summary_file:
         return

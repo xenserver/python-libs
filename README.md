@@ -176,7 +176,7 @@ See <https://github.com/xenserver/python-libs/pull/23> for the context of this e
 
 ## Guidelines
 
-Charset encoding/string handling:
+Character set encoding/string handling:
 See [README-Unicode.md](README-Unicode.md) for details on Unicode support.
 
 ## Users

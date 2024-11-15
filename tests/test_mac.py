@@ -45,7 +45,7 @@ class TestInvalidMAC(unittest.TestCase):
             MAC(val)
         self.assertFalse(MAC.is_valid(val))
 
-    def test_dash_too_few_octetes(self):
+    def test_dash_too_few_octets(self):
         val = "00-00-00-00-00"
         with self.assertRaises(ValueError):
             MAC(val)
@@ -190,7 +190,7 @@ class TestValidMAC(unittest.TestCase):
             self.assertEqual(mac.as_string("-", True), "15-52-4A-B4-0C-FF")
             self.assertEqual(mac.as_string(".", True), "1552.4AB4.0CFF")
 
-class TestCompaisons(unittest.TestCase):
+class TestComparisons(unittest.TestCase):
 
     def test_equal(self):
 

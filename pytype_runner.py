@@ -77,7 +77,7 @@ def run_pytype(command: List[str], branch_url: str, errorlog: TextIO, results):
     ok = True
     while ok:
         for key, _ in sel.select():
-            line = key.fileobj.readline()  # type: ignore
+            line = key.fileobj.readline()  # type: ignore[union-attr]
             if not line:
                 ok = False
                 break

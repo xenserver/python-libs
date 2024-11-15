@@ -20,6 +20,7 @@ else:
     import pytest
 
     pytest.skip(allow_module_level=True)
+    sys.exit(0)  # Let pyright know that this is a dead end
 
 binary_data = b"\x00\x1b\x5b\x95\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xcc\xdd\xee\xff"
 

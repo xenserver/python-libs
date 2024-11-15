@@ -32,7 +32,6 @@ from typing import cast
 
 import xcp.cmd
 
-# pyre-ignore-all-errors[21]
 try:  # xenserver-release.rpm puts a branding.py into our xcp installation directory:
     from xcp import branding  # type:ignore[attr-defined] # pytype: disable=import-error
 except ImportError:  # For CI, use stubs/branding.py (./stubs is added to pythonpath)

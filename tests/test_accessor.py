@@ -18,7 +18,7 @@ def test_file_accessor(fs):
 
 class TestAccessor(unittest.TestCase):
     def setUp(self):
-        """Provide the refrence content of the repo/.treeinfo file for check_repo_access()"""
+        """Provide the reference content of the repo/.treeinfo file for check_repo_access()"""
         with open("tests/data/repo/.treeinfo", "rb") as dot_treeinfo:
             self.reference_treeinfo = dot_treeinfo.read()
 

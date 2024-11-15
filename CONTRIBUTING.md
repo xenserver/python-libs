@@ -17,6 +17,7 @@ But this `tox` is older, so install `tox==4.5.1` using `pip` (see below)
 ```bash
 sudo dnf install tox;sudo rpm -e tox
 ```
+
 But preferably use `tox` from the virtual environment instead.
 
 ## Development setup on Ubuntu 24.04

@@ -75,6 +75,8 @@ repos:
     hooks:
     -   id: mypy
         additional_dependencies:
+        - pyfakefs
+        - pytest_httpserver
         - pytest-subprocess
         - types-mock
         - types-six
@@ -94,7 +96,7 @@ repos:
 
 
 -   repo: https://github.com/pycqa/pylint
-    rev: v2.17.4
+    rev: v3.3.1
     hooks:
     -   id: pylint
         args:
@@ -106,12 +108,16 @@ repos:
             ]
         log_file: ".git/pre-commit-pylint.log"
         additional_dependencies:
-        -   pyfakefs
+        -   setuptools
         -   six
         -   mock
         -   pandas
+        -   pyfakefs
         -   pytest_forked
+        -   pytest_httpserver
         -   toml
+
+
 -   repo: local
     hooks:
     -   id: pytype
@@ -127,7 +133,7 @@ repos:
         name: Check pytest unit tests pass
         types: [python]
         # entry: sh -c "pytest -x -rf --new-first --show-capture=all >/dev/tty"
-        entry: sh -c "tox -e py38-covcombine >/dev/tty"
+        entry: sh -c "tox >/dev/tty"
         verbose: true
         language: python
         require_serial: true

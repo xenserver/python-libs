@@ -10,8 +10,16 @@ from xcp.compat import open_utf8
 from xcp.logger import openLog
 
 
-def test_openLog_mock_open():
-    """Cover xcp.logger.openLog.open_with_codec_handling and check the arguments used for open()"""
+def test_openLog_mock_open(fs):
+    # type(FakeFilesystem) -> None
+    """
+    - Covers xcp.logger.openLog.open_with_codec_handling and
+    - checks the arguments it uses for open()
+
+    Because needs to call openLog() which creates a logfile, this test uses
+    the pytest pyfakefs fixture 'fs' which wraps creating it in a virtual fs.
+    With it, this tests does not create a log file on the filesystem of the host.
+    """
     fh = StringIO()
     with patch("xcp.compat.open", mock_open()) as open_mock:
         open_mock.return_value = fh

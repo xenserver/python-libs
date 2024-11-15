@@ -21,13 +21,14 @@ import ftplib
 from io import BytesIO
 
 import pytest
-import pytest_localftpserver  # pylint: disable=unused-import # Ensure that it is installed
+import pytest_localftpserver  # Ensure that it is installed
 from six import ensure_binary, ensure_str
 
 import xcp.accessor
 
 binary_data = b"\x80\x91\xaa\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xcc\xdd\xee\xff"
 text_data = "✋➔Hello Accessor from the 🗺, download and verify ✅ me!"
+assert pytest_localftpserver
 
 
 def upload_textfile(ftpserver, accessor):

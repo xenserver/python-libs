@@ -31,6 +31,7 @@ class TestValid(unittest.TestCase):
 
     def test_null_with_segment(self):
 
+        assert PCI.is_valid("0000:00:00.0") is True
         c = PCI("0000:00:00.0")
 
         self.assertEqual(c.segment, 0)
@@ -43,6 +44,7 @@ class TestValid(unittest.TestCase):
 
     def test_null_without_segment(self):
 
+        assert PCI.is_valid("00:00.0") is True
         c = PCI("00:00.0")
 
         self.assertEqual(c.segment, 0)
@@ -54,6 +56,7 @@ class TestValid(unittest.TestCase):
 
     def test_valid(self):
 
+        assert PCI.is_valid("8765:43:1f.3") is True
         c = PCI("8765:43:1f.3")
 
         self.assertEqual(c.segment, 0x8765)
@@ -61,14 +64,31 @@ class TestValid(unittest.TestCase):
         self.assertEqual(c.device, 0x1f)
         self.assertEqual(c.function, 0x3)
 
+    def test_valid_index(self):
+
+        assert PCI.is_valid("8765:43:1f.3[0]") is True
+        assert PCI.is_valid("1234:56:01.7[1]") is True
+        c = PCI("1234:56:01.7[1]")
+
+        self.assertEqual(c.segment, 0x1234)
+        self.assertEqual(c.bus, 0x56)
+        self.assertEqual(c.device, 0x01)
+        self.assertEqual(c.function, 0x7)
+        self.assertEqual(c.index, 0x1)
+
     def test_equality(self):
 
         self.assertEqual(PCI("0000:00:00.0"), PCI("00:00.0"))
+        assert PCI("1234:56:01.7[1]") != PCI("1234:56:01.7[2]")
+        assert PCI("1234:56:01.2") >= PCI("1234:56:01.2")
+        assert PCI("1234:56:01.1") <= PCI("1234:56:01.2")
+        assert PCI("1234:56:01.3") > PCI("1234:56:01.2")
+        assert PCI("1234:56:01.1") < PCI("1234:56:02.2")
 
 
 if sys.version_info >= (2, 7):
     def assert_videoclass_devices(ids, devs):  # type: (PCIIds, PCIDevices) -> None
-        """Verification function for checking the otuput of PCIDevices.findByClass()"""
+        """Verification function for checking the output of PCIDevices.findByClass()"""
         video_class = ids.lookupClass('Display controller')
         assert video_class == ["03"]
         sorted_devices = sorted(devs.findByClass(video_class),
@@ -76,6 +96,7 @@ if sys.version_info >= (2, 7):
 
         # Assert devs.findByClass() finding 3 GPUs from tests/data/lspci-mn in our mocked PCIIds DB:
         assert len(sorted_devices) == 3
+        assert len(devs.findByClass("03", "80")) == 2
 
         # For each of the found devices, assert these expected values:
         for (video_dev,

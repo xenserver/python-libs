@@ -37,7 +37,7 @@
 # https://github.com/dexpota/cheatsheets/blob/master/pre-commit
 exclude: "^tests/data"
 fail_fast: true
-default_stages: [commit]
+default_stages: [pre-commit]
 repos:
 -   repo: local
     hooks:
@@ -60,6 +60,14 @@ repos:
         verbose: true
         additional_dependencies:
           - isort
+
+
+-   repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0  # Use the ref you want to point at
+    hooks:
+    # Enforce that `# type: ignore` annotations always occur with specific codes.
+    # Sample annotation: # type: ignore[attr-defined,name-defined]
+    -   id: python-check-blanket-type-ignore
 
 
 -   repo: https://github.com/pre-commit/mirrors-mypy
@@ -124,12 +132,8 @@ repos:
         language: python
         require_serial: true
         pass_filenames: false
--   repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0  # Use the ref you want to point at
-    hooks:
-    # Enforce that `# type: ignore` annotations always occur with specific codes.
-    # Sample annotations: # type: ignore[attr-defined] # type: ignore[attr-defined,name-defined]
-    -   id: python-check-blanket-type-ignore
+
+
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:

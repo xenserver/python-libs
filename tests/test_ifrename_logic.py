@@ -558,7 +558,7 @@ class TestInputSanitisation(unittest.TestCase):
         self.siobuff.close()
 
 
-    def test_srule_eth_unaliased(self):
+    def test_srule_eth_not_aliased(self):
         rename([self.s111], [], [], [])
 
     def test_srule_eth_alias(self):

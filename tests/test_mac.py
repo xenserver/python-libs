@@ -218,7 +218,7 @@ class TestComparisons(unittest.TestCase):
         self.assertFalse(m1 >  m2)
         self.assertFalse(m1 >= m2)
 
-class TestHashability(unittest.TestCase):
+class TestHashing(unittest.TestCase):
 
     def test_keys(self):
 

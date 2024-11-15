@@ -58,21 +58,6 @@ jobs:
           pip install 'virtualenv<20.22' 'tox==4.5.1' tox-gh-actions
           tox --workdir .github/workflows/.tox --recreate
 
-      # tox >= 4.0.0 is needed for using optional-dependencies from pyproject.toml, which is
-      # is not available for python <= 3.6, so use the python3.8 of Ubuntu-20.04 to install it:
-      - name: Run tox for 3.6 and 3.8 on ${{ matrix.os }}'s 3.8 to get 'extras' from pyproject.toml)
-        if: ${{ matrix.python-version == 2.7 || matrix.python-version == 3.6 }}
-        run: |
-          set -xv;curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-          python3.8 get-pip.py
-          # The alternative is installing python3-pip but we don't need full pip function for now:
-          # sudo apt-get update && sudo apt-get install -y python3-pip
-          # Let tox-gh-actions get the environment(s) to run tests with from tox.ini:
-          # Use tox==4.5.1: tox>=4 is needed for reading the extras from pyproject.toml
-          # Warning: tox>=4.5.2 depends on virutalenv>=20.23, which breaks Python 2.7:
-          python3.8 -m pip install 'virtualenv<20.22' 'tox==4.5.1' tox-gh-actions
-          tox --workdir .github/workflows/.tox --recreate
-
       - name: Select the coverage file for upload
         if: |
           ( matrix.python-version == '3.6' || matrix.python-version == '3.11' ) &&

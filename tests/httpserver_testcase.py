@@ -12,7 +12,7 @@ try:
     from pytest_httpserver import HTTPServer
     from werkzeug.wrappers import Request, Response
 
-    ErrorHandler = Optional[Callable[[Request], Response]]
+    ErrorHandler = Optional[Callable[[Request], Response | None]]
 except ImportError:
     pytest.skip(allow_module_level=True)
     sys.exit(0)  # Let pyright know that this is a dead end

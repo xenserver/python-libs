@@ -43,7 +43,6 @@ class HTTPAccessorTestCase(HTTPServerTestCase):
 
     def assert_http_get_request_data(self, url, read_file, error_handler):
         # type:(str, str, ErrorHandler) -> HTTPAccessor
-        # pyre-ignore[23]: silence false positive
         with self.http_get_request_data(url, read_file, error_handler) as (httpaccessor, ref):
             http_accessor_filehandle = httpaccessor.openAddress(read_file)
             if sys.version_info >= (3, 0):

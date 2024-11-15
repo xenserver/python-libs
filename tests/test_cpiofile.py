@@ -1,5 +1,4 @@
 # suppress false positive on pytest missing pytest.raises():
-# pyre-ignore-all-errors[16]
 """
 Test various modes of creating and extracting CpioFile using different compression
 types, opening the archive as stream and as file, using pyfakefs as filesystem without

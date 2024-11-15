@@ -24,7 +24,6 @@
 """accessor - provide common interface to access methods"""
 
 import errno
-# pyre-ignore-all-errors[6,16]
 import ftplib
 import io
 import os

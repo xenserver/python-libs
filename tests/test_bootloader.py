@@ -41,8 +41,7 @@ class TestBootloader(unittest.TestCase):
                                     universal_newlines=True)
         assert proc.stdout
         for line in proc.stdout:
-            # pylint: disable-next=deprecated-method
-            self.assertRegexpMatches(line, r"^(5a6,13$|>)")
+            self.assertRegex(line, r"^(5a6,13$|>)")  # Replaced removed assert call
 
         proc.stdout.close()
         proc.wait()

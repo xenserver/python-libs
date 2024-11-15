@@ -28,7 +28,7 @@ The Continuous Integration Tests feature:
 - Checking of the combined coverage against the diff to master: Fails if changes are not covered!
 - Pylint report in the GitHub Action Summary page, with Warning and Error annotatios, even in the code review.
 - Check that changes don't generate pylint warnings (if warning classes which are enabled in .pylintrc)
-- Static analysis using `mypy`, `pyre` and `pytype`
+- Static analysis using `mypy`, `pylint`, `pyright` and `pytype`
 
 This enforces that any change (besides whitespace):
 
@@ -72,7 +72,6 @@ For the installation of the general development dependencies, visit [INSTALL.md]
 - Test with `python2.7 -m pytest`
 - Run `mypy` (without any arguments - The configuration is in `pyproject.toml`)
 - Run `./pytype_runner.py`
-- Run `./pyre_runner.py`
 - Run `tox -e py36-lint` and fix any `Pylint` warnings
 - Run `tox -e py310-covcombine-check` and fix any missing diff-coverage.
 - Run `tox` for the full CI test suite
@@ -86,7 +85,7 @@ The list of `virtualenvs` configured in tox can be shown using this command: `to
 $ tox -av
 default environments:
 py36-lint              -> Run in a py36 virtualenv: Run pylint and fail on warnings remaining on lines in the diff to master
-py311-pyre             -> Run in a py311 virtualenv: Run pyre for static analyis, only passes using: tox -e py311-pyre
+py311-pyright          -> Run in a py311 virtualenv: Run pyright for static analyis
 py38-pytype            -> Run in a py38 virtualenv: Run pytype for static analyis, intro: https://youtu.be/abvW0mOrDiY
 py310-covcombine-check -> Run in a py310 virtualenv: Generate combined coverage reports with py27-test coverage merged Run mypy for static analyis
 
@@ -100,7 +99,7 @@ test                   -> Run in a python virtualenv: Run pytest in this environ
 
 If you have only one version of Python3, that works too. Use: `tox -e py<ver>-test`
 
-## Static analysis using mypy, pyre, pyright and pytype
+## Static analysis using mypy, pylint, pyright and pytype
 
 The preconditions for using static analysis with `mypy` (which passes now but has
 only a few type comments) and `pyright` are present now and `mypy` is enabled in `tox`

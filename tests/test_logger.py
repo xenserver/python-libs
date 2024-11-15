@@ -31,3 +31,4 @@ def test_openLog_mock_stdin():
         assert openLog("test.log") is True
         os.close(slave_fd)
         os.close(master_fd)
+        open_mock.assert_called_once_with("test.log", "a", **open_utf8)

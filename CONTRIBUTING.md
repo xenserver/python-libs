@@ -1,3 +1,14 @@
+# Development setup
+
+## Create a virtual environment with the test dependencies
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+pip install pip-tools==7.3.0
+pip-compile --extra=test,mypy,pyright,pytype,tox -o - pyproject.toml | pip install -r /dev/stdin
+```
+
 ## Development setup on Fedora 37
 
 On Fedora 37, the `tox` rpm installs all Python versions.
@@ -6,8 +17,25 @@ But this `tox` is older, so install `tox==4.5.1` using `pip` (see below)
 ```bash
 sudo dnf install tox;sudo rpm -e tox
 ```
+But preferably use `tox` from the virtual environment instead.
+
+## Development setup on Ubuntu 24.04
+
+Prefer the virtual environment. Alternatively, an option is to use `pipx`:
+
+```bash
+sudo apt install pipx
+pipx install tox; pipx install 'pytest<7';pipx install pylint
+pipx inject pytest pytest-{forked,localftpserver,pythonpath,subprocess,timeout} pyfakefs pytest_httpserver six mock
+pipx inject pylint pyfakefs six mock pytest{,_forked,-localftpserver}
+```
+
+Use the `deadsnakes` ppa to install Python versions like 3.8 and 3.11 (see below)
 
 ## Development setup on Ubuntu 22.04
+
+Usage of <https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa> to install
+other python versions.
 
 ```bash
 sudo apt update
@@ -77,7 +105,7 @@ Using pip-tools, you can extract the requirements and extras from `pyptoject.tom
 
 ```bash
 PYTHON=python3.10
-EXTRAS=.,test,mypy,pytype,tox
+EXTRAS=.,test,mypy,pyright,pytype,tox
 PFLAGS="--no-warn-conflicts"
 $PYTHON -m pip install pip-tools==7.3.0
 $PYTHON -m piptools compile --extra=$EXTRAS -o - pyproject.toml |

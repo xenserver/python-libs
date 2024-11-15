@@ -164,3 +164,10 @@ repos:
     -   id: mixed-line-ending
         args: ['--fix=lf']
         description: Replace line endings with LF
+
+
+# Run the CSpell command line spell checker
+-   repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v8.16.0
+    hooks:
+    -   id: cspell

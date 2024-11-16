@@ -136,7 +136,7 @@ class TestLoadAndParse(unittest.TestCase):
         self.assertEqual(sr.formulae, {"eth0": ("ppn", "p2p3")})
         self.assertEqual(sr.rules, [])
 
-    def test_single_oldsytle_ppn_slot(self):
+    def test_single_old_style_ppn_slot(self):
         # CA-82901 - Accept old-style PPNs but translate them to new-style
         fd = StringIO('eth0:ppn="pci2p3"')
         sr = StaticRules(fd = fd)
@@ -455,7 +455,7 @@ class TestSave(unittest.TestCase):
     def test_one_invalid_method(self):
 
         sr = StaticRules()
-        sr.formulae = {"eth0": ("ppf", "foobaz"),
+        sr.formulae = {"eth0": ("ppf", "foobar"),
                        }
 
         self.assertEqual(sr.write(False), "")

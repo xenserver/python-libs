@@ -50,8 +50,7 @@ class PCI(object):
     @classmethod
     def is_valid(cls, addr):
         """
-        Static method to assertain whether addr is a recognised PCI address
-        or not
+        Static method to ascertain whether addr is a recognised PCI address
         """
         try:
             PCI(addr)

@@ -6,21 +6,15 @@ using different formats:
 - Markdown Reports for showing them in the GitHub Actions Summary
 - a pylint.txt for diff-quality to ensure no regressions in diffs.
 
-Pylint for Python2 does not support JSONReporter, so this wrapper only supports
-the native Python3 checks, not the 2to3 conversion checks selected by the --py3k
-options provied only in the Pylint for Python2.
-The older pylint-2.16 could be checked if it supports both.
-
-The output for GitHub of this script is fitered for putting the
-focus on severen warnings for the Python3 transition, expecially
-the encoding warnings are important.
+The output for GitHub of this script is filtered for focussing on severe warnings.
+Especially, the encoding warnings are important.
 
 On stdout, the format used by GitHub to generate error annotations us used.
 These error annotations are shown on the top of the GitHub Action summary page
 and are also shown in the diff view at the their code locations.
 
 It also generates a markdown report including two Markdown
-tables (one for summary, one with the individual erros)
+tables (one for summary, one with the individual errors)
 which can be viewed locally and is also shown in the GitHub
 Action's Summary Report.
 """
@@ -57,10 +51,10 @@ def cleanup_results_dict(r, sym):
     r["symbol"] = sym[:32]
     r["message"] = r["message"][:96]
     try:
-        dotpos = r["obj"].rindex(".") + 1
+        dot_pos = r["obj"].rindex(".") + 1
     except ValueError:
-        dotpos = 0
-    r["obj"] = r["obj"][dotpos:].split("test_")[-1][:16]
+        dot_pos = 0
+    r["obj"] = r["obj"][dot_pos:].split("test_")[-1][:16]
 
 
 suppress_msg = ["Unused variable 'e'"]  # type: list[str]
@@ -99,7 +93,7 @@ notice_syms = [
 # This is illegal according to:
 # https://docs.python.org/3/reference/datamodel.html#object.__hash__
 #
-# Reference: pylint3 removed the --py3k checker "because the transition is bedind us":
+# Reference: pylint3 removed the --py3k checker "because the transition is behind us":
 # https://github.com/pylint-dev/pylint/blob/main/pylint/extensions/eq_without_hash.py
 #
 # But some checks are still useful in python3 after all, and this is the remnant of it.
@@ -147,7 +141,6 @@ def pylint_project(check_dirs: List[str], errorlog: TextIO, branch_url: str):
             lineno = r["line"]
             # Write errors in the format for diff-quality to check against regressions:
             errorlog.write(f"{path}:{lineno}: [{msg_id}({sym}), {r['obj']}] {msg}\n")
-            # For suggestions to fix existing warnings, be more focussed on serverity:
             if not msg:
                 continue
 
@@ -214,7 +207,7 @@ def main(dirs: List[str], output_file: str, pylint_logfile: str, branch_url: str
     with open(pylint_logfile, "w", encoding="utf-8") as txt_out:
         panda_overview, panda_results = pylint_project(dirs, txt_out, branch_url)
 
-    # Write the panda dable to a markdown output file:
+    # Write the panda table to a markdown output file:
     summary_file = output_file or os.environ.get("GITHUB_STEP_SUMMARY")
     if not summary_file:
         return
@@ -225,22 +218,22 @@ def main(dirs: List[str], output_file: str, pylint_logfile: str, branch_url: str
 
 def write_results_as_markdown_tables(branch_url, fp, panda_overview, panda_results):
     me = os.path.basename(__file__)
-    mylink = f"[{me}]({branch_url}/{me})"
+    link = f"[{me}]({branch_url}/{me})"
     # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-markdown-content
-    fp.write(f"### PyLint breakdown from {mylink} on **xcp/\\*\\*/*.py**\n")
+    fp.write(f"### PyLint breakdown from {link} on **xcp/\\*\\*/*.py**\n")
     fp.write(panda_overview.to_markdown())
-    fp.write(f"\n### PyLint results from {mylink} on **xcp/\\*\\*/*.py**\n")
+    fp.write(f"\n### PyLint results from {link} on **xcp/\\*\\*/*.py**\n")
     fp.write(panda_results.to_markdown())
 
 
 if __name__ == "__main__":
-    ghblob_url = "https://github.com/xenserver/python-libs/blob/master"
+    github_blob_url = "https://github.com/xenserver/python-libs/blob/master"
     server_url = os.environ.get("GITHUB_SERVER_URL", None)
     repository = os.environ.get("GITHUB_REPOSITORY", None)
     if server_url and repository:
         # https://github.com/orgs/community/discussions/5251 only set on Pull requests:
         branch = os.environ.get("GITHUB_HEAD_REF", None) or os.environ.get("GITHUB_REF_NAME", None)
-        ghblob_url = f"{server_url}/{repository}/blob/{branch}"
+        github_blob_url = f"{server_url}/{repository}/blob/{branch}"
 
     # Like the previous run-pylint.sh, check the xcp module by default:
     dirs_to_check = sys.argv[1:] if len(sys.argv) > 1 else ["xcp", "tests"]
@@ -256,4 +249,4 @@ if __name__ == "__main__":
     pylint_txt = os.environ.get("ENVLOGDIR", ".tox") + "/pylint.txt"
 
     print("Checking:", str(dirs_to_check) + "; Writing report to:", step_summary)
-    main(dirs_to_check, step_summary, pylint_txt, ghblob_url)
+    main(dirs_to_check, step_summary, pylint_txt, github_blob_url)

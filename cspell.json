@@ -1,0 +1,48 @@
+// http://cspell.org/docs/getting-started/#2-add-words-to-the-project-dictionary
+{
+    "version": "0.2",
+    "language": "en-GB,en-US",
+    "dictionaryDefinitions": [
+        {
+            "name": "cspell-workspace-dictionary",
+            "path": ".vscode/ltex.dictionary.en-US.txt",
+            "addWords": true
+        }
+    ],
+    "dictionaries": ["cspell-workspace-dictionary"],
+    "ignorePaths": [
+        ".actrc",
+        ".pylintrc",
+        "Makefile",
+        "pyproject.toml",
+        "stubs/",
+        "tests/xcptestlib_unshare.py",
+        "tox.ini",
+        "xcp/cpiofile.py",
+        "xcp/net/ifrename/dynamic.py",
+        "xcp/net/ifrename/logic.py",
+        "xcp/net/ifrename/util.py",
+        "xcp/net/ip.py",
+        "xcp/repository.py",
+        "xcp-python-libs.spec.in"
+    ],
+    "ignoreRegExpList": [
+        // exclude regular expressions from re.compile(pattern)
+        "re.compile(.*)",
+        // exclude MAC addresses
+        "MAC(.*)"
+    ],
+    "ignoreWords": [
+        // In a log message, fix in final commit
+        "Succesfully",
+        // Volume label used in tests
+        "vgdorj",
+        // Unclear words in test method names
+        "nosrules",
+        "rshp",
+        "siobuff",
+        // Used to test an invalid quad
+        "efgh",
+        "ijkl"
+    ]
+}

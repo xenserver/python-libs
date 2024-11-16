@@ -51,7 +51,7 @@ def all_devices_all_names():
     Get all information, including all names, for all devices.
     Returns a dictionary of devices, indexed by current kernel name.  All
     entries will be string to string mappings, with the exception of
-    'BIOS device' which will be a dictonary of policies to names.
+    'BIOS device' which will be a dictionary of policies to names.
     """
 
     devices = {}
@@ -90,7 +90,7 @@ def all_devices_all_names():
 
 def has_ppn_quirks(bdn_dicts):
     # CA-75599 - Assert that no devices share the same SMBIOS Instance.  Some
-    # BIOSes have multiple different nics with the same value set, which causes
+    # BIOSes have multiple different NICs with the same value set, which causes
     # biosdevname to mis-name its physical policy names (emXX, pciXpX etc)
 
     smbios_instances = set()

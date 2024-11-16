@@ -46,7 +46,7 @@ load-plugins=
 # W0141 - Use of builtin functions
 
 #
-# For now, priorize Python3 mirgration as the use of pylint (e.g. enconding warnings).
+# Disable warnings that are not severe, but warn e.g about missing encoding:
 #
 disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141,
     bad-option-value,           # Skip complaining about suppressions for older option values
@@ -65,6 +65,7 @@ disable=W0142,W0703,C0111,R0201,W0603,W0613,W0212,W0141,
     len-as-condition,
     no-else-return,
     raise-missing-from,
+    too-many-positional-arguments,
     too-many-branches,
     too-many-nested-blocks,
     too-many-statements,
@@ -222,8 +223,9 @@ defining-attr-methods=__init__,__new__,setUp
 
 [DESIGN]
 
-# Maximum number of arguments for function / method
-max-args=100
+# Maximum number of arguments for function / method.
+# defaults to: max-args=5
+max-args=10
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore

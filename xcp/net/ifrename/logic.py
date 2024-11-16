@@ -33,7 +33,7 @@ of name transactions to rename network interfaces.
         list of MACPCI objects in form ethXXX|side-XXX-ethXX->(mac, pci)
 [in]  last_state - Last boot state (post rename) of network cards on the machine
         list of MACPCI objects in form (mac, pci)->ethXX
-[in]  old_state - Any older nics which have disappeared in the meantime
+[in]  old_state - Any older NICs which have disappeared in the meantime
         list of MACPCI objects in form (mac, pci)->ethXX
 
 [out] transactions

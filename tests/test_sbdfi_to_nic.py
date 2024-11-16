@@ -35,7 +35,7 @@ def check_raises(exc_type, func, sbdfi, nic_list):
 
 
 def test_sbdf_index():
-    """Test all possible uses and xcp.pci.pci_sbdfi_to_nic() and raised Execptions"""
+    """Test all possible uses and xcp.pci.pci_sbdfi_to_nic() and raised Exceptions"""
     assert pci_sbdfi_to_nic("0000:01:00.0", nics) == nics[0]
     assert pci_sbdfi_to_nic("0000:01:00.0[0]", nics) == nics[0]
     assert pci_sbdfi_to_nic("0000:01:00.0[1]", nics) == nics[1]

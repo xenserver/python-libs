@@ -37,7 +37,7 @@
 # https://github.com/dexpota/cheatsheets/blob/master/pre-commit
 exclude: "^tests/data"
 fail_fast: true
-default_stages: [commit]
+default_stages: [pre-commit]
 repos:
 -   repo: local
     hooks:
@@ -47,7 +47,7 @@ repos:
         types: [binary]
         language: fail
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, master]
@@ -62,11 +62,21 @@ repos:
           - isort
 
 
+-   repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0  # Use the ref you want to point at
+    hooks:
+    # Enforce that `# type: ignore` annotations always occur with specific codes.
+    # Sample annotation: # type: ignore[attr-defined,name-defined]
+    -   id: python-check-blanket-type-ignore
+
+
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+    rev: v1.13.0
     hooks:
     -   id: mypy
         additional_dependencies:
+        - pyfakefs
+        - pytest_httpserver
         - pytest-subprocess
         - types-mock
         - types-six
@@ -74,14 +84,19 @@ repos:
 
 
 -   repo: https://github.com/rcmdnk/pyproject-pre-commit
-    rev: v0.1.9
+    rev: v0.3.4
     hooks:
     -   id: shellcheck
-    -   id: mdformat-check
-        exclude: README-Unicode.md
-        language: python
+
+
+- repo: https://github.com/igorshubovych/markdownlint-cli
+  rev: v0.42.0
+  hooks:
+  - id: markdownlint
+
+
 -   repo: https://github.com/pycqa/pylint
-    rev: v2.17.4
+    rev: v3.3.1
     hooks:
     -   id: pylint
         args:
@@ -93,21 +108,18 @@ repos:
             ]
         log_file: ".git/pre-commit-pylint.log"
         additional_dependencies:
-        -   pyfakefs
+        -   setuptools
         -   six
         -   mock
         -   pandas
+        -   pyfakefs
         -   pytest_forked
+        -   pytest_httpserver
         -   toml
+
+
 -   repo: local
     hooks:
-    -   id: run-pyre
-        name: run-pyre (expect this to take 30 seconds)
-        entry: python pyre_runner.py
-        types: [python]
-        language: python
-        log_file: ".git/pre-commit-pyre.log"
-        additional_dependencies: [pyre-check,mock]
     -   id: pytype
         name: pytype (may take up to two minutes)
         entry: sh -c "pytype >/dev/tty"
@@ -116,24 +128,29 @@ repos:
         language: python
         language_version: python3.8
         require_serial: true
-        additional_dependencies: [pytype]
+        additional_dependencies:
+        - pytype
+        - pyfakefs
+        - pytest
+        - pytest_forked
+        - pytest_httpserver
+        - pytest_localftpserver
+        - pytest-subprocess
+
+
     -   id: pytest
         name: Check pytest unit tests pass
         types: [python]
         # entry: sh -c "pytest -x -rf --new-first --show-capture=all >/dev/tty"
-        entry: sh -c "tox -e py38-covcombine >/dev/tty"
+        entry: sh -c "tox >/dev/tty"
         verbose: true
         language: python
         require_serial: true
         pass_filenames: false
--   repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0  # Use the ref you want to point at
-    hooks:
-    # Enforce that `# type: ignore` annotations always occur with specific codes.
-    # Sample annotations: # type: ignore[attr-defined] # type: ignore[attr-defined,name-defined]
-    -   id: python-check-blanket-type-ignore
+
+
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer
@@ -147,3 +164,10 @@ repos:
     -   id: mixed-line-ending
         args: ['--fix=lf']
         description: Replace line endings with LF
+
+
+# Run the CSpell command line spell checker
+-   repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v8.16.0
+    hooks:
+    -   id: cspell

@@ -184,7 +184,7 @@ class StaticRules(object):
                     # If no validators, assume label
                     method = "label"
 
-            # If we have a validator, test the valididy
+            # If we have a validator, test the validity
             else:
                 if method in StaticRules.validators:
                     if StaticRules.validators[method].match(value) is None:
@@ -215,7 +215,7 @@ class StaticRules(object):
         """
 
         # CA-75599 - check that state has no shared ppns.
-        #  See net.biodevname.has_ppn_quirks() for full reason
+        #  See net.biosdevname.has_ppn_quirks() for full reason
         ppns = [ x.ppn for x in state if x.ppn is not None ]
         ppn_quirks = ( len(ppns) != len(set(ppns)) )
 
@@ -311,7 +311,7 @@ class StaticRules(object):
                 LOG.warning("Method %s not recognised.  Ignoring" % (method,))
                 continue
 
-            # If we have a validator, test the valididy
+            # If we have a validator, test the validity
             if method in StaticRules.validators:
                 if StaticRules.validators[method].match(value) is None:
                     LOG.warning("Invalid %s value '%s'. Ignoring"

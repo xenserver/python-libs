@@ -36,8 +36,6 @@
    Derived from Lars Gustäbel's tarfile.py
 """
 from __future__ import print_function
-# pyre is not as good as other static analysis tools in inferring the correct types:
-# pyre-ignore-all-errors[6,16]
 
 __version__ = "0.1"
 __author__  = "Simon Rowe"

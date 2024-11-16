@@ -44,7 +44,7 @@ class MAC(object):
     @classmethod
     def is_valid(cls, addr):
         """
-        Static method to assertain whether addr is a recognised MAC address or
+        Static method to ascertain whether addr is a recognised MAC address or
         not
         """
         try:
@@ -134,7 +134,7 @@ class MAC(object):
 
         if sep == ".":
             # this is a hack but I cant think of an easy way of
-            # manipulating self.octetes
+            # manipulating self.octets
             res = "%0.4x.%0.4x.%0.4x" % ( (self.integer >> 32) & 0xffff,
                                           (self.integer >> 16) & 0xffff,
                                           (self.integer      ) & 0xffff )
@@ -146,7 +146,7 @@ class MAC(object):
             res = ':'.join([ "%0.2x" % o for o in self.octets])
 
         else:
-            raise ValueError("'%s' is not a valid seperator" % sep)
+            raise ValueError("'%s' is not a valid separator" % sep)
 
         if upper:
             return res.upper()

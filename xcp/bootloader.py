@@ -345,6 +345,12 @@ class Bootloader(object):
             COUNTER += 1
             return "label%d" % COUNTER
 
+        def parse_boot_entry(line):
+            parts = line.split(None, 2)  # Split into at most 3 parts
+            entry = parts[1] if len(parts) > 1 else ""
+            args = parts[2] if len(parts) > 2 else ""
+            return entry, args
+        
         fh = open_textfile(src_file, "r")
         try:
             for line in fh:
@@ -395,23 +401,18 @@ class Bootloader(object):
                 elif title:
                     if l.startswith("multiboot2"):
                         if "tboot" in l:
-                            tboot, tboot_args = (l.split(None, 1)
-                                                 [1].split(None, 1))
+                            tboot, tboot_args = parse_boot_entry(l)
                         else:
-                            hypervisor, hypervisor_args = (l.split(None, 1)
-                                                           [1].split(None, 1))
+                            hypervisor, hypervisor_args = parse_boot_entry(l)
                     elif l.startswith("module2"):
                         if not hypervisor:
-                            hypervisor, hypervisor_args = (l.split(None, 1)
-                                                           [1].split(None, 1))
+                            hypervisor, hypervisor_args = parse_boot_entry(l)
                         elif kernel:
                             initrd = l.split(None, 1)[1]
                         else:
-                            kernel, kernel_args = (l.split(None, 1)
-                                                   [1].split(None, 1))
+                            kernel, kernel_args = parse_boot_entry(l)
                     elif l.startswith("linux"):
-                        kernel, kernel_args = (l.split(None, 1)
-                                               [1].split(None, 1))
+                        kernel, kernel_args = parse_boot_entry(l)
                     elif l.startswith("initrd"):
                         initrd = l.split(None, 1)[1]
                     elif l.startswith("search --label --set root"):

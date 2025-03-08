@@ -1,4 +1,4 @@
-# pyright: reportGeneralTypeIssues=false
+# pyright: reportGeneralTypeIssues=false,reportAttributeAccessIssue=false
 # pytype: disable=attribute-error
 from __future__ import print_function
 from __future__ import unicode_literals

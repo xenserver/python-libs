@@ -1,14 +1,16 @@
 import unittest
-
-from pyfakefs.fake_filesystem import FakeFilesystem
+from typing import TYPE_CHECKING
 
 import xcp.accessor
 
 from .test_mountingaccessor import check_binary_read, check_binary_write
 
+if TYPE_CHECKING:
+    import pyfakefs
+
 
 def test_file_accessor(fs):
-    # type:(FakeFilesystem) -> None
+    # type(pyfakefs.fake_filesystem.FakeFilesystem) -> None
     """Test FileAccessor.writeFile(), .openAddress and .access using pyfakefs"""
     accessor = xcp.accessor.createAccessor("file://repo/", False)
     assert isinstance(accessor, xcp.accessor.FileAccessor)
@@ -18,7 +20,7 @@ def test_file_accessor(fs):
 
 class TestAccessor(unittest.TestCase):
     def setUp(self):
-        """Provide the refrence content of the repo/.treeinfo file for check_repo_access()"""
+        """Provide the reference content of the repo/.treeinfo file for check_repo_access()"""
         with open("tests/data/repo/.treeinfo", "rb") as dot_treeinfo:
             self.reference_treeinfo = dot_treeinfo.read()
 
@@ -35,6 +37,7 @@ class TestAccessor(unittest.TestCase):
         self.assertFalse(a.access('no_such_file'))
         self.assertEqual(a.lastError, 404)
         a.finish()
+        a.finish()  # Cover the code handing a 2nd call of accessor.finish()
 
     def test_filesystem_accessor_access(self):
         """Test FilesystemAccessor.access()"""

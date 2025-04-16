@@ -30,6 +30,7 @@ from typing import TYPE_CHECKING, Type
 import six
 
 from xcp import version, xmlunwrap
+from xcp import logger
 
 if TYPE_CHECKING:
     from xml.dom.minidom import Element  # pytype: disable=pyi-error
@@ -151,6 +152,19 @@ class BaseRepository(object):
             return YumRepository.getProductVersion(access)
         return None
 
+    #pylint: disable=invalid-name
+    @classmethod
+    def getRequiredUpgradePluginVersion(cls, access):
+        """Returns the required upgrade plugin version of the repository."""
+        access.start()
+        is_yum = YumRepository.isRepo(access, "")
+        access.finish()
+
+        if is_yum:
+            return YumRepository.getRequiredUpgradePluginVersion(access)
+        return None
+
+
 class YumRepository(BaseRepository):
     """ Represents a Yum repository containing packages and associated meta data. """
     REPOMD_FILENAME = "repodata/repomd.xml"
@@ -177,7 +191,8 @@ class YumRepository(BaseRepository):
 
     @classmethod
     def _getVersion(cls, access, category):
-        category_map = {'platform': 'platform_version', 'branding': 'product_version'}
+        category_map = {'platform': 'platform_version', 'branding': 'product_version',
+                        'required_upgrade_plugin': 'required_minimal_upgrade_plugin_version'}
 
         access.start()
         try:
@@ -186,11 +201,15 @@ class YumRepository(BaseRepository):
             with access.openText(cls.TREEINFO_FILENAME) as fp:
                 treeinfo.read_file(fp)
 
-            if treeinfo.has_section('system-v1'):
-                ver_str = treeinfo.get('system-v1', category_map[category])
-            else:
-                ver_str = treeinfo.get(category, 'version')
-            repo_ver = version.Version.from_string(ver_str)
+            try:
+                if treeinfo.has_section('system-v1'):
+                    ver_str = treeinfo.get('system-v1', category_map[category])
+                else:
+                    ver_str = treeinfo.get(category, 'version')
+                repo_ver = version.Version.from_string(ver_str)
+            except configparser.NoOptionError as e:
+                logger.debug(e)
+                repo_ver = None
 
         except Exception as e:
             six.raise_from(RepoFormatError("Failed to open %s: %s" %
@@ -209,6 +228,13 @@ class YumRepository(BaseRepository):
         """Returns the product version of the repository."""
 
         return cls._getVersion(access, 'branding')
+
+    @classmethod
+    def getRequiredUpgradePluginVersion(cls, access):
+        """Returns the required upgrade plugin version of the repository."""
+
+        return cls._getVersion(access, 'required_upgrade_plugin')
+
 
 class Repository(BaseRepository):
     """ Represents a XenSource repository containing packages and associated

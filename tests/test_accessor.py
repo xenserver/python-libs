@@ -18,7 +18,7 @@ def test_file_accessor(fs):
 
 class TestAccessor(unittest.TestCase):
     def setUp(self):
-        """Provide the refrence content of the repo/.treeinfo file for check_repo_access()"""
+        """Provide the reference content of the repo/.treeinfo file for check_repo_access()"""
         with open("tests/data/repo/.treeinfo", "rb") as dot_treeinfo:
             self.reference_treeinfo = dot_treeinfo.read()
 
@@ -35,6 +35,7 @@ class TestAccessor(unittest.TestCase):
         self.assertFalse(a.access('no_such_file'))
         self.assertEqual(a.lastError, 404)
         a.finish()
+        a.finish()  # Cover the code handing a 2nd call of accessor.finish()
 
     def test_filesystem_accessor_access(self):
         """Test FilesystemAccessor.access()"""

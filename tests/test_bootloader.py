@@ -29,7 +29,6 @@ class TestBootloader(unittest.TestCase):
         # A module2 line without a multiboot2 line is an error
         with self.assertRaises(RuntimeError):
             Bootloader.readGrub2("tests/data/grub-no-multiboot.cfg")
-
 class TestLinuxBootloader(unittest.TestCase):
     def setUp(self):
         self.tmpdir = mkdtemp(prefix="testbl")
@@ -72,6 +71,12 @@ class TestLinuxBootloader(unittest.TestCase):
         assert bl.menu["safe"].kernel == "/boot/vmlinuz-2"
         assert bl.menu["safe"].kernel_args == "ro"
         assert bl.menu["safe"].initrd == "/boot/initrd.img-2"
+
+    def test_no_kernel(self):
+        # An initrd line without a kernel line is an error
+        with self.assertRaises(RuntimeError):
+            Bootloader.readGrub2("tests/data/grub-linux-no-kernel.cfg")
+
 
 class TestBootloaderAdHoc(unittest.TestCase):
     def setUp(self):

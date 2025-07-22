@@ -43,13 +43,11 @@ from .compat import open_textfile
 COUNTER = 0
 
 class MenuEntry(object):
+    # pylint: disable=too-many-positional-arguments
     def __init__(self, hypervisor, hypervisor_args, kernel, kernel_args,
-                 initrd, title = None, tboot = None, tboot_args = None,
-                 root = None):
+                 initrd, title = None, root = None):
         self.extra = None
         self.contents = []
-        self.tboot = tboot
-        self.tboot_args = tboot_args
         self.hypervisor = hypervisor
         self.hypervisor_args = hypervisor_args
         self.kernel = kernel
@@ -57,12 +55,6 @@ class MenuEntry(object):
         self.initrd = initrd
         self.title = title
         self.root = root
-
-    def getTbootArgs(self):
-        return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', cast(str, self.tboot_args))
-
-    def setTbootArgs(self, args):
-        self.tboot_args = ' '.join(args)
 
     def getHypervisorArgs(self):
         return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.hypervisor_args)
@@ -115,8 +107,6 @@ class Bootloader(object):
         timeout = None
         serial = None
         title = None
-        tboot = None
-        tboot_args = None
         hypervisor = None
         hypervisor_args = None
         kernel = None
@@ -133,10 +123,6 @@ class Bootloader(object):
 
             if title == branding.PRODUCT_BRAND:
                 return 'xe'
-            if title.endswith('(Serial) (Trusted Boot)'):
-                return 'xe-serial-tboot'
-            if title.endswith('(Trusted Boot)'):
-                return 'xe-tboot'
             if title.endswith('(Serial)'):
                 return 'xe-serial'
             if title.endswith('Safe Mode'):
@@ -206,10 +192,7 @@ class Bootloader(object):
                     boilerplate = []
                 elif title:
                     if l.startswith("multiboot2"):
-                        if "tboot" in l:
-                            tboot, tboot_args = parse_boot_entry(l)
-                        else:
-                            hypervisor, hypervisor_args = parse_boot_entry(l)
+                        hypervisor, hypervisor_args = parse_boot_entry(l)
                     elif l.startswith("module2"):
                         if not hypervisor:
                             hypervisor, hypervisor_args = parse_boot_entry(l)
@@ -226,9 +209,7 @@ class Bootloader(object):
                     elif l == "}":
                         label = create_label(title)
                         menu_order.append(label)
-                        menu[label] = MenuEntry(tboot = tboot,
-                                                tboot_args = tboot_args,
-                                                hypervisor = hypervisor,
+                        menu[label] = MenuEntry(hypervisor = hypervisor,
                                                 hypervisor_args = hypervisor_args,
                                                 kernel = kernel,
                                                 kernel_args = kernel_args,
@@ -238,8 +219,6 @@ class Bootloader(object):
                         menu[label].contents = menu_entry_contents
 
                         title = None
-                        tboot = None
-                        tboot_args = None
                         hypervisor = None
                         hypervisor_args = None
                         kernel = None
@@ -327,11 +306,7 @@ class Bootloader(object):
                 print("\tsearch --label --set root %s" % m.root, file=fh)
 
             if m.hypervisor:
-                if m.tboot:
-                    print("\tmultiboot2 %s %s" % (m.tboot, m.tboot_args), file=fh)
-                    print("\tmodule2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
-                else:
-                    print("\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
+                print("\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
                 if m.kernel:
                     print("\tmodule2 %s %s" % (m.kernel, m.kernel_args), file=fh)
                 if m.initrd:

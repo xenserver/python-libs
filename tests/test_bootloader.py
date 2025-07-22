@@ -8,28 +8,6 @@ from xcp.bootloader import Bootloader
 from xcp.compat import open_with_codec_handling
 
 
-def test_writeGrubWithTempFile(tmpdir):
-    """Test xcp.bootloader.{writeGrub,writeExtLinux}.open_with_codec_handling with tmpdir fixture"""
-    bootloader = Bootloader.readGrub2("tests/data/grub.cfg")
-    filename = str(tmpdir.mkdir("grub").join("menu.lst"))
-    bootloader.writeGrub(filename)
-    Bootloader.readGrub(filename)
-    bootloader.writeExtLinux(filename)
-    Bootloader.readExtLinux(filename)
-
-
-def test_GrubLegacyExtLinuxWithTempFile(tmpdir):
-    """Note: GRUB-Legacy and EXTLINUX code can likely be removed (pending approval)"""
-    bootloader = Bootloader.readGrub2("tests/data/grub-linux.cfg")
-    filename = str(tmpdir.mkdir("grub").join("menu.lst"))
-    bootloader.writeExtLinux(filename)
-    Bootloader.readExtLinux(filename)
-    bootloader.menu.pop("xe-tboot")
-    bootloader.menu_order.remove("xe-tboot")
-    bootloader.writeGrub(filename)
-    Bootloader.readGrub(filename)
-
-
 class TestBootloader(unittest.TestCase):
     def test_grub2(self):
         bl = Bootloader.readGrub2("tests/data/grub.cfg")
@@ -100,22 +78,13 @@ class TestBootloaderAdHoc(unittest.TestCase):
         self.bl = Bootloader.readGrub2("tests/data/grub.cfg")
         check_config(self.bl)
 
-    def test_grub(self):
+    def test_grub2(self):
         with NamedTemporaryFile("w", delete=False) as temp:
-            self.bl.writeGrub(temp)
-        bl2 = Bootloader.readGrub(temp.name)
+            self.bl.writeGrub2(temp)
+        bl2 = Bootloader.readGrub2(temp.name)
         # Check config from tests/data/grub.cfg:
         os.unlink(temp.name)
         assert bl2.serial == {"port": 0, "baud": 115200}
-        check_config(bl2)
-
-    def test_extlinux(self):
-        with NamedTemporaryFile("w", delete=False) as temp:
-            self.bl.writeExtLinux(temp)
-        bl2 = Bootloader.readExtLinux(temp.name)
-        os.unlink(temp.name)
-        # readExtLinux tries to read flow-control (there is none in tests/data/grub.cfg):
-        assert bl2.serial == {"port": 0, "baud": 115200, "flow": None}
         check_config(bl2)
 
 

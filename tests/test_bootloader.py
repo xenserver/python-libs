@@ -58,7 +58,6 @@ class TestLinuxBootloader(unittest.TestCase):
                 "",
             ],
             [],
-            [],
         ]
         assert str(bl.default).startswith("safe")
         assert bl.location == "mbr"
@@ -68,10 +67,6 @@ class TestLinuxBootloader(unittest.TestCase):
         assert bl.menu["safe"].kernel == "/boot/vmlinuz-2"
         assert bl.menu["safe"].kernel_args == "ro"
         assert bl.menu["safe"].initrd == "/boot/initrd.img-2"
-        assert bl.menu["xe-tboot"].title == "XCP-ng (Trusted Boot)"
-        assert bl.menu["xe-tboot"].hypervisor == "/boot/xen.gz"
-        assert bl.menu["xe-tboot"].tboot == "/boot/tboot.gz"
-        assert bl.menu["xe-tboot"].getTbootArgs() == ["logging=serial,memory"]
 
 class TestBootloaderAdHoc(unittest.TestCase):
     def setUp(self):

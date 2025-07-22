@@ -203,6 +203,8 @@ class Bootloader(object):
                     elif l.startswith("linux"):
                         kernel, kernel_args = parse_boot_entry(l)
                     elif l.startswith("initrd"):
+                        if not kernel:
+                            raise RuntimeError("Need a kernel")
                         initrd = l.split(None, 1)[1]
                     elif l.startswith("search --label --set root"):
                         root = l.split()[4]

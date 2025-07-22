@@ -25,6 +25,11 @@ class TestBootloader(unittest.TestCase):
         proc.stdout.close()
         proc.wait()
 
+    def test_no_multiboot(self):
+        # A module2 line without a multiboot2 line is an error
+        with self.assertRaises(RuntimeError):
+            Bootloader.readGrub2("tests/data/grub-no-multiboot.cfg")
+
 class TestLinuxBootloader(unittest.TestCase):
     def setUp(self):
         self.tmpdir = mkdtemp(prefix="testbl")

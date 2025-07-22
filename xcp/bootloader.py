@@ -195,8 +195,8 @@ class Bootloader(object):
                         hypervisor, hypervisor_args = parse_boot_entry(l)
                     elif l.startswith("module2"):
                         if not hypervisor:
-                            hypervisor, hypervisor_args = parse_boot_entry(l)
-                        elif kernel:
+                            raise RuntimeError("Need a multiboot2 kernel")
+                        if kernel:
                             initrd = l.split(None, 1)[1]
                         else:
                             kernel, kernel_args = parse_boot_entry(l)

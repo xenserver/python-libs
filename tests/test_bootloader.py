@@ -4,7 +4,7 @@ import shutil
 import subprocess
 from tempfile import NamedTemporaryFile, mkdtemp
 
-from xcp.bootloader import Bootloader
+from xcp.bootloader import Bootloader, Grub2Format, MenuEntry
 from xcp.compat import open_with_codec_handling
 
 
@@ -29,6 +29,93 @@ class TestBootloader(unittest.TestCase):
         # A module2 line without a multiboot2 line is an error
         with self.assertRaises(RuntimeError):
             Bootloader.readGrub2("tests/data/grub-no-multiboot.cfg")
+
+
+class TestMenuEntry(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = mkdtemp(prefix="testbl")
+        self.fn = os.path.join(self.tmpdir, 'grub.cfg')
+        self.bl = Bootloader('grub2', self.fn)
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def test_new_multiboot(self):
+        # No format specified, default to multiboot2
+        e = MenuEntry(hypervisor='xen.efi', hypervisor_args='xarg1 xarg2',
+                      kernel='vmlinuz', kernel_args='karg1 karg2',
+                      initrd='initrd.img', title='xe')
+        self.bl.append('xe', e)
+
+        e = MenuEntry(hypervisor='xen.efi', hypervisor_args='xarg1 xarg2',
+                      kernel='vmlinuz', kernel_args='karg1 karg2',
+                      initrd='initrd.img', title='xe-serial')
+        e.entry_format = Grub2Format.MULTIBOOT2
+        self.bl.append('xe-serial', e)
+
+        self.bl.commit()
+
+        with open_with_codec_handling(self.fn, 'r') as f:
+            content = f.read()
+
+        self.assertEqual(content, '''menuentry 'xe' {
+	multiboot2 xen.efi xarg1 xarg2
+	module2 vmlinuz karg1 karg2
+	module2 initrd.img
+}
+menuentry 'xe-serial' {
+	multiboot2 xen.efi xarg1 xarg2
+	module2 vmlinuz karg1 karg2
+	module2 initrd.img
+}
+''')
+
+    def test_new_xen_boot(self):
+        e = MenuEntry(hypervisor='xen.efi', hypervisor_args='xarg1 xarg2',
+                      kernel='vmlinuz', kernel_args='karg1 karg2',
+                      initrd='initrd.img', title='xe')
+        e.entry_format = Grub2Format.XEN_BOOT
+        self.bl.append('xe', e)
+        self.bl.commit()
+
+        with open_with_codec_handling(self.fn, 'r') as f:
+            content = f.read()
+
+        self.assertEqual(content, '''menuentry 'xe' {
+	xen_hypervisor xen.efi xarg1 xarg2
+	xen_module vmlinuz karg1 karg2
+	xen_module initrd.img
+}
+''')
+
+    def test_new_linux(self):
+        e = MenuEntry(hypervisor='', hypervisor_args='',
+                      kernel='vmlinuz', kernel_args='karg1 karg2',
+                      initrd='initrd.img', title='linux')
+        self.bl.append('linux', e)
+        self.bl.commit()
+
+        e = MenuEntry(hypervisor='', hypervisor_args='',
+                      kernel='vmlinuz2', kernel_args='karg3 karg4',
+                      initrd='initrd2.img', title='linux2')
+        e.entry_format = Grub2Format.LINUX
+        self.bl.append('linux2', e)
+        self.bl.commit()
+
+        with open_with_codec_handling(self.fn, 'r') as f:
+            content = f.read()
+
+        self.assertEqual(content, '''menuentry 'linux' {
+	linux vmlinuz karg1 karg2
+	initrd initrd.img
+}
+menuentry 'linux2' {
+	linux vmlinuz2 karg3 karg4
+	initrd initrd2.img
+}
+''')
+
+
 class TestLinuxBootloader(unittest.TestCase):
     def setUp(self):
         self.tmpdir = mkdtemp(prefix="testbl")

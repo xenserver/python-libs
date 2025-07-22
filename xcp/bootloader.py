@@ -24,6 +24,7 @@
 from __future__ import division, print_function
 
 import copy
+from enum import Enum
 import os
 import os.path
 import re
@@ -42,6 +43,11 @@ from .compat import open_textfile
 
 COUNTER = 0
 
+class Grub2Format(Enum):
+    MULTIBOOT2 = 0
+    LINUX = 1
+    XEN_BOOT = 2
+
 class MenuEntry(object):
     # pylint: disable=too-many-positional-arguments
     def __init__(self, hypervisor, hypervisor_args, kernel, kernel_args,
@@ -55,6 +61,7 @@ class MenuEntry(object):
         self.initrd = initrd
         self.title = title
         self.root = root
+        self.entry_format = None
 
     def getHypervisorArgs(self):
         return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.hypervisor_args)
@@ -117,6 +124,7 @@ class Bootloader(object):
         menu_entry_contents = []  # type: list[str]
         boilerplate = []  # type: list[str]
         boilerplates = []  # type: list[list[str]]
+        entry_format = Grub2Format.MULTIBOOT2
 
         def create_label(title):
             global COUNTER
@@ -193,6 +201,9 @@ class Bootloader(object):
                 elif title:
                     if l.startswith("multiboot2"):
                         hypervisor, hypervisor_args = parse_boot_entry(l)
+                    elif l.startswith("xen_hypervisor"):
+                        entry_format = Grub2Format.XEN_BOOT
+                        hypervisor, hypervisor_args = parse_boot_entry(l)
                     elif l.startswith("module2"):
                         if not hypervisor:
                             raise RuntimeError("Need a multiboot2 kernel")
@@ -200,7 +211,15 @@ class Bootloader(object):
                             initrd = l.split(None, 1)[1]
                         else:
                             kernel, kernel_args = parse_boot_entry(l)
+                    elif l.startswith("xen_module"):
+                        if not hypervisor:
+                            raise RuntimeError("Need a hypervisor")
+                        if kernel:
+                            initrd = l.split(None, 1)[1]
+                        else:
+                            kernel, kernel_args = parse_boot_entry(l)
                     elif l.startswith("linux"):
+                        entry_format = Grub2Format.LINUX
                         kernel, kernel_args = parse_boot_entry(l)
                     elif l.startswith("initrd"):
                         if not kernel:
@@ -219,6 +238,7 @@ class Bootloader(object):
                                                 root = root)
                         menu[label].extra = menu_entry_extra
                         menu[label].contents = menu_entry_contents
+                        menu[label].entry_format = entry_format
 
                         title = None
                         hypervisor = None
@@ -229,6 +249,7 @@ class Bootloader(object):
                         root = None
                         menu_entry_extra = None
                         menu_entry_contents = []
+                        entry_format = Grub2Format.MULTIBOOT2
 
                     else:
                         menu_entry_contents.append(line.rstrip())
@@ -307,17 +328,27 @@ class Bootloader(object):
             if m.root:
                 print("\tsearch --label --set root %s" % m.root, file=fh)
 
-            if m.hypervisor:
+            if ((m.entry_format is None and m.hypervisor) or
+                    m.entry_format == Grub2Format.MULTIBOOT2):
                 print("\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
                 if m.kernel:
                     print("\tmodule2 %s %s" % (m.kernel, m.kernel_args), file=fh)
                 if m.initrd:
                     print("\tmodule2 %s" % m.initrd, file=fh)
-            else:
-                if m.kernel:
-                    print("\tlinux %s %s" % (m.kernel, m.kernel_args), file=fh)
+            elif ((m.entry_format is None and not m.hypervisor) or
+                    m.entry_format == Grub2Format.LINUX):
+                print("\tlinux %s %s" % (m.kernel, m.kernel_args), file=fh)
                 if m.initrd:
                     print("\tinitrd %s" % m.initrd, file=fh)
+            elif m.entry_format == Grub2Format.XEN_BOOT:
+                print("\txen_hypervisor %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
+                if m.kernel:
+                    print("\txen_module %s %s" % (m.kernel, m.kernel_args), file=fh)
+                if m.initrd:
+                    print("\txen_module %s" % m.initrd, file=fh)
+            else:
+                raise AssertionError("Unreachable")
+
             print("}", file=fh)
         if not hasattr(dst_file, 'name'):
             fh.close()

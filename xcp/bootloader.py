@@ -371,7 +371,7 @@ class Bootloader(object):
                     if match:
                         serial = {
                             'port': int(match.group(1)),
-                            'baud': match.group(2)
+                            'baud': int(match.group(2)),
                         }
                 elif l.startswith('terminal_'):
                     pass

@@ -86,7 +86,7 @@ class Bootloader(object):
     # pylint: disable=too-many-positional-arguments
     def __init__(self, src_fmt, src_file, menu = None, menu_order = None,
                  default = None, timeout = None, serial = None,
-                 location = None, env_block = None):
+                 location = None, env_block = None, prefix = None):
 
         if menu is None:
             menu = {}
@@ -104,6 +104,7 @@ class Bootloader(object):
         self.serial = serial
         self.location = location and location or 'mbr'
         self.env_block = env_block
+        self.prefix = prefix
 
     def append(self, label, entry):
         self.menu[label] = entry
@@ -297,6 +298,9 @@ class Bootloader(object):
         else:
             fh = open_textfile(cast(str, dst_file), "w")
 
+        if self.prefix:
+            print(f"search --no-floppy --fs-uuid --set=rootdev {self.prefix['uuid']}", file=fh)
+            print(f"set prefix=($rootdev){self.prefix['path']}", file=fh)
         if self.serial:
             print("serial --unit=%s --speed=%s" % (self.serial['port'],
                                                    self.serial['baud']), file=fh)

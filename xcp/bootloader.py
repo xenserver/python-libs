@@ -76,6 +76,7 @@ class MenuEntry(object):
         self.kernel_args = ' '.join(args)
 
 class Bootloader(object):
+    # pylint: disable=too-many-positional-arguments
     def __init__(self, src_fmt, src_file, menu = None, menu_order = None,
                  default = None, timeout = None, serial = None,
                  location = None, env_block = None):
@@ -150,7 +151,7 @@ class Bootloader(object):
             entry = parts[1] if len(parts) > 1 else ""
             args = parts[2] if len(parts) > 2 else ""
             return entry, args
-        
+
         fh = open_textfile(src_file, "r")
         try:
             for line in fh:

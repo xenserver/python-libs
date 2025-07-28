@@ -17,13 +17,20 @@ class TestBootloader(unittest.TestCase):
             proc = subprocess.Popen(["diff", "tests/data/grub.cfg", temp.name],
                                     stdout = subprocess.PIPE,
                                     universal_newlines=True)
-        assert proc.stdout
-        for line in proc.stdout:
-            # pylint: disable-next=deprecated-method
-            self.assertRegexpMatches(line, r"^(5a6,13$|>)")
 
-        proc.stdout.close()
-        proc.wait()
+            self.assertEqual(proc.stdout.read(), '''5a6,13
+> if [ -s $prefix/grubenv ]; then
+> 	load_env
+> fi
+> 
+> if [ -n "$override_entry" ]; then
+> 	set default=$override_entry
+> fi
+> 
+''')
+            proc.stdout.close()
+            proc.wait()
+            self.assertEqual(proc.returncode, 1)
 
     def test_no_multiboot(self):
         # A module2 line without a multiboot2 line is an error

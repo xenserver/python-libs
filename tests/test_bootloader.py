@@ -9,12 +9,12 @@ from xcp.compat import open_with_codec_handling
 
 
 class TestBootloader(unittest.TestCase):
-    def test_grub2(self):
-        bl = Bootloader.readGrub2("tests/data/grub.cfg")
+    def _test_cfg(self, cfg):
+        bl = Bootloader.readGrub2(cfg)
         with NamedTemporaryFile("w") as temp:
             bl.writeGrub2(temp.name)
             # get a diff
-            proc = subprocess.Popen(["diff", "tests/data/grub.cfg", temp.name],
+            proc = subprocess.Popen(["diff", cfg, temp.name],
                                     stdout = subprocess.PIPE,
                                     universal_newlines=True)
 
@@ -32,10 +32,23 @@ class TestBootloader(unittest.TestCase):
             proc.wait()
             self.assertEqual(proc.returncode, 1)
 
+    def test_grub2(self):
+        '''Test read/write roundtrip of GRUB2 multiboot config'''
+        self._test_cfg("tests/data/grub.cfg")
+
+    def test_grub2_xen_boot(self):
+        '''Test read/write roundtrip of GRUB2 xen_boot config'''
+        self._test_cfg("tests/data/grub-xen-boot.cfg")
+
     def test_no_multiboot(self):
         # A module2 line without a multiboot2 line is an error
         with self.assertRaises(RuntimeError):
             Bootloader.readGrub2("tests/data/grub-no-multiboot.cfg")
+
+    def test_no_hypervisor(self):
+        # A xen_module line without a xen_hypervisor line is an error
+        with self.assertRaises(RuntimeError):
+            Bootloader.readGrub2("tests/data/grub-no-hypervisor.cfg")
 
 
 class TestMenuEntry(unittest.TestCase):

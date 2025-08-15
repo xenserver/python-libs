@@ -77,9 +77,14 @@ repos:
     rev: v0.1.9
     hooks:
     -   id: shellcheck
-    -   id: mdformat-check
-        exclude: README-Unicode.md
-        language: python
+
+
+- repo: https://github.com/igorshubovych/markdownlint-cli
+  rev: v0.42.0
+  hooks:
+  - id: markdownlint
+
+
 -   repo: https://github.com/pycqa/pylint
     rev: v2.17.4
     hooks:

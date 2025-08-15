@@ -28,7 +28,7 @@ def set_warnings():
     run-time checking during tests.
 
     By additionally using setenv = PYTHONWARNINGS=ignore in tox.ini,
-    we can disabling the Deprecation warnings wihch pytest plugins exhibit
+    we can disable the Deprecation warnings which pytest plugins exhibit
     (which we are not interested in, those are not our responsiblity).
     and this fixture will still enable the default warning filter to
     have e.g. ResourceWarning checks enabled.

@@ -47,13 +47,12 @@ dependencies = [
 test = [
     "mock",
     "pyfakefs",
-    "pytest<7",
+    "pytest>=7",
     "pytest-cov",
     "pytest-forked",
     "pytest_httpserver; python_version >= '3.7'",
     "pytest-localftpserver; python_version >= '3.7'",
     "pytest-localftpserver==0.5.1; python_version <= '3.6'",
-    "pytest-pythonpath",
     "pytest-subprocess; python_version >= '3.6'",
     "pytest-timeout",
     "typing_extensions"

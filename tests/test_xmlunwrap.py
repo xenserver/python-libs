@@ -15,6 +15,7 @@ class TestXmlUnwrap(unittest.TestCase):
         self.top_el = xmldoc.documentElement
 
     def test(self):
+        assert self.top_el is not None  # This test requires that top_el is not None
         self.assertEqual(self.top_el.tagName, "installation")
 
         self.assertEqual([getText(el)

@@ -60,7 +60,7 @@ class MenuEntry(object):
         self.initrd = initrd
         self.title = title
         self.root = root
-        self.entry_format = None
+        self.entry_format = None  # type: Grub2Format | None
 
     def getHypervisorArgs(self):
         return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.hypervisor_args)

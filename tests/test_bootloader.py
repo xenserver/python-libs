@@ -18,6 +18,7 @@ class TestBootloader(unittest.TestCase):
                                     stdout = subprocess.PIPE,
                                     universal_newlines=True)
 
+            assert proc.stdout is not None  # for pyright, to ensure it is valid
             self.assertEqual(proc.stdout.read(), '''5a6,13
 > if [ -s $prefix/grubenv ]; then
 > 	load_env

@@ -24,6 +24,7 @@
 from __future__ import division, print_function
 
 import copy
+from enum import Enum
 import os
 import os.path
 import re
@@ -41,14 +42,17 @@ from .compat import open_textfile
 
 COUNTER = 0
 
+class Grub2Format(Enum):
+    MULTIBOOT2 = 0
+    LINUX = 1
+    XEN_BOOT = 2
+
 class MenuEntry(object):
+    # pylint: disable=too-many-positional-arguments
     def __init__(self, hypervisor, hypervisor_args, kernel, kernel_args,
-                 initrd, title = None, tboot = None, tboot_args = None,
-                 root = None):
+                 initrd, title = None, root = None):
         self.extra = None
         self.contents = []
-        self.tboot = tboot
-        self.tboot_args = tboot_args
         self.hypervisor = hypervisor
         self.hypervisor_args = hypervisor_args
         self.kernel = kernel
@@ -56,12 +60,7 @@ class MenuEntry(object):
         self.initrd = initrd
         self.title = title
         self.root = root
-
-    def getTbootArgs(self):
-        return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', cast(str, self.tboot_args))
-
-    def setTbootArgs(self, args):
-        self.tboot_args = ' '.join(args)
+        self.entry_format = None  # type: Grub2Format | None
 
     def getHypervisorArgs(self):
         return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.hypervisor_args)
@@ -76,6 +75,7 @@ class MenuEntry(object):
         self.kernel_args = ' '.join(args)
 
 class Bootloader(object):
+    # pylint: disable=too-many-positional-arguments
     def __init__(self, src_fmt, src_file, menu = None, menu_order = None,
                  default = None, timeout = None, serial = None,
                  location = None, env_block = None):
@@ -106,200 +106,6 @@ class Bootloader(object):
         self.menu_order.remove(label)
 
     @classmethod
-    def readExtLinux(cls, src_file):
-        # type:(str) -> Bootloader
-        menu = {}  # type: dict[str, MenuEntry | dict[str, str]]
-        menu_order = []
-        default = None
-        timeout = None
-        location = None
-        serial = None
-        label = None
-        title = None
-        kernel = None
-
-        fh = open_textfile(src_file, "r")
-        try:
-            for line in fh:
-                l = line.strip()
-                els = l.split(None, 2)
-                if len(els) == 0:
-                    continue
-                keywrd = els[0].lower()
-
-                # header
-                if l.startswith('# location ') and len(els) == 3 and els[2] in ['mbr', 'partition']:
-                    location = els[2]
-                elif keywrd == 'serial' and len(els) > 1:
-                    baud = '9600'
-                    flow = None
-                    if len(els) > 2:
-                        if ' ' in els[2]:
-                            baud, flow = els[2].split(None, 1)
-                        else:
-                            baud = els[2]
-                    serial = {'port': int(els[1]), 'baud': int(baud), 'flow': flow}
-                elif keywrd == 'default' and len(els) == 2:
-                    default = els[1]
-                elif keywrd == 'timeout' and len(els) == 2:
-                    timeout = int(els[1])
-
-                # menu
-                elif keywrd == 'label' and len(els) == 2:
-                    label = els[1]
-                    menu[label] = {}
-                    menu_order.append(label)
-                    title = None
-                elif label:
-                    if keywrd == '#':
-                        title = l[1:].lstrip()
-                    elif keywrd == 'kernel' and len(els) > 1:
-                        kernel = els[1]
-                    elif keywrd == 'append' and len(els) > 1 and kernel == 'mboot.c32':
-                        if 'tboot' in els[1]:
-                            # els[2] contains tboot args, hypervisor,
-                            # hypervisor args, kernel,
-                            # kernel args & initrd
-                            args = [x.strip() for x in els[2].split('---')]
-                            if len(args) == 4:
-                                hypervisor = args[1].split(None, 1)
-                                kernel = args[2].split(None, 1)  # type:ignore[assignment] # mypy
-                                if len(hypervisor) == 2 and len(kernel) == 2:
-                                    menu[label] = MenuEntry(tboot = els[1],
-                                                            tboot_args = args[0],
-                                                            hypervisor = hypervisor[0],
-                                                            hypervisor_args = hypervisor[1],
-                                                            kernel = kernel[0],
-                                                            kernel_args = kernel[1],
-                                                            initrd = args[3],
-                                                            title = title)
-                        elif 'xen' in els[1]:
-                            # els[2] contains hypervisor args, kernel,
-                            # kernel args & initrd
-                            args = [x.strip() for x in els[2].split('---')]
-                            if len(args) == 3:
-                                kernel = args[1].split(None, 1)  # type:ignore[assignment] # mypy
-                                if len(kernel) == 2:
-                                    menu[label] = MenuEntry(hypervisor = els[1],
-                                                            hypervisor_args = args[0],
-                                                            kernel = kernel[0],
-                                                            kernel_args = kernel[1],
-                                                            initrd = args[2],
-                                                            title = title)
-        finally:
-            fh.close()
-
-        return cls('extlinux', src_file, menu, menu_order, default, timeout,
-                   serial, location)
-
-    @classmethod
-    def readGrub(cls, src_file):
-        # type: (str) -> Bootloader
-        menu = {}
-        menu_order = []
-        default = 0
-        timeout = None
-        location = None
-        serial = None
-        label = None
-        title = None
-        hypervisor = None
-        hypervisor_args = None
-        kernel = None
-        kernel_args = None
-
-        def create_label(title):
-            global COUNTER
-
-            if title == branding.PRODUCT_BRAND:
-                return 'xe'
-
-            if title.endswith('(Serial)'):
-                return 'xe-serial'
-            if title.endswith('Safe Mode'):
-                return 'safe'
-            if ' / ' in title:
-                if '(Serial,' in title:
-                    return 'fallback-serial'
-                else:
-                    return 'fallback'
-            COUNTER += 1
-            return "label%d" % COUNTER
-
-        fh = open_textfile(src_file, "r")
-        try:
-            for line in fh:
-                l = line.strip()
-                els = l.split(None, 2)
-                if len(els) == 0:
-                    continue
-
-                # header
-                if l.startswith('# location ') and len(els) == 3 and els[2] in ['mbr', 'partition']:
-                    location = els[2]
-                elif els[0] == 'serial' and len(els) > 1:
-                    port = 0
-                    baud = 9600
-                    for arg in l.split(None, 1)[1].split():
-                        if '=' in arg:
-                            opt, val = arg.split('=')
-                            if opt == '--unit':
-                                port = int(val)
-                            elif opt == '--speed':
-                                baud = int(val)
-                    serial = {'port': port, 'baud': baud}
-                elif els[0] == 'default' and len(els) == 2:
-                    # default is index into menu list, fixup later
-                    default = int(els[1])
-                elif els[0] == 'timeout' and len(els) == 2:
-                    timeout = int(els[1]) * 10
-
-                # menu
-                elif els[0] == 'title' and len(els) > 1:
-                    title = l.split(None, 1)[1]
-                elif title:
-                    if els[0] == 'kernel' and len(els) > 2:
-                        hypervisor, hypervisor_args = (l.split(None, 1)
-                                                       [1].split(None, 1))
-                    elif els[0] == 'module' and len(els) > 1:
-                        if kernel and hypervisor:
-                            # second module == initrd
-                            label = create_label(title)
-                            menu_order.append(label)
-                            menu[label] = MenuEntry(hypervisor = hypervisor,
-                                                    hypervisor_args = hypervisor_args,
-                                                    kernel = kernel,
-                                                    kernel_args = kernel_args,
-                                                    initrd = els[1], title = title)
-                            hypervisor = None
-                            kernel = None
-                        else:
-                            kernel, kernel_args = (l.split(None, 1)
-                                                   [1].split(None, 1))
-                    elif els[0] == 'initrd' and len(els) > 1:
-                        # not multiboot
-                        kernel = hypervisor
-                        kernel_args = hypervisor_args
-                        label = create_label(title)
-                        menu_order.append(label)
-                        menu[label] = MenuEntry(None,
-                                                None,
-                                                kernel = kernel,
-                                                kernel_args = kernel_args,
-                                                initrd = els[1], title = title)
-                        hypervisor = None
-                        hypervisor_args = None
-
-            # fixup default
-            if len(menu_order) > default:
-                default = menu_order[default]
-        finally:
-            fh.close()
-
-        return cls('grub', src_file, menu, menu_order, default,
-                   timeout, serial, location)
-
-    @classmethod
     def readGrub2(cls, src_file):
         # type:(str) -> Bootloader
         menu = {}
@@ -308,8 +114,6 @@ class Bootloader(object):
         timeout = None
         serial = None
         title = None
-        tboot = None
-        tboot_args = None
         hypervisor = None
         hypervisor_args = None
         kernel = None
@@ -320,16 +124,13 @@ class Bootloader(object):
         menu_entry_contents = []  # type: list[str]
         boilerplate = []  # type: list[str]
         boilerplates = []  # type: list[list[str]]
+        entry_format = Grub2Format.MULTIBOOT2
 
         def create_label(title):
             global COUNTER
 
             if title == branding.PRODUCT_BRAND:
                 return 'xe'
-            if title.endswith('(Serial) (Trusted Boot)'):
-                return 'xe-serial-tboot'
-            if title.endswith('(Trusted Boot)'):
-                return 'xe-tboot'
             if title.endswith('(Serial)'):
                 return 'xe-serial'
             if title.endswith('Safe Mode'):
@@ -343,6 +144,12 @@ class Bootloader(object):
                     return 'fallback'
             COUNTER += 1
             return "label%d" % COUNTER
+
+        def parse_boot_entry(line):
+            parts = line.split(None, 2)  # Split into at most 3 parts
+            entry = parts[1] if len(parts) > 1 else ""
+            args = parts[2] if len(parts) > 2 else ""
+            return entry, args
 
         fh = open_textfile(src_file, "r")
         try:
@@ -364,7 +171,7 @@ class Bootloader(object):
                     if match:
                         serial = {
                             'port': int(match.group(1)),
-                            'baud': match.group(2)
+                            'baud': int(match.group(2)),
                         }
                 elif l.startswith('terminal_'):
                     pass
@@ -393,34 +200,37 @@ class Bootloader(object):
                     boilerplate = []
                 elif title:
                     if l.startswith("multiboot2"):
-                        if "tboot" in l:
-                            tboot, tboot_args = (l.split(None, 1)
-                                                 [1].split(None, 1))
-                        else:
-                            hypervisor, hypervisor_args = (l.split(None, 1)
-                                                           [1].split(None, 1))
+                        hypervisor, hypervisor_args = parse_boot_entry(l)
+                    elif l.startswith("xen_hypervisor"):
+                        entry_format = Grub2Format.XEN_BOOT
+                        hypervisor, hypervisor_args = parse_boot_entry(l)
                     elif l.startswith("module2"):
                         if not hypervisor:
-                            hypervisor, hypervisor_args = (l.split(None, 1)
-                                                           [1].split(None, 1))
-                        elif kernel:
+                            raise RuntimeError("Need a multiboot2 kernel")
+                        if kernel:
                             initrd = l.split(None, 1)[1]
                         else:
-                            kernel, kernel_args = (l.split(None, 1)
-                                                   [1].split(None, 1))
+                            kernel, kernel_args = parse_boot_entry(l)
+                    elif l.startswith("xen_module"):
+                        if not hypervisor:
+                            raise RuntimeError("Need a hypervisor")
+                        if kernel:
+                            initrd = l.split(None, 1)[1]
+                        else:
+                            kernel, kernel_args = parse_boot_entry(l)
                     elif l.startswith("linux"):
-                        kernel, kernel_args = (l.split(None, 1)
-                                               [1].split(None, 1))
+                        entry_format = Grub2Format.LINUX
+                        kernel, kernel_args = parse_boot_entry(l)
                     elif l.startswith("initrd"):
+                        if not kernel:
+                            raise RuntimeError("Need a kernel")
                         initrd = l.split(None, 1)[1]
                     elif l.startswith("search --label --set root"):
                         root = l.split()[4]
                     elif l == "}":
                         label = create_label(title)
                         menu_order.append(label)
-                        menu[label] = MenuEntry(tboot = tboot,
-                                                tboot_args = tboot_args,
-                                                hypervisor = hypervisor,
+                        menu[label] = MenuEntry(hypervisor = hypervisor,
                                                 hypervisor_args = hypervisor_args,
                                                 kernel = kernel,
                                                 kernel_args = kernel_args,
@@ -428,10 +238,9 @@ class Bootloader(object):
                                                 root = root)
                         menu[label].extra = menu_entry_extra
                         menu[label].contents = menu_entry_contents
+                        menu[label].entry_format = entry_format
 
                         title = None
-                        tboot = None
-                        tboot_args = None
                         hypervisor = None
                         hypervisor_args = None
                         kernel = None
@@ -440,6 +249,7 @@ class Bootloader(object):
                         root = None
                         menu_entry_extra = None
                         menu_entry_contents = []
+                        entry_format = Grub2Format.MULTIBOOT2
 
                     else:
                         menu_entry_contents.append(line.rstrip())
@@ -470,88 +280,8 @@ class Bootloader(object):
             return cls.readGrub2(os.path.join(root, "boot/grub/grub.cfg"))
         elif os.path.exists(os.path.join(root, "boot/grub2/grub.cfg")):
             return cls.readGrub2(os.path.join(root, "boot/grub2/grub.cfg"))
-        elif os.path.exists(os.path.join(root, "boot/extlinux.conf")):
-            return cls.readExtLinux(os.path.join(root, "boot/extlinux.conf"))
-        elif os.path.exists(os.path.join(root, "boot/grub/menu.lst")):
-            return cls.readGrub(os.path.join(root, "boot/grub/menu.lst"))
         else:
             raise RuntimeError("No existing bootloader configuration found")
-
-    def writeExtLinux(self, dst_file = None):
-        if dst_file and hasattr(dst_file, 'name'):
-            fh = dst_file
-        else:
-            fh = open_textfile(cast(str, dst_file), "w")
-        print("# location " + self.location, file=fh)
-
-        if self.serial:
-            if self.serial.get("flow", None) is None:
-                print("serial %s %s" % (self.serial['port'],
-                                        self.serial['baud']), file=fh)
-            else:
-                print("serial %s %s %s" % (self.serial['port'],
-                                           self.serial['baud'],
-                                           self.serial['flow']), file=fh)
-        if self.default:
-            print("default " + self.default, file=fh)
-        print("prompt 1", file=fh)
-        if self.timeout:
-            print("timeout %d" % self.timeout, file=fh)
-
-        for label in self.menu_order:
-            print("\nlabel " + label, file=fh)
-            m = self.menu[label]
-            if m.title:
-                print("  # " + m.title, file=fh)
-            if m.tboot:
-                print("  kernel mboot.c32", file=fh)
-                print("  append %s %s --- %s %s --- %s %s --- %s" %
-                      (m.tboot, m.tboot_args, m.hypervisor, m.hypervisor_args,
-                       m.kernel, m.kernel_args, m.initrd), file=fh)
-            elif m.hypervisor:
-                print("  kernel mboot.c32", file=fh)
-                print("  append %s %s --- %s %s --- %s" %
-                      (m.hypervisor, m.hypervisor_args, m.kernel, m.kernel_args, m.initrd), file=fh)
-            else:
-                print("  kernel " + m.kernel, file=fh)
-                print("  append " + m.kernel_args, file=fh)
-                print("  initrd " + m.initrd, file=fh)
-        if not hasattr(dst_file, 'name'):
-            fh.close()
-
-    def writeGrub(self, dst_file = None):
-        if dst_file and hasattr(dst_file, 'name'):
-            fh = dst_file
-        else:
-            fh = open_textfile(cast(str, dst_file), "w")
-        print("# location " + self.location, file=fh)
-
-        if self.serial:
-            print("serial --unit=%s --speed=%s" %
-                  (self.serial['port'], self.serial['baud']), file=fh)
-            print("terminal --timeout=10 console serial", file=fh)
-        else:
-            print("terminal console", file=fh)
-        if self.default:
-            for i in range(len(self.menu_order)):
-                if self.menu_order[i] == self.default:
-                    print("default %d" % i, file=fh)
-                    break
-        if self.timeout:
-            print("timeout %d" % (self.timeout // 10), file=fh)
-
-        for label in self.menu_order:
-            m = self.menu[label]
-            print("\ntitle " + m.title, file=fh)
-            if m.hypervisor:
-                print("   kernel " + m.hypervisor + " " + m.hypervisor_args, file=fh)
-                print("   module " + m.kernel + " " + m.kernel_args, file=fh)
-                print("   module " + m.initrd, file=fh)
-            else:
-                print("   kernel " + m.kernel + " " + m.kernel_args, file=fh)
-                print("   initrd " + m.initrd, file=fh)
-        if not hasattr(dst_file, 'name'):
-            fh.close()
 
     def writeGrub2(self, dst_file = None):
         if dst_file and hasattr(dst_file, 'name'):
@@ -598,21 +328,27 @@ class Bootloader(object):
             if m.root:
                 print("\tsearch --label --set root %s" % m.root, file=fh)
 
-            if m.hypervisor:
-                if m.tboot:
-                    print("\tmultiboot2 %s %s" % (m.tboot, m.tboot_args), file=fh)
-                    print("\tmodule2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
-                else:
-                    print("\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
+            if ((m.entry_format is None and m.hypervisor) or
+                    m.entry_format == Grub2Format.MULTIBOOT2):
+                print("\tmultiboot2 %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
                 if m.kernel:
                     print("\tmodule2 %s %s" % (m.kernel, m.kernel_args), file=fh)
                 if m.initrd:
                     print("\tmodule2 %s" % m.initrd, file=fh)
-            else:
-                if m.kernel:
-                    print("\tlinux %s %s" % (m.kernel, m.kernel_args), file=fh)
+            elif ((m.entry_format is None and not m.hypervisor) or
+                    m.entry_format == Grub2Format.LINUX):
+                print("\tlinux %s %s" % (m.kernel, m.kernel_args), file=fh)
                 if m.initrd:
                     print("\tinitrd %s" % m.initrd, file=fh)
+            elif m.entry_format == Grub2Format.XEN_BOOT:
+                print("\txen_hypervisor %s %s" % (m.hypervisor, m.hypervisor_args), file=fh)
+                if m.kernel:
+                    print("\txen_module %s %s" % (m.kernel, m.kernel_args), file=fh)
+                if m.initrd:
+                    print("\txen_module %s" % m.initrd, file=fh)
+            else:
+                raise AssertionError("Unreachable")
+
             print("}", file=fh)
         if not hasattr(dst_file, 'name'):
             fh.close()
@@ -624,12 +360,8 @@ class Bootloader(object):
         # write to temp file in final destination directory
         fd, tmp_file = tempfile.mkstemp(dir = os.path.dirname(dst_file))
 
-        if self.src_fmt == 'extlinux':
-            self.writeExtLinux(tmp_file)
-        elif self.src_fmt == 'grub':
-            self.writeGrub(tmp_file)
-        elif self.src_fmt == 'grub2':
-            self.writeGrub2(tmp_file)
+        assert self.src_fmt == 'grub2'
+        self.writeGrub2(tmp_file)
 
         # atomically replace destination file
         os.close(fd)

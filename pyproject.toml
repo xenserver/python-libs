@@ -39,8 +39,6 @@ dependencies = [
     # Info: xcp imports branding, but branding has no distribution, so we can't list it.
     # A stub for testing is in ./stubs, which we configure to be in PYTHONPATH by pytest.
     "six",
-    "configparser; python_version < '3.0'",
-    "pyliblzma; python_version  < '3.0'"
 ]
 
 [project.optional-dependencies]
@@ -50,10 +48,9 @@ test = [
     "pytest>=7",
     "pytest-cov",
     "pytest-forked",
-    "pytest_httpserver; python_version >= '3.7'",
-    "pytest-localftpserver; python_version >= '3.7'",
-    "pytest-localftpserver==0.5.1; python_version <= '3.6'",
-    "pytest-subprocess; python_version >= '3.6'",
+    "pytest_httpserver",
+    "pytest-localftpserver",
+    "pytest-subprocess",
     "pytest-timeout",
     "typing_extensions"
 ]
@@ -75,16 +72,7 @@ pytype = [
     "pytype",
 ]
 tox = [
-    # The latest versions of tox need 'py>=1.11.0' and this is not stated in the deps of tox-4.5.1.
-    "py>=1.11.0",
-    # Use tox==4.5.1: tox>=4 is needed for reading the extras from pyproject.toml
-    # while tox>=4.5.2 depends on virutalenv>=20.23, which breaks Python 2.7:
-    "tox==4.5.1; python_version >= '3.7'",
-    "tox-gh-actions; python_version >= '3.7'",
-    # virtualenv-20.22 breaks using python2.7 for the `py27` virtualenv with tox and newer
-    # versions even break py36(which is also EOL) because py36 does not support
-    # from __future__ import annotations
-    "virtualenv<20.22",
+    "tox-gh-actions",
 ]
 
 [project.urls]

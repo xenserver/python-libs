@@ -82,7 +82,7 @@ This project uses `tox` to run the tests for different python versions. Intro:
 > A comprehensive beginner's introduction to `tox`":_
 > <https://www.seanh.cc/2018/09/01/tox-tutorial>
 
-`tox` runs `pytest`, `pylint` and static analysis using `mypy`, `pyre`, `pytype`, and `pyright`.
+`tox` runs `pytest`, `pylint` and static analysis using `mypy`, `pytype`, and `pyright`.
 Links:
 
 - <https://mypy.readthedocs.io/en/stable>

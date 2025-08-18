@@ -1,0 +1,108 @@
+# For more configuration details:
+# https://docs.codecov.io/docs/codecov-yaml
+
+# After making edits, check if this file is valid by running:
+# curl -X POST --data-binary @.codecov.yml https://codecov.io/validate
+
+#
+# Coverage configuration
+# ----------------------
+#
+github_checks:
+  #
+  # On adding coverage annotations to the code in the GitHub
+  # Code Review for now:
+  #
+  # - The annotations consume a lot of space in the PR code review,
+  #   and can make it hard to review files that are not covered yet.
+  #
+  # - The coverage can be visited using the Codecov link at all times.
+  #   https://app.codecov.io/gh/xapi-project/xen-api/pulls
+  #
+  # - The annotations can be hidden in GitHub PR code review by
+  #   pressing the "a" key or by deselecting the "Show comments"
+  #   checkbox but they are shown by default.
+  #
+  # - The Codecov Chrome and Firefox extension is a much nicer
+  #   way to indicate coverage:
+  #
+  #   Link: https://github.com/codecov/codecov-browser-extension
+  #
+  #   - How to enable: You need to log in to Codecov using Github.
+  #     For Firefox, enable the needed permissions:
+  #     https://github.com/codecov/codecov-browser-extension/issues/50
+  #
+  # Reference:
+  # http://docs.codecov.com/docs/common-recipe-list#disable-github-check-run-annotations
+  #
+  annotations: true
+
+#
+# Pull request comments:
+# ----------------------
+# This feature adds the code coverage summary as a comment on each PR.
+# See https://docs.codecov.io/docs/pull-request-comments
+# This same information is available from the Codecov checks in the PR's
+# "Checks" tab in GitHub even when this feature is disabled.
+#
+comment:
+  #
+  # Legend:
+  # "diff" is the Coverage Diff of the pull request.
+  # "files" are the files impacted by the pull request
+  # "flags" are the coverage status of the pull request
+  #
+  # For an even shorter layout, this may be used:
+  # layout: "condensed_header, diff, files, flags"
+  #
+  layout: "header, diff, files, flags"
+
+  #
+  # Add the Codecov comment to the PR when coverage changes always for testing
+  #
+  require_changes: false
+
+  #
+  # The overall project coverage is secondary to the individual coverage
+  # and it is always shown in the repository at:
+  # - https://app.codecov.io/gh/xenserver/python-libs
+  #
+  hide_project_coverage: true
+
+coverage:
+  #
+  # Number of precision digits when showing coverage percentage e.g. 88.8%.
+  # One precision digit is also used by coverage.py when reporting coverage:
+  #
+  precision: 1
+
+  status:
+
+    #
+    # Patch coverage is the incremental change in coverage in a PR
+    #
+    patch:
+      default: false  # disable the default status that measures entire project
+
+      tests:
+        paths: ["tests/"]  # only include coverage in "tests/" folder
+        target: auto     # don't reduce coverage on test code lines
+
+      python-libs:     # declare a new status context "python-libs"
+        paths: ["xcp/"]  # library code
+        target: 0      # Temporarily allow 0% coverage to allow to merge dmv.py,
+                       # Project threshold sets a lower bound to not go further.
+
+    #
+    # Project coverage is the absolute coverage of the entire project
+    #
+    project:
+      default: false  # disable the default status that measures entire project
+
+      tests:  # declare a new status context "tests"
+        paths: ["tests/"]  # only include coverage in "tests/" folder
+        target: 99%  # we always want 99% coverage here
+
+      python-libs:  # declare a new status context "python-libs"
+        paths: ["xcp/"]  # library code
+        target: 78%    # Coverage should not be reduced compared to its base

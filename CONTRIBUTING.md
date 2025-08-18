@@ -1,78 +1,153 @@
 # Development setup
 
+To run all tests and all supported static analysis tools, Python 3.11 is needed,
+which matches the current Python version of XenServer 9.
+
+Python 3.10 might work as well (when replacing the references in the config files with 3.10).
+Python 3.12 and 3.13 can be used too, but not for running [pytype](https://github.com/google/pytype)
+([it does not support 3.12 yet](https://google.github.io/pytype/support.html)).
+
+On Ubuntu, you can install 3.11 (and also 3.12 and 3.13) from the widely-used Python support PPA:
+
+```sh
+sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt update
+sudo apt install -y python3.11 python3.12 python3.13
+```
+
+If 3.12 or 3.13 are found by [tox](https://tox.wiki), it will run the unit tests with them as well.
+
+You can also use [uv to install Python versions](https://docs.astral.sh/uv/concepts/python-versions),
+see below on a link and an example how to install uv.
+
+## Do not use distro-privided Python CI tools
+
+Python tools (other than the Python interpreters themself) provided by Linux distributions
+are "always" out of date and do not work as required. If possible, uninstall/remove those,
+even if your environment is based on Ubuntu 24.04. In addition, most problematically, the
+distribution-provided Python tools are running using the default Pyton version of the
+host system, which may not be compatible and can cause subtle errors.  (e.g. Python 3.12
+or newer triggers unclear dependency errors in pytype because it is not supported yet)
+
 ## Create a virtual environment with the test dependencies
+
+[Install `uv`](https://docs.astral.sh/uv/), either using `pip`/`pipx` or the
+[installer](https://docs.astral.sh/uv/getting-started/installation/)
+and install the extras groups that you need. Example:
+
+```sh
+pip install pipx
+pipx install uv
+uv venv --python 3.11 .uv-venv
+. .uv-venv/bin/activate
+uv pip install -r pyproject.toml --extra test mypy pytype pyright tox pre-commit
+```
+
+The older, slower way is to use pip-compile to the deps from `pyproject.toml`:
 
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-pip install pip-tools==7.3.0
+pip install pre-commit pip-tools==7.3.0
 pip-compile --extra=test,mypy,pyright,pytype,tox -o - pyproject.toml | pip install -r /dev/stdin
 ```
 
-## Development setup on Fedora 37
+## Running CI
 
-On Fedora 37, the `tox` rpm installs all Python versions.
-But this `tox` is older, so install `tox==4.5.1` using `pip` (see below)
+These commands assume you installed the tools using the commands above in a Python 3.11 environment.
 
-```bash
-sudo dnf install tox;sudo rpm -e tox
+### Run pyright, watching for changes and automatically checking the change
+
+```sh
+pyright -w
 ```
 
-But preferably use `tox` from the virtual environment instead.
+### Run pytest with coverage (fine-grained, e.g. during test development)
 
-## Development setup on Ubuntu 24.04
+```sh
+pytest --cov -v --new-first -x --show-capture=all -rA [optional: files / select which tests to run]
+```
 
-Prefer the virtual environment. Alternatively, an option is to use `pipx`:
+### Watching and running tests on changes automatically using `pytest-watch` (`ptw`)
+
+Install ptw in the Python environment using:
+
+```sh
+pip install pytest-watch
+```
+
+`ptw` watches changed files and runs `pytest` after changes are saved.
+Run `ptw`, and pass the files to watch, e.g.:
+
+```sh
+ptw tests/test_*
+```
+
+### Run mypy (fine-grained, e.g. during development)
+
+```sh
+mypy [optionally pass the flags or files to select which tests to run]
+```
+
+### Run pylint (fine-grained, e.g. during development)
+
+```sh
+pylint xcp tests [optionally pass the flags or files to select which tests to run]
+```
+
+### Run all of the above on one go in defined virtual environments
+
+```sh
+tox -e py311-cov-check-lint-mdreport
+```
+
+This also checks code coverage and ends with a test report from the pytest run.
+If you just run `tox` without arguments, in addition, the unit tests are run with
+all installed Python versions (out of the list of 3.11, 3.12 and 3.13)
+
+### Run pre-commit for all checks
+
+To run all tests, including trailing whitespace checks, run
+
+```sh
+pre-commit run -av
+```
+
+## Alternative: installing pytest packages using `pipx`
+
+`pipx` installs tools in `~/.local/share/pipx/venvs` which can be an alternate
+way to install up-to-date python tools
 
 ```bash
-sudo apt install pipx
-pipx install tox; pipx install 'pytest<7';pipx install pylint
+python3.11 -m pip install pipx
+pipx install tox; pipx install 'pytest<7';pipx install pylint pyright
 pipx inject pytest pytest-{forked,localftpserver,pythonpath,subprocess,timeout} pyfakefs pytest_httpserver six mock
 pipx inject pylint pyfakefs six mock pytest{,_forked,-localftpserver}
 ```
 
-Use the `deadsnakes` ppa to install Python versions like 3.8 and 3.11 (see below)
+### Updating the documentation
 
-## Development setup on Ubuntu 22.04
+For consistently well-spaced documentation, all Markdown files are checked
+in CI using Markdownlint, which ensures that e.g. code blocks are separated
+by space from the preceeding and following paragraphs and so on. This helps
+to keep the Markdown source as well-readable as the rendered Markdown.
 
-Usage of <https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa> to install
-other python versions.
+To check and fix Markdown files quickly, use:
 
-```bash
-sudo apt update
-sudo apt install software-properties-common python{2,3}-dev
-sudo add-apt-repository -y ppa:deadsnakes/ppa
-sudo apt-get install -y python3.{8,11}{,-distutils}
+```sh
+pre-commit run -av markdownlint
 ```
 
-Installation of additional python versions for testing different versions:
+### Removing trailing whitepace and fixing files to have only one trailing newline
 
-- If `deadsnakes/ppa` does not work, e.g. for Python 3.6, `conda` or `pyenv` can be used.
-  For instructions, see <https://realpython.com/intro-to-pyenv>:
+These fixers detect and fix trailing whitespace and trailing newlines in files
+to keep commits clean of adding trailing whitespace and are used in GitHub CI:
 
-  ```bash
-  sudo apt install -y build-essential xz-utils zlib1g-dev \
-                      lib{bz2,ffi,lzma,readline,ssl,sqlite3}-dev
-  curl https://pyenv.run | bash  # add displayed commands to .bashrc
-  ~/.pyenv/bin/pyenv install 3.{6,8,11} && ~/.pyenv/bin/pyenv local 3.{6,8,11} # builds them
-  ```
-
-- For testing on newer Ubuntu which has `python2-dev`, but not `pip2`, install `pip2` this way:
-
-  ```bash
-  curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py;sudo python2 get-pip.py
-  ```
-
-You may want to install `pytype` in your user environment to run it directly without `tox`:
-
-```bash
-# On Python != 3.8, pytype can't import xml.dom.minidom, use 3.8:
-python3.8 -m pip install pytype
-python -m pip install tabulate
-./pytype_runner.py
+```sh
+pre-commit run -av trailing-whitespace
+pre-commit run -av end-of-file-fixer
 ```
 
-## Installation of dependencies using `pip`
+## Background information on the provided tools
 
 ### Testing locally and in GitHub CI using `tox`
 
@@ -155,6 +230,9 @@ For more information to debug `pytest` test suites see
 <https://stribny.name/blog/pytest>:
 
 ## Running GitHub actions locally using `act`
+
+With `docker` (or `podman`) installed, [act](https://github.com/nektos/act) can be used to run
+the CI jobs configured in [.actrc](.actrc):
 
 - `act` uses `docker` (also mimicked by `podman-docker`) to run GitHub actions locally
 - While `act` does not use the same GitHub runner images, they are similar.

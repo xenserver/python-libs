@@ -58,48 +58,9 @@ open a recent workflow run the latest and scroll down until you see the tables!
 - `.github/act-serial.yaml`: Configuration for the jobs run by the local GitHub actions runner `act`
 - `.pylintrc`: Configuration file of `Pylint`
 
-## Installation and Setup of a development environment
+## Installation and setup of the development environment
 
-For the installation of the general development dependencies, visit [INSTALL.md](INSTALL.md)
-
-### Updating tests using `pytest-watch` (`ptw`)
-
-- `pip install pytest-watch` - `ptw` watches changed files and runs `pytest` after changes are saved.
-  - Then run `ptw` on the code/tests you work on, e.g.: `ptw tests/test_pci_*` and edit the files.
-
-## Example development workflow
-
-- Run the tests for at also with `LC_ALL=C python3.6 -m pytest` to check for any `ascii` codec
-  issues by Python3.6
-- Test with `python2.7 -m pytest`
-- Run `mypy` (without any arguments - The configuration is in `pyproject.toml`)
-- Run `./pytype_runner.py`
-- Run `tox -e py36-lint` and fix any `Pylint` warnings
-- Run `tox -e py310-covcombine-check` and fix any missing diff-coverage.
-- Run `tox` for the full CI test suite
-- Run `act` for the full CI test suite in local containers (similar to GitHub action containers)
-- Commit with `--signoff` on a new branch and push it and check the triggered GitHub Action run succeeds.
-- Open a new PR
-
-The list of `virtualenvs` configured in tox can be shown using this command: `tox -av`
-
-```ml
-$ tox -av
-default environments:
-py36-lint              -> Run in a py36 virtualenv: Run pylint and fail on warnings remaining on lines in the diff to master
-py311-pyright          -> Run in a py311 virtualenv: Run pyright for static analyis
-py38-pytype            -> Run in a py38 virtualenv: Run pytype for static analyis, intro: https://youtu.be/abvW0mOrDiY
-py310-covcombine-check -> Run in a py310 virtualenv: Generate combined coverage reports with py27-test coverage merged Run mypy for static analyis
-
-additional environments:
-cov                    -> Run in a python virtualenv: Generate coverage html reports (incl. diff-cover) for this environment
-covcp                  -> Run in a python virtualenv: Copy the generated .converage and coverage.xml to the UPLOAD_DIR dir
-fox                    -> Run in a python virtualenv: Generate combined coverage html reports and open them in firefox
-mdreport               -> Run in a python virtualenv: Make a test report (which is shown in the GitHub Actions Summary Page)
-test                   -> Run in a python virtualenv: Run pytest in this environment with --cov for use in other stages
-```
-
-If you have only one version of Python3, that works too. Use: `tox -e py<ver>-test`
+For the installation of the general development dependencies, visit [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Static analysis using mypy, pylint, pyright and pytype
 

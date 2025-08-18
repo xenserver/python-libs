@@ -19,15 +19,16 @@ class TestBootloader(unittest.TestCase):
                                     universal_newlines=True)
 
             assert proc.stdout is not None  # for pyright, to ensure it is valid
+            # check the diff output, working around trailing whitespace issues
             self.assertEqual(proc.stdout.read(), '''5a6,13
 > if [ -s $prefix/grubenv ]; then
 > 	load_env
 > fi
-> 
+> ''' + '''
 > if [ -n "$override_entry" ]; then
 > 	set default=$override_entry
 > fi
-> 
+> ''' + '''
 ''')
             proc.stdout.close()
             proc.wait()

@@ -40,27 +40,26 @@ jobs:
         with:
           fetch-depth: 0  # Needed by diff-cover to get the changed lines: origin/master..HEAD
       - name: Set up Python ${{ matrix.python-version }}
+        # Python 3.11 is not supported in the nektos/act container, so we skip this step
+        if: ${{ !(matrix.python-version == '3.11' && github.actor == 'nektos/act') }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Python 2.7 from Ubuntu 20.04 using apt-get install
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
-        run: sudo apt-get update && sudo apt-get install -y python2-dev
-
       - name: Install missing cpio in containers of nektos/act
-        if: ${{ github.actor == 'nektos/act'}}
+        if: ${{ (github.actor == 'nektos/act' && matrix.python-version != '3.11') }}
         run: apt-get update && apt-get install -y cpio
 
-      - name: Run of tox on ubuntu-latest
-        if: ${{ startsWith(matrix.python-version, '3.') && matrix.python-version != 3.6 }}
+      - name: Run of tox on Ubuntu
+        # Python 3.11 is not supported in the nektos/act container, so we skip this step
+        if: ${{ !(matrix.python-version == '3.11' && github.actor == 'nektos/act') }}
         run: |
-          pip install 'virtualenv<20.22' 'tox==4.5.1' tox-gh-actions
+          pip install tox tox-gh-actions
           tox --workdir .github/workflows/.tox --recreate
 
       - name: Select the coverage file for upload
         if: |
-          ( matrix.python-version == '3.6' || matrix.python-version == '3.11' ) &&
+          matrix.python-version == '3.11' &&
           ( !cancelled() && github.actor != 'nektos/act' )
         id: coverage
         run: mv $( ls -t .github/workflows/.tox/*/log/.coverage | head -1 ) .coverage

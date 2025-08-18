@@ -227,10 +227,12 @@ def write_results_as_markdown_tables(branch_url, fp, panda_overview, panda_resul
     me = os.path.basename(__file__)
     mylink = f"[{me}]({branch_url}/{me})"
     # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#multiline-markdown-content
-    fp.write(f"### PyLint breakdown from {mylink} on **xcp/\\*\\*/*.py**\n")
+    fp.write(f"### PyLint summary (by {mylink})\n")
     fp.write(panda_overview.to_markdown())
-    fp.write(f"\n### PyLint results from {mylink} on **xcp/\\*\\*/*.py**\n")
-    fp.write(panda_results.to_markdown())
+    fp.write("\n")
+    if not panda_results.empty:
+        fp.write("### PyLint results\n")
+        fp.write(panda_results.to_markdown())
 
 
 if __name__ == "__main__":
@@ -242,7 +244,7 @@ if __name__ == "__main__":
         branch = os.environ.get("GITHUB_HEAD_REF", None) or os.environ.get("GITHUB_REF_NAME", None)
         ghblob_url = f"{server_url}/{repository}/blob/{branch}"
 
-    # Like the previous run-pylint.sh, check the xcp module by default:
+    # By default, run pylint on xcp/ and tests/
     dirs_to_check = sys.argv[1:] if len(sys.argv) > 1 else ["xcp", "tests"]
 
     # https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#adding-a-job-summary
@@ -255,5 +257,8 @@ if __name__ == "__main__":
     #
     pylint_txt = os.environ.get("ENVLOGDIR", ".tox") + "/pylint.txt"
 
-    print("Checking:", str(dirs_to_check) + "; Writing report to:", step_summary)
+    print("Checking:", " ".join(dirs_to_check) + ". Writing report to:", step_summary)
     main(dirs_to_check, step_summary, pylint_txt, ghblob_url)
+    # Show the report
+    with open(step_summary, "r", encoding="utf-8") as fp:
+        print(fp.read())

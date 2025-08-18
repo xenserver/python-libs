@@ -37,7 +37,7 @@
 # https://github.com/dexpota/cheatsheets/blob/master/pre-commit
 exclude: "^tests/data"
 fail_fast: true
-default_stages: [commit]
+default_stages: [pre-commit]
 repos:
 -   repo: local
     hooks:
@@ -47,7 +47,7 @@ repos:
         types: [binary]
         language: fail
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, master]
@@ -62,11 +62,21 @@ repos:
           - isort
 
 
+-   repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0  # Use the ref you want to point at
+    hooks:
+    # Enforce that `# type: ignore` annotations always occur with specific codes.
+    # Sample annotation: # type: ignore[attr-defined,name-defined]
+    -   id: python-check-blanket-type-ignore
+
+
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+    rev: v1.17.1
     hooks:
     -   id: mypy
         additional_dependencies:
+        - pyfakefs
+        - pytest_httpserver
         - pytest-subprocess
         - types-mock
         - types-six
@@ -74,64 +84,33 @@ repos:
 
 
 -   repo: https://github.com/rcmdnk/pyproject-pre-commit
-    rev: v0.1.9
+    rev: v0.4.2
     hooks:
     -   id: shellcheck
 
 
 - repo: https://github.com/igorshubovych/markdownlint-cli
-  rev: v0.42.0
+  rev: v0.45.0
   hooks:
   - id: markdownlint
 
 
--   repo: https://github.com/pycqa/pylint
-    rev: v2.17.4
-    hooks:
-    -   id: pylint
-        args:
-            [
-                -sn, # Don't display the score
-                --load-plugins=pylint.extensions.eq_without_hash,
-                --ignore-imports=yes,
-                "--disable=duplicate-code,line-too-long",
-            ]
-        log_file: ".git/pre-commit-pylint.log"
-        additional_dependencies:
-        -   pyfakefs
-        -   six
-        -   mock
-        -   pandas
-        -   pytest_forked
-        -   toml
 -   repo: local
     hooks:
-    -   id: pytype
-        name: pytype (may take up to two minutes)
-        entry: sh -c "pytype >/dev/tty"
-        types: [python]
-        verbose: true
-        language: python
-        language_version: python3.8
-        require_serial: true
-        additional_dependencies: [pytype]
-    -   id: pytest
-        name: Check pytest unit tests pass
+    -   id: tox
+        name: pytest unit tests and static analysis using tox
         types: [python]
         # entry: sh -c "pytest -x -rf --new-first --show-capture=all >/dev/tty"
-        entry: sh -c "tox -e py38-covcombine >/dev/tty"
+        entry: sh -c "tox -e py311-cov-check-pytype-pyright-lint-mdreport >/dev/tty"
         verbose: true
         language: python
         require_serial: true
         pass_filenames: false
--   repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.10.0  # Use the ref you want to point at
-    hooks:
-    # Enforce that `# type: ignore` annotations always occur with specific codes.
-    # Sample annotations: # type: ignore[attr-defined] # type: ignore[attr-defined,name-defined]
-    -   id: python-check-blanket-type-ignore
+        additional_dependencies: [tox]
+
+
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
     -   id: trailing-whitespace
     -   id: end-of-file-fixer

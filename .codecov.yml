@@ -37,6 +37,9 @@ github_checks:
   #
   annotations: true
 
+codecov:
+  token: 37ee4f08-37b2-404b-bf4d-254891cf6f30  # Codecov coverage upload token
+
 #
 # Pull request comments:
 # ----------------------

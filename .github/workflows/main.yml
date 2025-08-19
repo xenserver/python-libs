@@ -13,6 +13,11 @@ concurrency:  # On new workflow, cancel old workflows from the same PR, branch o
 # or requested by adding "request-checks: true" if disabled by default for pushes:
 # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/about-status-checks#skipping-and-requesting-checks-for-individual-commits
 on: [push, pull_request]
+
+permissions:
+  contents: read
+  pull-requests: write
+
 env:
   PYTHONWARNINGS: "ignore:DEPRECATION"
   PIP_ROOT_USER_ACTION: "ignore"     # For local testing using act-cli
@@ -35,6 +40,8 @@ jobs:
         - python-version: '3.13'
           os: ubuntu-22.04
     runs-on: ${{ matrix.os }}
+    env:
+      PYTHON_VERSION_USED_FOR_COVERAGE: ${{ '3.11' }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -50,94 +57,38 @@ jobs:
         if: ${{ (github.actor == 'nektos/act' && matrix.python-version != '3.11') }}
         run: apt-get update && apt-get install -y cpio
 
-      - name: Run of tox on Ubuntu
+      - name: Run tox to run pytest in the defined tox environments
         # Python 3.11 is not supported in the nektos/act container, so we skip this step
         if: ${{ !(matrix.python-version == '3.11' && github.actor == 'nektos/act') }}
         run: |
           pip install tox tox-gh-actions
           tox --workdir .github/workflows/.tox --recreate
-
-      - name: Select the coverage file for upload
-        if: |
-          matrix.python-version == '3.11' &&
-          ( !cancelled() && github.actor != 'nektos/act' )
-        id: coverage
-        run: mv $( ls -t .github/workflows/.tox/*/log/.coverage | head -1 ) .coverage
-
-      # The new reliable Codecov upload requires Codecov to query the GitHub API to check
-      # the repo and the commit. The repo (or organisation) owner needs to login to
-      # codecov, generated the CODECOV_TOKEN and save it as a secret in the ORG or the repo:
-      # https://docs.codecov.com/docs/adding-the-codecov-token
-
-      # Links to get and set the token:
-      # Get the CODECOV_TOKEN: https://app.codecov.io/gh/xenserver/python-libs/settings
-      # Set the CODE_COV_TOKEN: https://github.com/xenserver/python-libs/settings/secrets/actions
-
-      # Without it, the API calls are rate-limited by GitHub, and the upload may fail:
-      # https://github.com/codecov/feedback/issues/126#issuecomment-1932658904
-      #
-      - name: Upload coverage reports to Codecov (fallback, legacy Node.js 16 action)
-        # If CODECOV_TOKEN is not set, use the legacy tokenless Codecov action:
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        # To reduce chances of GitHub's API throttling to hit this upload, only run the
-        # upload for the py38-covcombine-check job running on Ubuntu-20.04, which is the
-        # one we need. And only run it for PRs and the master branch, not for pushes.
-        # This reduces the number of uploads and the chance of hitting the rate limit
-        # by a factor of 6.
+          DIFF_COVERAGE_MIN: 0  # Let the reviewdog and codecov show uncovered lines
+
+      - uses: aki77/reviewdog-action-code-coverage@v2
+        continue-on-error: true
         if: |
-          steps.coverage.outcome == 'success' &&
-          !env.CODECOV_TOKEN && !cancelled() &&
-          matrix.os == 'ubuntu-20.04' && github.actor != 'nektos/act' &&
-          ( github.event.pull_request.number || github.ref == 'refs/heads/master' )
-        uses: codecov/codecov-action@v3
+          matrix.python-version == env.PYTHON_VERSION_USED_FOR_COVERAGE &&
+          !cancelled() && github.event_name == 'pull_request'
         with:
-          directory: .github/workflows/.tox/py38-covcombine-check/log
-          env_vars: OS,PYTHON
-          # Use fail_ci_if_error: false as explained the big comment above:
-          # Not failing this job in this case is ok because the tox CI checks also contain
-          # a diff-cover check which would fail on changed lines missing coverage.
-          # The Codecov CLI is more reliable and should be used if the CODECOV_TOKEN is set.
-          # The Codecov CLI is used in the next step when CODECOV_TOKEN is set.
-          fail_ci_if_error: false
-          flags: unittest
-          name: py27-py38-combined
-          verbose: true
+          lcov_path: coverage.lcov
 
-      - name: Upload coverage reports to Codecov (used when secrets.CODECOV_TOKEN is set)
-        # If CODECOV_TOKEN is set, use the new Codecov CLI to upload the coverage reports
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - uses: codecov/codecov-action@v5
+        id: codecov
         if: |
-          env.CODECOV_TOKEN && !cancelled() && github.actor != 'nektos/act' &&
-          steps.coverage.outcome == 'success' && matrix.os == 'ubuntu-20.04'
-        run: >
-          set -euxv;
-          mv .github/workflows/.tox/py38-covcombine-check/log/coverage.xml cov.xml;
-          curl -O https://cli.codecov.io/latest/linux/codecov; sudo chmod +x codecov;
-          ./codecov upload-process --report-type coverage
-          --name "CLI Upload for ${{ env.PYTHON_VERSION }}"
-          --git-service github --fail-on-error --file cov.xml --disable-search
-          --flag python${{ env.PYTHON_VERSION }}
-        continue-on-error: false  # Fail the job if the upload with CODECOV_TOKEN fails
+          matrix.python-version == env.PYTHON_VERSION_USED_FOR_COVERAGE &&
+          !cancelled() && github.actor != 'nektos/act'
 
-      - if: steps.coverage.outcome == 'success'
+      - uses: codecov/test-results-action@v1
+        if: steps.codecov.outcome == 'success'
+
+      - if: |
+          matrix.python-version == env.PYTHON_VERSION_USED_FOR_COVERAGE &&
+          !cancelled() && github.actor != 'nektos/act'
         name: Upload coverage reports to Coveralls
         env:
-          COVERALLS_PARALLEL: true
           COVERALLS_FLAG_NAME: ${{ format('python{0}', steps.python.outputs.python-version ) }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pip install coveralls && coveralls --service=github
-
-  # For combined coverage of 2.7, 3.8 and 3.11 we upload to Coveralls in parallel mode.
-  # To view the Coveralls results from the PR, click on the "Details" link to the right
-  # of the Coveralls Logo in the Checks section of the PR.
-  finish-coverage-upload:
-    if: github.actor != 'nektos/act'
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Finish the coverage upload to Coveralls
-        uses: coverallsapp/github-action@v1
-        with:
-          parallel-finished: true
+        continue-on-error: true  # Coveralls.io is currently overloaded

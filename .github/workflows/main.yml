@@ -67,7 +67,6 @@ jobs:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.REVIEWDOG_GITHUB_API_TOKEN }}
         if: |
           matrix.python-version == env.PYTHON_VERSION_USED_FOR_COVERAGE &&
-          !cancelled() && github.event_name == 'pull_request' &&
           env.REVIEWDOG_GITHUB_API_TOKEN
         with:
           lcov_path: coverage.lcov
@@ -79,7 +78,7 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         if: |
           matrix.python-version == env.PYTHON_VERSION_USED_FOR_COVERAGE &&
-          !cancelled() && github.actor != 'nektos/act' && env.CODECOV_TOKEN
+          !cancelled()
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

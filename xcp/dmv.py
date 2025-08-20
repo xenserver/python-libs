@@ -28,6 +28,7 @@ import re
 import struct
 import glob
 import errno
+from typing import Any, Dict
 
 from .compat import open_with_codec_handling
 
@@ -91,37 +92,36 @@ def id_matches(id1, id2):
         return True
     return id1 == id2
 
-'''
-driver_pci_ids example:
-{
-        "abc.ko": [
-            {
-                "vendor_id": "14e4",
-                "device_id": "163c",
-                "subvendor_id": "*",
-                "subdevice_id": "*"
-            },
-            {
-                "vendor_id": "14e4",
-                "device_id": "163b",
-                "subvendor_id": "*",
-                "subdevice_id": "*"
-            }],
-        "de.ko": [
-            {
-                "vendor_id": "eees",
-                "device_id": "163c",
-                "subvendor_id": "*",
-                "subdevice_id": "*"
-            },
-            {
-                "vendor_id": "14f4",
-                "device_id": "16db",
-                "subvendor_id": "2123",
-                "subdevice_id": "1123"
-            }]
-}
-'''
+
+# driver_pci_ids example:
+# {
+#         "abc.ko": [
+#             {
+#                 "vendor_id": "14e4",
+#                 "device_id": "163c",
+#                 "subvendor_id": "*",
+#                 "subdevice_id": "*"
+#             },
+#             {
+#                 "vendor_id": "14e4",
+#                 "device_id": "163b",
+#                 "subvendor_id": "*",
+#                 "subdevice_id": "*"
+#             }],
+#         "de.ko": [
+#             {
+#                 "vendor_id": "eees",
+#                 "device_id": "163c",
+#                 "subvendor_id": "*",
+#                 "subdevice_id": "*"
+#             },
+#             {
+#                 "vendor_id": "14f4",
+#                 "device_id": "16db",
+#                 "subvendor_id": "2123",
+#                 "subdevice_id": "1123"
+#             }]
+# }
 def pci_matches(present_pci_id, driver_pci_ids):
     """Check if present PCI ID matches any of the driver PCI IDs."""
     merged_driver_pci_id_list = []
@@ -169,22 +169,6 @@ def hardware_present(lspci_out, pci_ids):
         if pci_matches(match.groupdict(), pci_ids):
             return True
     return False
-
-def variant_selected(modules, updates_dir):
-    """Check and return which driver is selected"""
-    # Check if any module in the modules is selected
-    for module in modules:
-        slink_file = os.path.join(updates_dir, module)
-        if os.path.islink(slink_file):
-            module_path = os.path.realpath(slink_file)
-            module_dir = os.path.dirname(module_path)
-            info_file = os.path.join(module_dir, "info.json")
-            with open(info_file, "r", encoding="ascii") as json_file:
-                json_data = json.load(json_file)
-                variant = json_data["variant"]
-
-            return variant
-    return None
 
 class DriverMultiVersion(object):
     def __init__(self, updates_dir, lspci_out, runtime=False):
@@ -242,7 +226,7 @@ class DriverMultiVersionManager(object):
             "protocol": {"version": dmv_proto_ver},
             "operation": {"reboot": False},
             "drivers": {}
-        }
+        } # type: Dict[str, Any]
         self.errors_list = {
             "version": err_proto_ver,
             "exit_code": 0,
@@ -296,7 +280,7 @@ class DriverMultiVersionManager(object):
         for _, updates_dir, dmv_dir in get_all_kabi_dirs():
             if not os.path.isdir(dmv_dir):
                 continue
-    
+
             for path, _, files in os.walk(dmv_dir):
                 if "info.json" not in files:
                     continue

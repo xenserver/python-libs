@@ -1,4 +1,4 @@
-# Python3 Unicode migration in the XCP package
+# Unicode migration
 
 ## Problem
 
@@ -79,7 +79,7 @@ When this is known to be the case, `encoding="iso-8859-1` could be tried (not te
 With the locale set to C (XAPI plugins have that), Python's default mode changes
 between 3.6 and 3.7:
 
-```py
+```sh
 for i in 3.{6,7,10,11};do echo -n "3.$i: ";
    LC_ALL=C python3.$i -c 'import locale,sys;print(locale.getpreferredencoding())';done
 3.6: ANSI_X3.4-1968
@@ -90,9 +90,12 @@ for i in 3.{6,7,10,11};do echo -n "3.$i: ";
 
 This has the effect that in Python 3.6, the default codec for XAPI plugins is `ascii`:
 
-```py
+```sh
 for i in 2.7 3.{6,7};do echo "$i:";
   LC_ALL=C python$i -c 'open("/usr/share/hwdata/pci.ids").read()';done
+```
+
+```
 2.7:
 3.6:
 Traceback (most recent call last):
@@ -111,52 +114,16 @@ While Python 3.7 and newer use UTF-8 mode by default, it does not set up an erro
 
 As it happens, some older tools output ISO-8859-1 characters hard-coded and these aren't valid UTF-8 sequences, and even newer Python versions need error handlers to not fail:
 
-```py
+```sh
 echo -e "\0262"  # ISO-8859-1 for: "²"
 python3 -c 'open(".text").read()'
+```
+
+```
 Traceback (most recent call last):
   File "<string>", line 1, in <module>
   File "<frozen codecs>", line 322, in decode
 UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb2 in position 0: invalid start byte
-```
-
-```py
-pylint -d all -e unspecified-encoding --msg-template="{path} line {line} in {obj}()" xcp/ tests/
-************* Module xcp.accessor
-xcp/accessor.py line 165 in MountingAccessor.writeFile()
-xcp/accessor.py line 240 in FileAccessor.writeFile()
-************* Module xcp.bootloader
-xcp/bootloader.py line 111 in Bootloader.readExtLinux()
-xcp/bootloader.py line 219 in Bootloader.readGrub()
-xcp/bootloader.py line 335 in Bootloader.readGrub2()
-xcp/bootloader.py line 465 in Bootloader.writeExtLinux()
-xcp/bootloader.py line 507 in Bootloader.writeGrub()
-xcp/bootloader.py line 541 in Bootloader.writeGrub2()
-************* Module xcp.cmd
-xcp/cmd.py line 67 in OutputCache.fileContents()
-************* Module xcp.dom0
-xcp/dom0.py line 85 in default_memory()
-************* Module xcp.environ
-xcp/environ.py line 48 in readInventory()
-************* Module xcp.logger
-xcp/logger.py line 51 in openLog()
-************* Module xcp.net.ifrename.dynamic
-xcp/net/ifrename/dynamic.py line 95 in DynamicRules.load_and_parse()
-xcp/net/ifrename/dynamic.py line 292 in DynamicRules.save()
-************* Module xcp.net.ifrename.static
-xcp/net/ifrename/static.py line 118 in StaticRules.load_and_parse()
-xcp/net/ifrename/static.py line 330 in StaticRules.save()
-************* Module tests.test_biosdevname
-tests/test_biosdevname.py line 30 in TestDeviceNames.test()
-tests/test_biosdevname.py line 32 in TestDeviceNames.test()
-************* Module tests.test_bootloader
-tests/test_bootloader.py line 32 in TestLinuxBootloader.setUp()
-tests/test_bootloader.py line 34 in TestLinuxBootloader.setUp()
-tests/test_bootloader.py line 36 in TestLinuxBootloader.setUp()
-tests/test_bootloader.py line 38 in TestLinuxBootloader.setUp()
-************* Module tests.test_pci
-tests/test_pci.py line 96 in TestPCIIds.test_videoclass_by_mock_calls()
-tests/test_pci.py line 110 in TestPCIIds.mock_lspci_using_open_testfile()
 ```
 
 Of course, `xcp/net/ifrename` won't be affected but it would be good to fix the

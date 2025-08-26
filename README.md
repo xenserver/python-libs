@@ -54,7 +54,7 @@ open a recent workflow run the latest and scroll down until you see the tables!
 
 ## Installation and setup of the development environment
 
-For the installation of the general development dependencies, visit [CONTRIBUTING.md](CONTRIBUTING.md)
+For the installation of the general development dependencies, visit [CONTRIBUTING.md]
 
 ## Static analysis using mypy, pylint, pyright and pytype
 
@@ -106,7 +106,7 @@ As proof, these examples show how the comment below triggers the checks:
 
 mypy:
 
-```py
+```sh
 $ mypy xcp/xmlunwrap.py
 xcp/xmlunwrap.py:31: error: Name "Element" is not defined
 xcp/xmlunwrap.py:38: error: Incompatible return value type (got "bytes", expected "str")
@@ -114,7 +114,7 @@ xcp/xmlunwrap.py:38: error: Incompatible return value type (got "bytes", expecte
 
 pyright (used by VS Code by default):
 
-```py
+```sh
 $ pyright xcp/xmlunwrap.py|sed "s|$PWD/||"
 ...
 pyright 1.1.295
@@ -135,7 +135,7 @@ See <https://github.com/xenserver/python-libs/pull/23> for the context of this e
 ## Guidelines
 
 Charset encoding/string handling:
-See [README-Unicode.md](README-Unicode.md) for details on Unicode support.
+See [README-Unicode.md] for details on Unicode support.
 
 ## Users
 
@@ -168,7 +168,7 @@ See [README-Unicode.md](README-Unicode.md) for details on Unicode support.
 
 Verification:
 
-```ps
+```py
 # rpm -qf $(grep -r import /usr/libexec/ /usr/bin /etc/xapi.d/ /opt/xensource/|grep xcp|cut -d: -f1|grep -v Binary) --qf '%{name}\n'|sort -u|tee xcp-python-libs-importers.txt
 host-upgrade-plugin
 interface-rename

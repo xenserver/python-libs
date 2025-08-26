@@ -440,13 +440,15 @@ def createAccessor(baseAddress, *args):
     For all Accessors, the 1st arg after the address is type bool for ro (readonly flag)
     The DeviceAccessor accepts a 3rd argument: a List[] of filesystem names
 
-    Examples:
+    Example usage::
+
         accessor = createAccessor("http://example.com", True)
         accessor = createAccessor("dev://example.com", True, ['iso9660', 'ext3'])
         if not accessor:
             fatal()
         else:
             accessor.read()
+
     """
     url_parts = urllib.parse.urlsplit(baseAddress, allow_fragments=False)
 

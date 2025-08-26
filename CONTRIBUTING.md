@@ -4,7 +4,7 @@ To run all tests and all supported static analysis tools, Python 3.11 is needed,
 which matches the current Python version of XenServer 9.
 
 Python 3.10 might work as well (when replacing the references in the config files with 3.10).
-Python 3.12 and 3.13 can be used too, but not for running [pytype](https://github.com/google/pytype)
+Python 3.12 and 3.13 can be used too, but not for running [`pytype`](https://github.com/google/pytype)
 ([it does not support 3.12 yet](https://google.github.io/pytype/support.html)).
 
 On Ubuntu, you can install 3.11 (and also 3.12 and 3.13) from the widely-used Python support PPA:
@@ -14,19 +14,19 @@ sudo add-apt-repository ppa:deadsnakes/ppa && sudo apt update
 sudo apt install -y python3.11 python3.12 python3.13
 ```
 
-If 3.12 or 3.13 are found by [tox](https://tox.wiki), it will run the unit tests with them as well.
+If 3.12 or 3.13 are found by [`tox`](https://tox.wiki), it will run the unit tests with them as well.
 
-You can also use [uv to install Python versions](https://docs.astral.sh/uv/concepts/python-versions),
-see below on a link and an example how to install uv.
+You can also use [`uv` to install Python versions](https://docs.astral.sh/uv/concepts/python-versions),
+see below on a link and an example how to install `uv`.
 
-## Do not use distro-privided Python CI tools
+## Do not use distro-provided Python CI tools
 
-Python tools (other than the Python interpreters themself) provided by Linux distributions
+Python tools (other than the Python interpreters themselves) provided by Linux distributions
 are "always" out of date and do not work as required. If possible, uninstall/remove those,
 even if your environment is based on Ubuntu 24.04. In addition, most problematically, the
-distribution-provided Python tools are running using the default Pyton version of the
+distribution-provided Python tools are running using the default Python version of the
 host system, which may not be compatible and can cause subtle errors.  (e.g. Python 3.12
-or newer triggers unclear dependency errors in pytype because it is not supported yet)
+or newer triggers unclear dependency errors in `pytype` because it is not supported yet)
 
 ## Create a virtual environment with the test dependencies
 
@@ -55,13 +55,13 @@ pip-compile --extra=test,mypy,pyright,pytype,tox -o - pyproject.toml | pip insta
 
 These commands assume you installed the tools using the commands above in a Python 3.11 environment.
 
-### Run pyright, watching for changes and automatically checking the change
+### Run `pyright`, watching for changes and automatically checking the change
 
 ```sh
 pyright -w
 ```
 
-### Run pytest with coverage (fine-grained, e.g. during test development)
+### Run `pytest` with coverage (fine-grained, e.g. during test development)
 
 ```sh
 pytest --cov -v --new-first -x --show-capture=all -rA [optional: files / select which tests to run]
@@ -69,7 +69,7 @@ pytest --cov -v --new-first -x --show-capture=all -rA [optional: files / select 
 
 ### Watching and running tests on changes automatically using `pytest-watch` (`ptw`)
 
-Install ptw in the Python environment using:
+Install `ptw` in the Python environment using:
 
 ```sh
 pip install pytest-watch
@@ -82,25 +82,25 @@ Run `ptw`, and pass the files to watch, e.g.:
 ptw tests/test_*
 ```
 
-### Run mypy (fine-grained, e.g. during development)
+### Run `mypy` (fine-grained, e.g. during development)
 
 ```sh
 mypy [optionally pass the flags or files to select which tests to run]
 ```
 
-### Run pylint (fine-grained, e.g. during development)
+### Run `pylint` (fine-grained, e.g. during development)
 
 ```sh
 pylint xcp tests [optionally pass the flags or files to select which tests to run]
 ```
 
-### Run all of the above on one go in defined virtual environments
+### Run all the above on one go in defined virtual environments
 
 ```sh
 tox -e py311-cov-check-lint-mdreport
 ```
 
-This also checks code coverage and ends with a test report from the pytest run.
+This also checks code coverage and ends with a test report from the `pytest` run.
 If you just run `tox` without arguments, in addition, the unit tests are run with
 all installed Python versions (out of the list of 3.11, 3.12 and 3.13)
 
@@ -112,7 +112,7 @@ To run all tests, including trailing whitespace checks, run
 pre-commit run -av
 ```
 
-## Alternative: installing pytest packages using `pipx`
+## Alternative: Install `pytest` packages using `pipx`
 
 `pipx` installs tools in `~/.local/share/pipx/venvs` which can be an alternate
 way to install up-to-date python tools
@@ -128,7 +128,7 @@ pipx inject pylint pyfakefs six mock pytest{,_forked,-localftpserver}
 
 For consistently well-spaced documentation, all Markdown files are checked
 in CI using Markdownlint, which ensures that e.g. code blocks are separated
-by space from the preceeding and following paragraphs and so on. This helps
+by space from the proceeding and following paragraphs and so on. This helps
 to keep the Markdown source as well-readable as the rendered Markdown.
 
 To check and fix Markdown files quickly, use:
@@ -137,7 +137,7 @@ To check and fix Markdown files quickly, use:
 pre-commit run -av markdownlint
 ```
 
-### Removing trailing whitepace and fixing files to have only one trailing newline
+### Removing trailing whitespace and fixing files to have only one trailing newline
 
 These fixers detect and fix trailing whitespace and trailing newlines in files
 to keep commits clean of adding trailing whitespace and are used in GitHub CI:

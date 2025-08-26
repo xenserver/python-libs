@@ -1,0 +1,14 @@
+xcp.accessor
+xcp.bootloader
+xcp.cmd
+xcp.compat
+xcp.cpiofile
+xcp.dmv
+xcp.dom0
+xcp.environ
+xcp.logger
+xcp.mount
+xcp.pci
+xcp.repository
+xcp.version
+xcp.xmlunwrap

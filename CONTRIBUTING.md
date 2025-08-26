@@ -232,7 +232,7 @@ For more information to debug `pytest` test suites see
 ## Running GitHub actions locally using `act`
 
 With `docker` (or `podman`) installed, [act](https://github.com/nektos/act) can be used to run
-the CI jobs configured in [.actrc](.actrc):
+the CI jobs configured in [`.actrc`](https://github.com/xenserver/python-libs/blob/master/.actrc):
 
 - `act` uses `docker` (also mimicked by `podman-docker`) to run GitHub actions locally
 - While `act` does not use the same GitHub runner images, they are similar.

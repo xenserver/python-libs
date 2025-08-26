@@ -55,10 +55,12 @@ test = [
     "typing_extensions"
 ]
 coverage = [
+    "python-libs[test]",
     "coverage[toml]",
     "diff_cover"
 ]
 mypy = [
+    "python-libs[test]",
     "lxml",
     "mypy",
     "mypy-extensions",
@@ -68,6 +70,7 @@ mypy = [
     "types-toml",
 ]
 pytype = [
+    "python-libs[test]",
     "pandas",
     "pytype",
 ]

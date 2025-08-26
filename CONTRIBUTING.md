@@ -164,43 +164,13 @@ Links:
 - <https://microsoft.github.io/pyright>
 - <https://google.github.io/pytype>
 
-With `tox`, developers can run the full test suite for Python 2.7 and 3.x.
-The same test suite is used in GitHub CI:
+With `tox`, developers can run the full test suite with several Python versions.
+The same test suite is used in GitHub CI.
+To install the latest version of `tox`, in an activated Python `venv`, run:
 
 ```bash
-pip3 install --user --upgrade 'py>=1.11.0' 'virtualenv<20.22' 'tox==4.5.1'; hash -r; tox
+pip3 install --user --upgrade tox; hash -r; tox
 ```
-
-Explanation:
-
-- `tox>=4` is needed in order to fix reading the python2.7 dependencies from `pyproject.toml`
-- `tox==4.5.1` is the last version not depending on `virtualenv>=20.23` (breaks Python 2.7)
-- The latest versions of `tox` need `'py>=1.11.0'`. This ensures that it is at least `1.11`.
-- `virtualenv-20.22` breaks using python2.7 for the `py27`, so has to be `virtualenv<20.22`.
-
-## Installation of all development dependencies
-
-Using pip-tools, you can extract the requirements and extras from `pyptoject.toml`:
-
-```bash
-PYTHON=python3.10
-EXTRAS=.,test,mypy,pyright,pytype,tox
-PFLAGS="--no-warn-conflicts"
-$PYTHON -m pip install pip-tools==7.3.0
-$PYTHON -m piptools compile --extra=$EXTRAS -o - pyproject.toml |
-    $PYTHON -m pip install -r /dev/stdin $PFLAGS
-```
-
-With this, you can run most of the CI tests run by `tox` and GitHub CI also from the shell.
-
-You can use e.g.: `tox -e py27-test -e py3.10-covcombine-check`
-The syntax is `-e py<python-version>-<factor1>[-factor2]`.
-A few of the factors are:
-
-- `test`: runs `pytest`
-- `cov`: runs `pytest --cov` and generates `XML` and `HTML` reports in `.tox/py<ver>-cov/logs/`
-- `check`: runs `mypy`
-- `fox`: runs like `cov` but then opens the `HTML` reports in Firefox
 
 ## Recommended `tox` and `pytest` plugins for development
 
@@ -270,7 +240,7 @@ To run `podman` as your user, run these as your user:
 ```bash
 systemctl enable --now --user podman.socket # Only configures the podman socket
 systemctl start --user podman.socket        # Start the docker-compatible unix socket
-# Ubuntu only, Fedora 37 configures it already with more unqualifies search registries:
+# Ubuntu only, Fedora configures unqualified search registries out-of-the-box:
 echo 'unqualified-search-registries = ["docker.io"]' | sudo tee -a /etc/containers/registries.conf
 sudo touch /etc/containers/nodocker         # Quiet the docker emulation notification
 echo "--container-daemon-socket unix://$XDG_RUNTIME_DIR/podman/podman.sock" >>~/.actrc

@@ -13,9 +13,6 @@ The package name is `python-libs` which is also the `rpm` package name in XenSer
 XCP-ng packages it as [xcp-python-libs](https://github.com/xcp-ng-rpms/xcp-python-libs)
 ([koji](https://koji.xcp-ng.org/packageinfo?packageID=400)).
 
-It supports Python 2.7 and is currently in progress to get further fixes for >= 3.6.
-It depends on `six`, and on Python 2.7, also `configparser` and `pyliblzma`.
-
 ## Test-driven Development (TDD) Model
 
 Please see [CONTRIBUTING.md] for installing a local development environment.
@@ -25,11 +22,8 @@ Test-driven development.
 
 The Continuous Integration Tests feature:
 
-- Combined coverage testing of Python 2.7 and Python 3.8 code branches
-- Automatic Upload of the combined coverage to CodeCov (from the GitHub Workflow)
-- Checking of the combined coverage against the diff to master: Fails if changes are not covered!
-- Pylint report in the GitHub Action Summary page, with Warning and Error annotatios, even in the code review.
-- Check that changes don't generate pylint warnings (if warning classes which are enabled in .pylintrc)
+- `pylint` report in the GitHub Action Summary page with warning and error annotations in the code review.
+- Checks that changes don't generate `pylint` warnings
 - Static analysis using `mypy`, `pylint`, `pyright` and `pytype`
 
 This enforces that any change (besides whitespace):

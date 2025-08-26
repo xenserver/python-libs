@@ -119,7 +119,7 @@ way to install up-to-date python tools
 
 ```bash
 python3.11 -m pip install pipx
-pipx install tox; pipx install 'pytest<7';pipx install pylint pyright
+pipx install tox; pipx install pytest;pipx install pylint pyright
 pipx inject pytest pytest-{forked,localftpserver,pythonpath,subprocess,timeout} pyfakefs pytest_httpserver six mock
 pipx inject pylint pyfakefs six mock pytest{,_forked,-localftpserver}
 ```
@@ -215,7 +215,7 @@ yet committed in a Git repository and run only them.
 For nicer diffs of dictionaries, arrays and the like, use `pytest-clarity` or `pytest-icdiff`:
 
 ```py
-pip install "pytest<7" pytest-picked pytest-sugar pytest-clarity # pytest-icdiff
+pip install pytest pytest-picked pytest-sugar pytest-clarity # pytest-icdiff
 ```
 
 To verify or extract the dependencies and extras configured in `pyproject.toml` and `tox.ini`

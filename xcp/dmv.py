@@ -164,8 +164,8 @@ def hardware_present(lspci_out, pci_ids):
         "(?P<subdevice>[^"]*)"       # Subdevice (07a0 or empty)
         $
     '''
-    lscpi_pattern = re.compile(lspci_expression, re.VERBOSE | re.MULTILINE)
-    for match in lscpi_pattern.finditer(lspci_out):
+    lspci_pattern = re.compile(lspci_expression, re.VERBOSE | re.MULTILINE)
+    for match in lspci_pattern.finditer(lspci_out):
         if pci_matches(match.groupdict(), pci_ids):
             return True
     return False

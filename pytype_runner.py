@@ -142,8 +142,11 @@ def to_markdown(me, fp, returncode, results, branch_url):
     mylink = f"[{me}]({branch_url}/{me}.py)"
     pytype_link = "[pytype](https://google.github.io/pytype)"
     if len(results) or returncode:
-        fp.write(f"\n#### {mylink} reports these {pytype_link} error messages:\n")
-        fp.write(pd.DataFrame(results).to_markdown())
+        fp.write(f"\n#### {mylink} reports these error messages:\n")
+        if len(results):
+            fp.write(pd.DataFrame(results).to_markdown())
+        else:
+            fp.write(f"\n*pytype exited with error {returncode}, please check the CI logs*\n")
     else:
         fp.write(f"\n#### Congratulations, {mylink} reports no {pytype_link} errors.\n")
     fp.write("\n")
@@ -152,6 +155,12 @@ def to_markdown(me, fp, returncode, results, branch_url):
 def setup_and_run_pytype_action(scriptname: str):
     config = load("pyproject.toml")
     pytype = config["tool"].get("pytype")
+    if required := pytype.get("python_version", None):
+        if f"{sys.version_info[0]}.{sys.version_info[1]}" != required:
+            print(f"`pyproject.toml->tool.pytype->python_version` requires {required}!")
+            print("(It does not support 3.12: Fails to importing several pytest plugins.)")
+            raise RuntimeError(f"Python version {sys.version} does not match {required})")
+
     xfail_files = pytype.get("xfail", []) if pytype else []
     repository_url = config["project"]["urls"]["repository"].strip(" /")
     filelink_baseurl = repository_url + "/blob/master"
@@ -163,13 +172,17 @@ def setup_and_run_pytype_action(scriptname: str):
         branch = os.environ.get("GITHUB_HEAD_REF", None) or os.environ.get("GITHUB_REF_NAME", None)
         filelink_baseurl = f"{server_url}/{repository}/blob/{branch}"
     retcode, results = run_pytype_and_parse_annotations(xfail_files, filelink_baseurl)
-    # Write the panda dable to a markdown output file:
+    # Write the pandas table to a markdown output file:
     summary_file = os.environ.get("GITHUB_STEP_SUMMARY", None)
     if summary_file:
+        dirname = os.path.dirname(summary_file)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         with open(summary_file, "w", encoding="utf-8") as fp:
             to_markdown(scriptname, fp, retcode, results, filelink_baseurl)
     else:
         to_markdown(scriptname, sys.stdout, retcode, results, filelink_baseurl)
+    return retcode
 
 
 if __name__ == "__main__":

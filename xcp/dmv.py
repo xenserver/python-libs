@@ -20,6 +20,29 @@
 # ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+Driver Multiversion (DMV) Management for XenServer
+
+This module provides functionality to manage multiple hardware driver variants
+across different kernel versions. It enables detection, selection, and activation
+of appropriate driver modules based on hardware presence and system configuration.
+
+Features:
+- Scans /lib/modules/<version>/dmv and /lib/modules/<version>/updates for dmv drivers.
+- Detects active and loaded driver modules
+- Matches hardware PCI IDs to supported driver variants
+- Manages symlinks and updates for selected drivers
+- Provides structured information about available drivers and their status
+
+Main Classes:
+- DriverMultiVersion: Handles driver variant selection and info parsing
+- DriverMultiVersionManager: Aggregates and manages DMV data across the system
+
+Typical Usage:
+    manager = DriverMultiVersionManager(runtime=True)
+    manager.parse_dmv_list()
+    dmv_info = manager.get_dmv_list()
+"""
 
 import os
 import subprocess
@@ -42,7 +65,7 @@ def get_all_kabi_dirs():
     for kabi_ver in os.listdir(modules_root):
         updates_dir = os.path.join(modules_root, kabi_ver, "updates")
         dmv_dir = os.path.join(modules_root, kabi_ver, "dmv")
-        # not checking if updates_dir and dmv_dir exist here, will check later when use them
+        # No check if the directories exist. On use, we check if they exist
         dirs.append((kabi_ver, updates_dir, dmv_dir))
     return dirs
 
@@ -138,7 +161,16 @@ def pci_matches(present_pci_id, driver_pci_ids):
     return False
 
 def hardware_present(lspci_out, pci_ids):
-    """Check if supported hardware is fitted"""
+    """
+    Checks if any of the specified PCI IDs are present in the output of `lspci -nm`.
+
+    Args:
+        lspci_out (str): The output string from the `lspci -nm` command.
+        pci_ids (list or set): A collection of PCI IDs to search for in the output.
+
+    Returns:
+        bool: True if any of the given PCI IDs are found in the `lspci_out`, False otherwise.
+    """
     if not pci_ids or not lspci_out:
         return False
 

@@ -925,13 +925,13 @@ class CpioFile(six.Iterator):
 
     def __init__(self, name=None, mode="r", fileobj=None):
         # type:(str | None, str, Optional[IO[bytes] | GzipFile | _Stream]) -> None
-        """Open an (uncompressed) cpio archive `name'. `mode' is either 'r' to
-           read from an existing archive, 'a' to append data to an existing
-           file or 'w' to create a new file overwriting an existing one. `mode'
-           defaults to 'r'.
-           If `fileobj' is given, it is used for reading or writing data. If it
-           can be determined, `mode' is overridden by `fileobj's mode.
-           `fileobj' is not closed, when CpioFile is closed.
+        """Open an (uncompressed) cpio archive `name'. `mode` is either `r` to
+           read from an existing archive, `a` to append data to an existing
+           file or `w` to create a new file overwriting an existing one. `mode`
+           defaults to `r`.
+           If `fileobj` is given, it is used for reading or writing data. If it
+           can be determined, `mode` is overridden by `fileobj`'s mode.
+           `fileobj` is not closed, when CpioFile is closed.
         """
         if len(mode) > 1 or mode not in "raw":
             raise ValueError("mode must be 'r', 'a' or 'w'")
@@ -1003,26 +1003,27 @@ class CpioFile(six.Iterator):
            an appropriate CpioFile class.
 
            mode:
-           'r' or 'r:*' open for reading with transparent compression
-           'r:'         open for reading exclusively uncompressed
-           'r:gz'       open for reading with gzip compression
-           'r:bz2'      open for reading with bzip2 compression
-           'r:xz'       open for reading with xz compression
-           'a' or 'a:'  open for appending
-           'w' or 'w:'  open for writing without compression
-           'w:gz'       open for writing with gzip compression
-           'w:bz2'      open for writing with bzip2 compression
-           'w:xz'       open for writing with xz compression
 
-           'r|*'        open a stream of cpio blocks with transparent compression
-           'r|'         open an uncompressed stream of cpio blocks for reading
-           'r|gz'       open a gzip compressed stream of cpio blocks
-           'r|bz2'      open a bzip2 compressed stream of cpio blocks
-           'r|xz'       open a xz compressed stream of cpio blocks
-           'w|'         open an uncompressed stream for writing
-           'w|gz'       open a gzip compressed stream for writing
-           'w|bz2'      open a bzip2 compressed stream for writing
-           'w|xz'       open a xz compressed stream for writing
+           - ``r`` or ``r:*`` open for reading with transparent compression
+           - ``r:``           open for reading exclusively uncompressed
+           - ``r:gz``         open for reading with gzip compression
+           - ``r:bz2``        open for reading with bzip2 compression
+           - ``r:xz``         open for reading with xz compression
+           - ``a`` or ``a:``  open for appending
+           - ``w`` or ``w:``  open for writing without compression
+           - ``w:gz``         open for writing with gzip compression
+           - ``w:bz2``        open for writing with bzip2 compression
+           - ``w:xz``         open for writing with xz compression
+
+           - ``r|*``        open a stream of cpio blocks with transparent compression
+           - ``r|``         open an uncompressed stream of cpio blocks for reading
+           - ``r|gz``       open a gzip compressed stream of cpio blocks
+           - ``r|bz2``      open a bzip2 compressed stream of cpio blocks
+           - ``r|xz``       open a xz compressed stream of cpio blocks
+           - ``w|``         open an uncompressed stream for writing
+           - ``w|gz``       open a gzip compressed stream for writing
+           - ``w|bz2``      open a bzip2 compressed stream for writing
+           - ``w|xz``       open a xz compressed stream for writing
         """
 
         if not name and not fileobj:
@@ -1182,9 +1183,9 @@ class CpioFile(six.Iterator):
 
     def getmember(self, name):
         # type:(str | bytes) -> CpioInfo
-        """Return a CpioInfo object for member `name'. If `name' can not be
+        """Return a CpioInfo object for member `name`. If `name` can not be
            found in the archive, KeyError is raised. If a member occurs more
-           than once in the archive, its last occurence is assumed to be the
+           than once in the archive, its last occurrence is assumed to be the
            most up-to-date version.
         """
         cpioinfo = self._getmember(name)
@@ -1210,10 +1211,10 @@ class CpioFile(six.Iterator):
         return [cpioinfo.name for cpioinfo in self.getmembers()]
 
     def getcpioinfo(self, name=None, arcname=None, fileobj=None):
-        """Create a CpioInfo object for either the file `name' or the file
-           object `fileobj' (using os.fstat on its file descriptor). You can
+        """Create a CpioInfo object for either the file `name` or the file
+           object `fileobj` (using os.fstat on its file descriptor). You can
            modify some of the CpioInfo's attributes before you add it using
-           addfile(). If given, `arcname' specifies an alternative name for the
+           addfile(). If given, `arcname` specifies an alternative name for the
            file in the archive.
         """
         self._check("aw")
@@ -1274,8 +1275,8 @@ class CpioFile(six.Iterator):
         return cpioinfo
 
     def list(self, verbose=True):
-        """Print a table of contents to sys.stdout. If `verbose' is False, only
-           the names of the members are printed. If it is True, an `ls -l'-like
+        """Print a table of contents to sys.stdout. If `verbose` is False, only
+           the names of the members are printed. If it is True, an `ls -l`-like
            output is produced.
         """
         self._check()
@@ -1300,11 +1301,11 @@ class CpioFile(six.Iterator):
             print()
 
     def add(self, name, arcname=None, recursive=True):
-        """Add the file `name' to the archive. `name' may be any type of file
-           (directory, fifo, symbolic link, etc.). If given, `arcname'
+        """Add the file `name` to the archive. `name` may be any type of file
+           (directory, fifo, symbolic link, etc.). If given, `arcname`
            specifies an alternative name for the file in the archive.
            Directories are added recursively by default. This can be avoided by
-           setting `recursive' to False.
+           setting `recursive` to False.
         """
         self._check("aw")
 
@@ -1351,10 +1352,10 @@ class CpioFile(six.Iterator):
             self.addfile(cpioinfo)
 
     def addfile(self, cpioinfo, fileobj=None):
-        """Add the CpioInfo object `cpioinfo' to the archive. If `fileobj' is
+        """Add the CpioInfo object `cpioinfo` to the archive. If `fileobj` is
            given, cpioinfo.size bytes are read from it and added to the archive.
            You can create CpioInfo objects using getcpioinfo().
-           On Windows platforms, `fileobj' should always be opened with mode
+           On Windows platforms, `fileobj` should always be opened with mode
            'rb' to avoid irritation about the file size.
         """
         self._check("aw")
@@ -1389,8 +1390,8 @@ class CpioFile(six.Iterator):
     def extractall(self, path=".", members=None):
         """Extract all members from the archive to the current working
            directory and set owner, modification time and permissions on
-           directories afterwards. `path' specifies a different directory
-           to extract to. `members' is optional and must be a subset of the
+           directories afterwards. `path` specifies a different directory
+           to extract to. `members` is optional and must be a subset of the
            list returned by getmembers().
         """
         directories = []
@@ -1430,8 +1431,8 @@ class CpioFile(six.Iterator):
     def extract(self, member, path=""):
         """Extract a member from the archive to the current working directory,
            using its full name. Its file information is extracted as accurately
-           as possible. `member' may be a filename or a CpioInfo object. You can
-           specify a different directory using `path'.
+           as possible. `member` may be a filename or a CpioInfo object. You can
+           specify a different directory using `path`.
         """
         self._check("r")
 
@@ -1462,10 +1463,10 @@ class CpioFile(six.Iterator):
 
     def extractfile(self, member):
         # type:(CpioInfo | str | bytes) -> ExFileObject | None
-        """Extract a member from the archive as a file object. `member' may be
-           a filename or a CpioInfo object. If `member' is a regular file, a
-           file-like object is returned. If `member' is a link, a file-like
-           object is constructed from the link's target. If `member' is none of
+        """Extract a member from the archive as a file object. `member` may be
+           a filename or a CpioInfo object. If `member` is a regular file, a
+           file-like object is returned. If `member` is a link, a file-like
+           object is constructed from the link's target. If `member` is none of
            the above, None is returned.
            The file-like object is read-only and provides the following
            methods: read(), readline(), readlines(), seek() and tell()

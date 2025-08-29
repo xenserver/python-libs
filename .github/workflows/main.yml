@@ -92,3 +92,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pip install coveralls && coveralls --service=github
         continue-on-error: true  # Coveralls.io is currently overloaded
+
+      - name: Render docs if master was updated and the deploy_webhook_url is set
+        # See https://render.com/docs/deploy-hooks on how to deploy using a webhook:
+        env:
+          docs_deploy_branch: refs/heads/master
+          deploy_webhook_url: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        if: |
+          env.deploy_webhook_url && github.ref == env.docs_deploy_branch &&
+          matrix.python-version == env.PYTHON_VERSION_USED_FOR_COVERAGE
+        run: |
+          curl "$deploy_webhook_url"

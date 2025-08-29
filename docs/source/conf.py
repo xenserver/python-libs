@@ -46,6 +46,7 @@ extensions = [
     "myst_parser",
 ]
 
+myst_heading_anchors = 2
 templates_path = ["_templates"]
 exclude_patterns = []
 

@@ -3,7 +3,8 @@
 name = "python-libs"
 dynamic = ["version"]
 description = "Common Xenserver Python classes"
-requires-python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*"
+# 3.6 is used by XS8.4, 3.11 by XS9, versions in-between are not required
+requires-python = ">=3.6, !=3.7.*, !=3.8.*, !=3.9.*, !=3.10.*"
 license = {file = "LICENSE"}
 keywords = ["xenserver", "xen-project", "libraries"]
 authors = [
@@ -20,14 +21,10 @@ readme = "README.md"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python :: 2.7",
     "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: System :: Hardware",
     "Topic :: System :: Installation/Setup",

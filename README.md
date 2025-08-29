@@ -1,17 +1,21 @@
-# Common XenServer/XCP-ng Python classes
+# XenServer Python libs for Dom0
 
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
-[![](https://img.shields.io/badge/python-2.7_%7C_3.6_%7C_3.7_%7C_3.8_%7C_3.9_%7C_3.10_%7C_3.11+-blue.svg)](https://www.python.org/downloads/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://pre-commit.com)
+[![](https://img.shields.io/badge/python-3.6_%7C_3.11_%7C_3.12_%7C_3.13-blue.svg)](https://www.python.org/downloads/)
+[![](https://coveralls.io/repos/github/xenserver/python-libs/badge.svg?branch=master)](https://coveralls.io/github/xenserver/python-libs?branch=master)
 [![codecov](https://codecov.io/gh/xenserver/python-libs/branch/master/graph/badge.svg?token=6WKVLDXJFN)](https://codecov.io/gh/xenserver/python-libs)
-[![](https://img.shields.io/badge/License-BSD--2--Cause%20%26%20MIT-brightgreen)](https://github.com/xenserver/python-libs/blob/master/LICENSE)
+[![](https://img.shields.io/badge/License-BSD--2--Clause%20%26%20MIT-brightgreen)](https://github.com/xenserver/python-libs/blob/master/LICENSE)
+[![](https://img.shields.io/badge/Sphinx-docs-blue.svg)](https://python-libs.onrender.com/)
 
-The `xcp` directory contains the Common XenServer and XCP-ng Python packages.
-They are intented for use in XenServer and XCP-ng Dom0 only and deal with logging,
-Hardware/PCI, networking, and other Dom0 tasks.
-
-The package name is `python-libs` which is also the `rpm` package name in XenServer.
-XCP-ng packages it as [xcp-python-libs](https://github.com/xcp-ng-rpms/xcp-python-libs)
-([koji](https://koji.xcp-ng.org/packageinfo?packageID=400)).
+The `xcp` directory contains the XenServer Python modules used in Dom0 internally.
+They are used in XenServer Dom0 and derivatives to provide them with services around
+logging, Hardware-related configuration, network interfaces, and other Dom0 tasks.
+The callers of these modules are only other XenServer components residing in Dom0.
+A detailed list is in the [Users](#users) section.
+The rpm package name in XenServer 8.4 is `python3-xcp-libs`.
+XCP-ng packages it currently as
+[xcp-python-libs](https://github.com/xcp-ng-rpms/xcp-python-libs)
+([koji](https://koji.xcp-ng.org/packageinfo?packageID=400)) instead.
 
 ## Test-driven Development (TDD) Model
 

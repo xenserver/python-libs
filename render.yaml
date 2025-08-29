@@ -1,0 +1,21 @@
+services:
+- type: web
+  name: python-libs
+  runtime: static
+  repo: https://github.com/xenserver/python-libs
+  branch: master
+  buildCommand: |
+    pip install -r docs/requirements.txt
+    make -C docs html
+  staticPublishPath: docs/build/html
+  buildFilter:
+    paths:
+    - docs
+    - xcp
+    - CONTRIBUTING.md
+    - DOCUMENTING.md
+    - README-Unicode.md
+    - README.md
+  previews:
+    generation: automatic
+version: "1"

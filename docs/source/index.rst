@@ -18,6 +18,11 @@ XenServer Python libs for Dom0
 .. image:: https://img.shields.io/badge/Sphinx-docs-blue.svg
    :target: https://python-libs.onrender.com/
 
+Welcome to the python-libs documentation!
+
+Each module is documented in its own section.
+Select a module from the menu to view its API documentation.
+
 .. toctree::
    :maxdepth: 2
    :caption: Project Documentation
@@ -46,7 +51,20 @@ XenServer Python libs for Dom0
    version
    xmlunwrap
 
-Welcome to the python-libs documentation!
+.. toctree::
+   :maxdepth: 2
+   :caption: XCP.Net Modules
 
-Each module is documented in its own section. Select a module from the menu to view its API documentation.
+   net/biosdevname
+   net/ip
+   net/mac
 
+.. toctree::
+   :maxdepth: 2
+   :caption: XCP.Net.Ifrename Modules
+
+   net/ifrename/ifrename-util
+   net/ifrename/ifrename-static
+   net/ifrename/ifrename-logic
+   net/ifrename/ifrename-dynamic
+   net/ifrename/ifrename-macpci

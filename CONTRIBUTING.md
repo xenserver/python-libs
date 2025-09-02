@@ -128,7 +128,7 @@ pipx inject pylint pyfakefs six mock pytest{,_forked,-localftpserver}
 
 For consistently well-spaced documentation, all Markdown files are checked
 in CI using Markdownlint, which ensures that e.g. code blocks are separated
-by space from the proceeding and following paragraphs and so on. This helps
+by space from the preceding and following paragraphs and so on. This helps
 to keep the Markdown source as well-readable as the rendered Markdown.
 
 To check and fix Markdown files quickly, use:

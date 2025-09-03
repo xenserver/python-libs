@@ -101,7 +101,7 @@ repos:
         name: pytest unit tests and static analysis using tox
         types: [python]
         # entry: sh -c "pytest -x -rf --new-first --show-capture=all >/dev/tty"
-        entry: sh -c "tox -e py311-cov-check-pytype-pyright-lint-mdreport >/dev/tty"
+        entry: sh -c "tox -e py311-cov-check-pytype-pyright-lint-docs-mdreport >/dev/tty"
         verbose: true
         language: python
         require_serial: true

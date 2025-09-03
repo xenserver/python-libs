@@ -39,6 +39,10 @@ of name transactions to rename network interfaces.
 [out] transactions
         list of string tuples as source and destination names for "ip link set
         name"
+
+Abbreviations used in this file:
+    kname: The kernel name of the network interface (the original name assigned by the kernel).
+    tname: The temporary name of the interface, used while renaming interfaces to avoid name conflicts.
 """
 
 from __future__ import unicode_literals
@@ -122,24 +126,32 @@ def __rename_nic(nic, name, transactions, cur_state):
         transactions.append((nic.kname, name))
 
 
-def rename_logic( static_rules,
-                  cur_state,
-                  last_state,
-                  old_state ):
+def rename_logic(static_rules, cur_state, last_state, old_state):
     """
     Core logic of renaming the current state based on the rules and past state.
+
     This function assumes all inputs have been suitably sanitised.
-    @param static_rules
+
+    Parameters
+    ----------
+    static_rules : list[MACPCI]
         List of MACPCI objects representing rules
-    @param cur_state
+    cur_state : list[MACPCI]
         List of MACPCI objects representing the current state
-    @param last_state
+    last_state : list[MACPCI]
         List of MACPCI objects representing the last boot state
-    @param old_state
+    old_state : list[MACPCI]
         List of MACPCI objects representing the old state
-    @returns List of tuples...
-    @throws AssertionError (Should not be thrown, but better to know about logic
-    errors if they occur)
+
+    Returns
+    -------
+    list
+        List of tuples representing name transactions.
+
+    Raises
+    ------
+    AssertionError
+        If the current state contains invalid entries.
     """
 
     transactions = []
@@ -365,26 +377,44 @@ def rename_logic( static_rules,
                                          util.niceformat(cur_state)))
     return transactions
 
-def rename( static_rules,
-            cur_state,
-            last_state,
-            old_state ):
+def rename(static_rules, cur_state, last_state, old_state):
     """
     Rename current state based on the rules and past state.
-    This function sanitises the input and delegates the renaming logic to
-    __rename.
-    @param static_rules
+
+    This function:
+    - Sanitises the input
+    - Delegates the renaming logic to rename_logic()
+
+    Parameters
+    ----------
+    static_rules : list[MACPCI]
         List of MACPCI objects representing rules
-    @param cur_state
+    cur_state : list[MACPCI]
         List of MACPCI objects representing the current state
-    @param last_state
+    last_state : list[MACPCI]
         List of MACPCI objects representing the last boot state
-    @param old_state
+    old_state : list[MACPCI]
         List of MACPCI objects representing the old state
 
-    @throws StaticRuleError, CurrentStateError, LastStateError, TypeError
+    Returns
+    -------
+    list
+        List of tuples of name changes required
 
-    @returns list of tuples of name changes required
+    Raises
+    ------
+    StaticRuleError
+        Raised if any of the following conditions are met:
+        - A static rule has a kernel name.
+        - A static rule has a tname not starting with 'eth'.
+        - Duplicate eth names are present in static rules.
+        - Duplicate MAC addresses are present in static rules.
+    CurrentStateError
+        If the current state contains invalid entries.
+    LastStateError
+        If the last state contains invalid entries.
+    TypeError
+        If any of the input lists contain objects that are not MACPCI instances.
     """
 
     if len(static_rules):

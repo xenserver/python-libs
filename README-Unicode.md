@@ -126,45 +126,9 @@ Traceback (most recent call last):
 UnicodeDecodeError: 'utf-8' codec can't decode byte 0xb2 in position 0: invalid start byte
 ```
 
-Of course, `xcp/net/ifrename` won't be affected but it would be good to fix the
-warning for them as well in an intelligent way. See the proposal for that below.
-
-There are a couple of possibilities and Python because 2.7 does not support the
-arguments we need to pass to ensure that all users of open() will work, we need
-to make passing the arguments conditional on Python >= 3.
-
-1. Overriding `open()`, while technically working would not only affect xcp.python but the entire program:
-
-    ```py
-    if sys.version_info >= (3, 0):
-        original_open = __builtins__["open"]
-            def uopen(*args, **kwargs):
-                if "b" not in (args[1] \
-                  if len(args) >= 2 else kwargs.get("mode", "")):
-                    kwargs.setdefault("encoding", "UTF-8")
-                    kwargs.setdefault("errors", "replace")
-                return original_open(*args, **kwargs)
-            __builtins__["open"] = uopen
-    ```
-
-2. This is sufficient but is not very nice:
-
-    ```py
-    # xcp/utf8mode.py
-    if sys.version_info >= (3, 0):
-        open_utf8args = {"encoding": "utf-8", "errors": "replace"}
-    else:
-        open_utf8args = {}
-    # xcp/{cmd,pci,environ?,logger?}.py tests/test_{pci,biodevname?,...?}.py
-    + from .utf8mode import open_utf8args
-    ...
-    - open(filename)
-    + open(filename, **open_utf8args)
-    ```
-
-   But, `pylint` will still warn about these lines, so I propose:
-
-3. Instead, use a wrapper function, which will also silence the `pylint` warnings at the locations which have been changed to use it:
+To fix these issues, `xcp.compat`, provides a wrapper for `open()`.
+It adds `encoding="utf-8", errors="replace"`
+to enable UTF-8 conversion and handle encoding errors:
 
     ```py
     # xcp/utf8mode.py
@@ -182,9 +146,3 @@ to make passing the arguments conditional on Python >= 3.
     + utf8open(filename)
     ```
 
-Using the 3rd option, the `pylint` warnings for the changed locations
-`unspecified-encoding` and `consider-using-with` don't appear without
-explicitly disabling them.
-
-PS: Since utf8open() still returns a context-manager, `with open(...) as f:`
-would still work.

@@ -4,20 +4,20 @@
 
 Python3.6 on XS8 does not have an all-encompassing default UTF-8 mode for I/O.
 
-Newer Python versions have an UTF-8 mode that they even enable by default.
-Python3.6 only enabled UTF-8 for I/O when an UTF-8 locale is used.
+Newer Python versions have a UTF-8 mode that they even enable by default.
+Python3.6 only enabled UTF-8 for I/O when a UTF-8 locale is used.
 See below for more background info on the UTF-8 mode.
 
 For situations where UTF-8 enabled, we have to specify UTF-8 explicitly.
 
-Such sitation happens when LANG or LC_* variables are not set for UTF-8.
-XAPI plugins like auto-cert-kit find themself in this situation.
+This happens when LANG or LC_* variables are not set for UTF-8.
+XAPI plugins like auto-cert-kit find themselves in this situation.
 
 Example:
 For reading UTF-8 files like the `pciids` file, add `encoding="utf-8"`.
-This applies especailly to `open()` and `Popen()` when files my contain UTF-8.
+This applies especially to `open()` and `Popen()` when files may contain UTF-8.
 
-This also applies when en/decoding to/form `urllib` which uses bytes.
+This also applies when en/decoding to/from `urllib` which uses bytes.
 `urllib` has to use bytes as HTTP data can of course also be binary, e.g. compressed.
 
 ## Migrating `subprocess.Popen()`

@@ -95,7 +95,7 @@ for i in 2.7 3.{6,7};do echo "$i:";
   LC_ALL=C python$i -c 'open("/usr/share/hwdata/pci.ids").read()';done
 ```
 
-```
+```text
 2.7:
 3.6:
 Traceback (most recent call last):
@@ -106,20 +106,20 @@ UnicodeDecodeError: 'ascii' codec can't decode byte 0xc2 in position 97850: ordi
 3.7:
 ```
 
-This error means that the `'ascii' codec` cannot handle input ord() >= 128, and as some Video cards use `²` to reference their power, the `ascii` codec chokes on them.
-
-It means `xcp.pci.PCIIds()` cannot use `open("/usr/share/hwdata/pci.ids").read()`.
+The `'ascii'` codec fails on all bytes >128 like the bytes of `²` (UTF-8: power of two).
+To read `/usr/share/hwdata/pci.ids`, we must use `encoding="utf-8"`.
 
 While Python 3.7 and newer use UTF-8 mode by default, it does not set up an error handler for `UnicodeDecodeError`.
 
-As it happens, some older tools output ISO-8859-1 characters hard-coded and these aren't valid UTF-8 sequences, and even newer Python versions need error handlers to not fail:
+Also, some older tools output ISO-8859-1 characters which aren't valid UTF-8 sequences.
+For all Python versions, we need to use error handlers to handle them:
 
 ```sh
 echo -e "\0262"  # ISO-8859-1 for: "²"
 python3 -c 'open(".text").read()'
 ```
 
-```
+```text
 Traceback (most recent call last):
   File "<string>", line 1, in <module>
   File "<frozen codecs>", line 322, in decode

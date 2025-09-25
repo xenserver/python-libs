@@ -3,6 +3,7 @@
 import logging
 import os
 import sys
+from datetime import datetime
 
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
@@ -30,11 +31,26 @@ logging.getLogger("markdown_it").setLevel(logging.INFO)
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "python-libs"
-copyright = "2025, Citrix Inc."
+copyright = "2025, Citrix Inc."  # pylint: disable=redefined-builtin
 author = "Citrix Inc."
-from datetime import datetime
-
 release = datetime.now().strftime("%Y.%m.%d-%H%M")
+
+# -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html
+# Set the favicon and logo to XenServer branding.
+html_favicon = "https://xenserver.com/content/dam/xenserver/images/favicon-32x32.png"
+html_logo = "https://www.xenserver.com/content/dam/xenserver/images/xenserver-full-color-rgb.svg"
+
+# -- MyST-Parser configuration -----------------------------------------------
+# https://github.com/mgaitan/sphinxcontrib-mermaid:
+# Enables GitHub-style mermaid code blocks in markdown files.
+# See https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
+# This allows to use mermaid code blocks in markdown files like this:
+# ```mermaid
+#   graph TD;
+#     A-->B;
+# ```
+myst_fence_as_directive = ["mermaid"]
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -43,6 +59,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
+    "sphinxcontrib.mermaid",
     "myst_parser",
 ]
 

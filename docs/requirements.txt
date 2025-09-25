@@ -1,5 +1,6 @@
 six
 sphinx
 sphinx-autodoc-typehints
+sphinxcontrib-mermaid
 furo
 myst_parser

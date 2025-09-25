@@ -25,6 +25,19 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1" # Reduce noise in logs
 
 jobs:
+  pre-commit:
+    env:
+      SKIP: pytest,pytype,tox,no-commit-to-branch
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-python@v6
+      with:
+        python-version: 3.11
+    - uses: pre-commit/action@v3.0.1
+    - uses: pre-commit-ci/lite-action@v1.0.3
+      if: always()
+
   test:
     strategy:
       # See: https://github.com/xenserver/python-libs/pull/26#discussion_r1179482169
@@ -43,13 +56,13 @@ jobs:
     env:
       PYTHON_VERSION_USED_FOR_COVERAGE: ${{ '3.11' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0  # Needed by diff-cover to get the changed lines: origin/master..HEAD
       - name: Set up Python ${{ matrix.python-version }}
         # Python 3.11 is not supported in the nektos/act container, so we skip this step
         if: ${{ !(matrix.python-version == '3.11' && github.actor == 'nektos/act') }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 

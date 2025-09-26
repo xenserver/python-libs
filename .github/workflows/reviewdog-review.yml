@@ -1,0 +1,63 @@
+#
+# The reviewdog workflow steps use reporter: github-pr-review,
+# which submits mypy and pylint warnings using review comment
+# on the pull request. It needs write permissions for the pull request
+# to post the comments and can only be used in the context of a pull request.
+#
+name: mypy, pylint and coverage PR review comments
+
+on:
+  workflow_run:
+    workflows: ["Unit tests"]
+    types: [completed]
+
+concurrency:  # On new workflow, cancel old workflows from the same PR, branch or tag:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  mypy-pylint-coverage-PR-comments:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.ref }}
+        repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+    - uses: actions/setup-python@v5
+      with:
+        python-version: 3.11
+
+    - name: Install uv and activate the environment
+      uses: astral-sh/setup-uv@v6
+      with:
+        activate-environment: true
+
+    - run: uv pip install pylint tox types-setuptools -r pyproject.toml --extra mypy
+
+    - uses: tsuyoshicho/action-mypy@v4
+      name: Run mypy with reviewdog to submit GitHub checks for warnings
+      with:
+        install_types: false
+        reporter: github-pr-review
+        level: warning
+
+    - uses: dciborow/action-pylint@0.1.0
+      name: Run pylint with reviewdog to submit GitHub checks for warnings
+      with:
+        reporter: github-pr-review
+        glob_pattern: "xcp tests"
+
+    - name: Run tox to run pytest in the defined tox environments
+      run: tox -e py311-covcp
+      continue-on-error: true
+      env:
+        DIFF_COVERAGE_MIN: 0  # reviewdog-action-code-coverage shows coverage
+
+    - uses: aki77/reviewdog-action-code-coverage@v2
+      with:
+        lcov_path: coverage.lcov

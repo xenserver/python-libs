@@ -132,19 +132,9 @@ To fix these issues, `xcp.compat`, provides a wrapper for `open()`.
 It adds `encoding="utf-8", errors="replace"`
 to enable UTF-8 conversion and handle encoding errors:
 
-    ```py
-    # xcp/utf8mode.py
-    if sys.version_info >= (3, 0):
-        def utf8open(*args, **kwargs):
-            if len(args) > 1 and "b" in args[1]:
-                return open(*args, **kwargs)
-            return open(*args, encoding="utf-8", errors="replace", **kwargs)
-    else:
-        utf8open = open
-    # xcp/{cmd,pci,environ?,logger?}.py tests/test_{pci,biodevname?,...?}.py
-    + from .utf8mode import utf8open
-    ...
-    - open(filename)
-    + utf8open(filename)
-    ```
-
+```py
+    def utf8open(*args, **kwargs):
+        if len(args) > 1 and "b" in args[1]:
+            return open(*args, **kwargs)
+        return open(*args, encoding="utf-8", errors="replace", **kwargs)
+```

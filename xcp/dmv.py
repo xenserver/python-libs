@@ -350,14 +350,16 @@ class DriverMultiVersionManager(object):
                 os.symlink(module_file, tmp_name)
                 os.rename(tmp_name, module_sym)
                 created = True
-                modules = [module_sym]
-                input_data = "\n".join(modules) + "\n"
-                subprocess.run(
-                    ["/usr/sbin/weak-modules", "--no-initramfs", "--add-modules"],
-                    input=input_data,
-                    text=True,
-                    check=True
-                )
+                # weak-modules will call dracut, while no dracut in install image
+                if os.path.exists("/usr/bin/dracut"):
+                    modules = [module_sym]
+                    input_data = "\n".join(modules) + "\n"
+                    subprocess.run(
+                        ["/usr/sbin/weak-modules", "--no-initramfs", "--add-modules"],
+                        input=input_data,
+                        text=True,
+                        check=True
+                    )
         if created:
             subprocess.run(["/usr/sbin/depmod", "-a"], check=True)
             uname_r = subprocess.run(["uname", '-r'], stdout=subprocess.PIPE, text=True,

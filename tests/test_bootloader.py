@@ -52,12 +52,31 @@ class TestBootloader(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             Bootloader.readGrub2("tests/data/grub-no-hypervisor.cfg")
 
+    def test_set_grub_variable(self):
+        tmpdir = mkdtemp(prefix="testbl")
+        env = os.path.join(tmpdir, 'grubenv')
+        bl = Bootloader("", "", env_block=env)
+
+        self.assertFalse(os.path.isfile(env))
+
+        self.assertTrue(bl.setGrubVariable("waffles=true"))
+
+        self.assertTrue(os.path.isfile(env))
+        self.assertGreater(os.path.getsize(env), 0)
+
+    def test_set_grub_variable_throws_without_envfile(self):
+        bl = Bootloader("", "", env_block=None)
+
+        with self.assertRaises(AssertionError):
+            bl.setGrubVariable("waffles=true")
+
 
 class TestMenuEntry(unittest.TestCase):
     def setUp(self):
         self.tmpdir = mkdtemp(prefix="testbl")
         self.fn = os.path.join(self.tmpdir, 'grub.cfg')
         self.bl = Bootloader('grub2', self.fn)
+        self.env = os.path.join(self.tmpdir, 'grubenv')
 
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
@@ -134,6 +153,101 @@ menuentry 'xe-serial' {
 menuentry 'linux2' {
 	linux vmlinuz2 karg3 karg4
 	initrd initrd2.img
+}
+''')
+
+    def test_arbitrary_contents(self):
+        """ Test that arbitrary data can be injected into the MenuEntry.contents field. """
+        e = MenuEntry(hypervisor='xen.efi', hypervisor_args='a',
+                      kernel='vmlinuz', kernel_args='b',
+                      initrd='initrd.img',
+                      title='menu_name')
+
+        e.contents.append("\textra data line 1")
+        e.contents.append("\textra data line 2")
+
+        e.entry_format = Grub2Format.XEN_BOOT
+
+        self.bl.append('menu_name', e)
+        self.bl.commit()
+
+        with open_with_codec_handling(self.fn, 'r') as f:
+            content = f.read()
+
+        self.assertEqual(content,
+'''menuentry 'menu_name' {
+	extra data line 1
+	extra data line 2
+	xen_hypervisor xen.efi a
+	xen_module vmlinuz b
+	xen_module initrd.img
+}
+''')
+
+    def test_contents_not_clobbered_by_setnextboot(self):
+
+        self.assertIsNone(self.bl.env_block)
+        self.bl.env_block = self.env
+
+        e = MenuEntry(hypervisor='xen.efi', hypervisor_args='a',
+                      kernel='vmlinuz', kernel_args='b',
+                      initrd='initrd.img',
+                      title='menu_title')
+
+        e.contents.append("\textra data line 1")
+        e.contents.append("\textra data line 2")
+
+        e.entry_format = Grub2Format.XEN_BOOT
+
+        self.bl.append('menu_title', e)
+        self.assertTrue(self.bl.setNextBoot('menu_title'))
+        self.bl.commit()
+
+
+        with open_with_codec_handling(self.fn, 'r') as f:
+            content = f.read()
+
+        self.assertEqual(content,
+'''menuentry 'menu_title' {
+	unset override_entry
+	save_env override_entry
+	extra data line 1
+	extra data line 2
+	xen_hypervisor xen.efi a
+	xen_module vmlinuz b
+	xen_module initrd.img
+}
+''')
+
+    def test_setnextboot_is_indempotent(self):
+        self.bl.env_block = self.env
+
+        e = MenuEntry(hypervisor='xen.efi', hypervisor_args='a',
+                      kernel='vmlinuz', kernel_args='b',
+                      initrd='initrd.img',
+                      title='menu_title')
+
+        e.entry_format = Grub2Format.XEN_BOOT
+
+        self.bl.append('menu_title', e)
+
+        # Calling twice should have thte same effect as calling once
+        self.assertTrue(self.bl.setNextBoot('menu_title'))
+        self.assertTrue(self.bl.setNextBoot('menu_title'))
+
+        self.bl.commit()
+
+
+        with open_with_codec_handling(self.fn, 'r') as f:
+            content = f.read()
+
+        self.assertEqual(content,
+'''menuentry 'menu_title' {
+	unset override_entry
+	save_env override_entry
+	xen_hypervisor xen.efi a
+	xen_module vmlinuz b
+	xen_module initrd.img
 }
 ''')
 

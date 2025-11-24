@@ -374,14 +374,20 @@ class Bootloader(object):
             return False
 
         clear_default = ['\tunset override_entry', '\tsave_env override_entry']
-        self.menu[entry].contents = clear_default
+        if clear_default[0] not in self.menu[entry].contents:
+            self.menu[entry].contents = clear_default + self.menu[entry].contents
 
         for i in range(len(self.menu_order)):
             if self.menu_order[i] == entry:
-                cmd = ['grub-editenv', self.env_block, 'set', 'override_entry=%d' % i]
-                return xcp.cmd.runCmd(cmd) == 0
+                return self.setGrubVariable('override_entry=%d' % i)
 
         return False
+
+    def setGrubVariable(self, var):
+        if self.env_block is None:
+            raise AssertionError("No grubenv file")
+        cmd = ['grub-editenv', self.env_block, 'set', var]
+        return xcp.cmd.runCmd(cmd) == 0
 
     @classmethod
     def newDefault(cls, kernel_link_name, initrd_link_name, root = '/'):

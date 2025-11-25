@@ -64,7 +64,11 @@ class TestBootloader(unittest.TestCase):
         self.assertTrue(os.path.isfile(env))
         self.assertGreater(os.path.getsize(env), 0)
 
-    def test_set_grub_variable_throws_without_envfile(self):
+    def test_set_variable_no_envfile(self):
+        """
+        Test that calling setGrubVariable() without setting an envfile first
+        will throw an exception.
+        """
         bl = Bootloader("", "", env_block=None)
 
         with self.assertRaises(AssertionError):
@@ -184,7 +188,10 @@ menuentry 'linux2' {
 }
 ''')
 
-    def test_contents_not_clobbered_by_setnextboot(self):
+    def test_contents_not_clobbered(self):
+        """
+        Test that MenuEntry.contents is not clobbered by setNextBoot
+        """
 
         self.assertIsNone(self.bl.env_block)
         self.bl.env_block = self.env

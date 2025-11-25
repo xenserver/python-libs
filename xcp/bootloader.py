@@ -40,7 +40,7 @@ except ImportError:  # For CI, use stubs/branding.py (./stubs is added to python
 
 from .compat import open_textfile
 
-COUNTER = 0
+_counter = 0
 
 class Grub2Format(Enum):
     MULTIBOOT2 = 0
@@ -127,7 +127,7 @@ class Bootloader(object):
         entry_format = Grub2Format.MULTIBOOT2
 
         def create_label(title):
-            global COUNTER
+            global _counter
 
             if title == branding.PRODUCT_BRAND:
                 return 'xe'
@@ -142,8 +142,8 @@ class Bootloader(object):
                     return 'fallback-serial'
                 else:
                     return 'fallback'
-            COUNTER += 1
-            return "label%d" % COUNTER
+            _counter += 1
+            return "label%d" % _counter
 
         def parse_boot_entry(line):
             parts = line.split(None, 2)  # Split into at most 3 parts

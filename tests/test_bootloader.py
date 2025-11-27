@@ -188,6 +188,38 @@ menuentry 'linux2' {
 }
 ''')
 
+    def test_chainloader(self):
+        e = MenuEntry(hypervisor='xen.efi', hypervisor_args='a',
+                      kernel='vmlinuz', kernel_args='b',
+                      initrd='initrd.img',
+                      title='menu_name')
+
+        e.contents.append("\textra data line 1")
+        e.entry_format = Grub2Format.XEN_BOOT
+        e.setRpuChainloader("/EFI/installer/shimx64.efi", "GUARD_VAR", "ESP_LABEL")
+
+        self.bl.append('menu_name', e)
+        self.bl.commit()
+
+        with open_with_codec_handling(self.fn, 'r') as f:
+            content = f.read()
+
+        self.assertEqual(content,
+'''menuentry 'menu_name' {
+	if [ "${GUARD_VAR}" = "1" ]; then
+		unset GUARD_VAR
+		save_env GUARD_VAR
+		search --label --set root ESP_LABEL
+		chainloader /EFI/installer/shimx64.efi
+	else
+	extra data line 1
+	xen_hypervisor xen.efi a
+	xen_module vmlinuz b
+	xen_module initrd.img
+	fi
+}
+''')
+
     def test_contents_not_clobbered(self):
         """
         Test that MenuEntry.contents is not clobbered by setNextBoot

@@ -61,6 +61,14 @@ class MenuEntry(object):
         self.title = title
         self.root = root
         self.entry_format = None  # type: Grub2Format | None
+        self.chainloader = None
+        self.guard_var = None
+        self.esp_label = None
+
+    def setRpuChainloader(self, chainloader, guard_var, esp_label):
+        self.chainloader = chainloader
+        self.guard_var = guard_var
+        self.esp_label = esp_label
 
     def getHypervisorArgs(self):
         return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.hypervisor_args)
@@ -318,6 +326,14 @@ class Bootloader(object):
             extra = m.extra if m.extra else ' '
             print("menuentry '%s'%s{" % (m.title, extra), file=fh)
 
+            if m.chainloader and m.guard_var:
+                print(f"\tif [ \"${{{m.guard_var}}}\" = \"1\" ]; then",  file=fh)
+                print(f"\t\tunset {m.guard_var}", file=fh)
+                print(f"\t\tsave_env {m.guard_var}", file=fh)
+                print(f"\t\tsearch --label --set root {m.esp_label}", file=fh)
+                print(f"\t\tchainloader {m.chainloader}", file=fh)
+                print("\telse", file=fh)
+
             try:
                 contents = "\n".join(m.contents)
                 if contents:
@@ -348,6 +364,9 @@ class Bootloader(object):
                     print("\txen_module %s" % m.initrd, file=fh)
             else:
                 raise AssertionError("Unreachable")
+
+            if m.chainloader and m.guard_var:
+                print("\tfi", file=fh)
 
             print("}", file=fh)
         if not hasattr(dst_file, 'name'):

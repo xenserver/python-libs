@@ -40,7 +40,7 @@ except ImportError:  # For CI, use stubs/branding.py (./stubs is added to python
 
 from .compat import open_textfile
 
-COUNTER = 0
+_counter = 0
 
 class Grub2Format(Enum):
     MULTIBOOT2 = 0
@@ -61,6 +61,14 @@ class MenuEntry(object):
         self.title = title
         self.root = root
         self.entry_format = None  # type: Grub2Format | None
+        self.chainloader = None
+        self.guard_var = None
+        self.esp_label = None
+
+    def setRpuChainloader(self, chainloader, guard_var, esp_label):
+        self.chainloader = chainloader
+        self.guard_var = guard_var
+        self.esp_label = esp_label
 
     def getHypervisorArgs(self):
         return re.findall(r'\S[^ "]*(?:"[^"]*")?\S*', self.hypervisor_args)
@@ -127,7 +135,7 @@ class Bootloader(object):
         entry_format = Grub2Format.MULTIBOOT2
 
         def create_label(title):
-            global COUNTER
+            global _counter
 
             if title == branding.PRODUCT_BRAND:
                 return 'xe'
@@ -142,8 +150,8 @@ class Bootloader(object):
                     return 'fallback-serial'
                 else:
                     return 'fallback'
-            COUNTER += 1
-            return "label%d" % COUNTER
+            _counter += 1
+            return "label%d" % _counter
 
         def parse_boot_entry(line):
             parts = line.split(None, 2)  # Split into at most 3 parts
@@ -318,6 +326,14 @@ class Bootloader(object):
             extra = m.extra if m.extra else ' '
             print("menuentry '%s'%s{" % (m.title, extra), file=fh)
 
+            if m.chainloader and m.guard_var:
+                print(f"\tif [ \"${{{m.guard_var}}}\" = \"1\" ]; then",  file=fh)
+                print(f"\t\tunset {m.guard_var}", file=fh)
+                print(f"\t\tsave_env {m.guard_var}", file=fh)
+                print(f"\t\tsearch --label --set root {m.esp_label}", file=fh)
+                print(f"\t\tchainloader {m.chainloader}", file=fh)
+                print("\telse", file=fh)
+
             try:
                 contents = "\n".join(m.contents)
                 if contents:
@@ -349,6 +365,9 @@ class Bootloader(object):
             else:
                 raise AssertionError("Unreachable")
 
+            if m.chainloader and m.guard_var:
+                print("\tfi", file=fh)
+
             print("}", file=fh)
         if not hasattr(dst_file, 'name'):
             fh.close()
@@ -374,14 +393,20 @@ class Bootloader(object):
             return False
 
         clear_default = ['\tunset override_entry', '\tsave_env override_entry']
-        self.menu[entry].contents = clear_default
+        if clear_default[0] not in self.menu[entry].contents:
+            self.menu[entry].contents = clear_default + self.menu[entry].contents
 
         for i in range(len(self.menu_order)):
             if self.menu_order[i] == entry:
-                cmd = ['grub-editenv', self.env_block, 'set', 'override_entry=%d' % i]
-                return xcp.cmd.runCmd(cmd) == 0
+                return self.setGrubVariable('override_entry=%d' % i)
 
         return False
+
+    def setGrubVariable(self, var):
+        if self.env_block is None:
+            raise AssertionError("No grubenv file")
+        cmd = ['grub-editenv', self.env_block, 'set', var]
+        return xcp.cmd.runCmd(cmd) == 0
 
     @classmethod
     def newDefault(cls, kernel_link_name, initrd_link_name, root = '/'):

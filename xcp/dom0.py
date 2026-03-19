@@ -73,24 +73,36 @@ def default_memory_for_version(host_mem_kib, platform_version):
     else:
         return default_memory_v3(host_mem_kib)
 
-def default_memory(host_mem_kib):
-    """Return the default for the amount of dom0 memory for the
-    specified amount of host memory for the current platform version"""
+def crash_kernel_memory_for_version(platform_version):
+    """Return the default crash kernel memory size in KiB for the given
+    platform version."""
+    # Need to update this if we change the crash kernel memory in the future version
+    if platform_version >= version.Version([3, 99, 90]):
+        return 512 * 1024
+    if platform_version >= version.Version([3, 0, 50]):
+        return 256 * 1024
+    # Earlier versions are far past EOL, so don't consider them
+    return 192 * 1024
 
-    # read current host version
-    platform_version = None
+def _read_platform_version():
+    """Read PLATFORM_VERSION from /etc/xensource-inventory."""
     with open_with_codec_handling("/etc/xensource-inventory") as f:
         for l in f.readlines():
             line = l.strip()
             if line.startswith('PLATFORM_VERSION='):
-                platform_version = version.Version.from_string(
-                                   line.split('=', 1)[1].strip("'"))
-                break
+                return version.Version.from_string(
+                       line.split('=', 1)[1].strip("'"))
+    raise RuntimeError('Could not find PLATFORM_VERSION from inventory.')
 
-    if not platform_version:
-        raise RuntimeError('Could not find PLATFORM_VERSION from inventory.')
+def default_memory(host_mem_kib):
+    """Return the default for the amount of dom0 memory for the
+    specified amount of host memory for the current platform version"""
+    return default_memory_for_version(host_mem_kib, _read_platform_version())
 
-    return default_memory_for_version(host_mem_kib, platform_version)
+def crash_kernel_memory():
+    """Return the default crash kernel memory size in KiB for the
+    current platform version."""
+    return crash_kernel_memory_for_version(_read_platform_version())
 
 
 _size_and_unit_re = re.compile(r"^(-?\d+)([bkmg]?)$", re.IGNORECASE)

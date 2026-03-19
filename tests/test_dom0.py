@@ -1,7 +1,7 @@
 import unittest
 from mock import patch, Mock
 
-from xcp.dom0 import default_memory, parse_mem, default_vcpus
+from xcp.dom0 import default_memory, crash_kernel_memory, parse_mem, default_vcpus
 
 
 # pylint: disable=invalid-name
@@ -47,6 +47,29 @@ class TestDom0(unittest.TestCase):
                 expected = dom0_mib * 1024
                 calculated = default_memory(host_gib * 1024 * 1024)
                 self.assertEqual(calculated, expected)
+
+            open_mock.assert_called_with("/etc/xensource-inventory")
+
+    def test_crash_kernel_memory(self):
+        def mock_version(open_mock, version):
+            file_mock = Mock()
+            file_mock.readlines.return_value = iter(["PLATFORM_VERSION='%s'\n" % (version,)])
+            open_mock.return_value.__enter__.return_value = file_mock
+
+        test_values = [
+            ('2.9.0',  192 * 1024),   # Old version
+            ('3.0.49', 192 * 1024),   # Just below 3.0.50
+            ('3.0.50', 256 * 1024),   # Threshold for 256 MiB
+            ('3.4.0',  256 * 1024),   # Between thresholds
+            ('3.99.50', 256 * 1024),  # Below 3.99.90
+            ('3.99.90', 512 * 1024),  # Threshold for 512 MiB
+            ('4.0.0',  512 * 1024),   # Above threshold
+        ]
+
+        with patch("xcp.dom0.open_with_codec_handling") as open_mock:
+            for ver, expected_kib in test_values:
+                mock_version(open_mock, ver)
+                self.assertEqual(crash_kernel_memory(), expected_kib)
 
             open_mock.assert_called_with("/etc/xensource-inventory")
 

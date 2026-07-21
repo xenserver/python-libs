@@ -38,7 +38,7 @@ else:
 
     def open_with_codec_handling(filename, mode="r", encoding="", errors="", **kwargs):
         # type:(str, str, str, str, str) -> IO[Any]
-        """open() wrapper to pass mode and **kwargs to open(), ignores endcoding and errors args"""
+        """open() wrapper to pass mode and **kwargs to open(), ignores encoding and errors args"""
         _ = encoding
         _ = errors
         return open(filename, mode, **kwargs)
